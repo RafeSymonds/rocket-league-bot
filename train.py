@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 import numpy as np
 from gymnasium import spaces
@@ -10,7 +10,6 @@ from torch.utils.tensorboard.writer import SummaryWriter
 
 from rlgym.api import AgentID, RLGym, RewardFunction, ObsBuilder
 from rlgym.api.typing import AgentID as AgentIDType
-from rlgym.api.typing import RewardType
 from rlgym.rocket_league import common_values
 from rlgym.rocket_league.action_parsers import LookupTableAction, RepeatAction
 from rlgym.rocket_league.api import GameState
@@ -411,7 +410,7 @@ class BallNetProgressReward(RewardFunction):
         for agent in agents:
             car = state.cars[agent]
             goal_y = (
-                -common_values.BACK_NET_Y if car.is_orange else common_values.BACK_NET_Y
+                common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
             )
             goal_pos = np.array([0.0, goal_y, 0.0], dtype=np.float32)
 
@@ -554,7 +553,12 @@ class SuccessfulDefenseReward(TouchBasedRewardBase):
         )
 
     def get_rewards(
-        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+        self,
+        agents,
+        state: GameState,
+        is_terminated,
+        is_truncated,
+        shared_info,
     ):
         ball = state.ball
         vel_y = float(ball.linear_velocity[1])
@@ -619,7 +623,12 @@ class SpeedTowardBallReward(RewardFunction):
         self.prev_dist: Dict[AgentID, float] = {}
 
     def get_rewards(
-        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+        self,
+        agents,
+        state: GameState,
+        is_terminated,
+        is_truncated,
+        shared_info,
     ):
         rewards: Dict[AgentID, float] = {}
 
@@ -651,7 +660,12 @@ class NoTouchProximityPenalty(RewardFunction):
         pass
 
     def get_rewards(
-        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+        self,
+        agents,
+        state: GameState,
+        is_terminated,
+        is_truncated,
+        shared_info,
     ):
         rewards: Dict[AgentID, float] = {}
 
@@ -674,7 +688,12 @@ class StepPenalty(RewardFunction):
         pass
 
     def get_rewards(
-        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+        self,
+        agents,
+        state: GameState,
+        is_terminated,
+        is_truncated,
+        shared_info,
     ):
         return {agent: -0.001 for agent in agents}
 
@@ -892,14 +911,14 @@ def build_rlgym_v2_env():
         # commitment signals (new-touch based)
         (ShotReward(), 0.5),
         (PowerHitReward(), 0.25),
-        (TouchReward(), 0.5),
+        (TouchReward(), 5),
         # defense shaping (small)
         (SuccessfulDefenseReward(), 0.25),
         # approach shaping
-        (SpeedTowardBallReward(), 0.1),
+        (SpeedTowardBallReward(), 1),
         # anti-stall (mild + gated)
-        (NoTouchProximityPenalty(), 0.2),
-        (StepPenalty(), 1.0),
+        (NoTouchProximityPenalty(), 0.05),
+        (StepPenalty(), 0.1),
     )
 
     env = RLGym(
@@ -933,7 +952,7 @@ def build_rlgym_v2_env():
 def main():
     learner = Learner(
         build_rlgym_v2_env,
-        n_proc=100,
+        n_proc=16,
         min_inference_size=12,
         policy_layer_sizes=(512, 512, 256),
         critic_layer_sizes=(512, 512, 256),
