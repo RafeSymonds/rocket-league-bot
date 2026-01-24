@@ -15,7 +15,7 @@ from rlgym.rocket_league.done_conditions import (
     NoTouchTimeoutCondition,
     TimeoutCondition,
 )
-from rlgym.rocket_league.reward_functions import CombinedReward, GoalReward
+from rlgym.rocket_league.reward_functions import CombinedReward, GoalReward, TouchReward
 from rlgym.rocket_league.sim import RocketSimEngine
 from rlgym.rocket_league.state_mutators import (
     FixedTeamSizeMutator,
@@ -455,6 +455,69 @@ class BoostEfficiencyReward(RewardFunction):
         return rewards
 
 
+class NoTouchProximityPenalty(RewardFunction):
+    """
+    Penalize staying close to the ball without touching it.
+    Prevents oscillating / stalling behavior.
+    """
+
+    def reset(
+        self,
+        agents: list,
+        initial_state: Any,
+        shared_info: dict[str, Any],
+    ) -> None:
+        pass
+
+    def get_rewards(
+        self,
+        agents: List[AgentID],
+        state: GameState,
+        is_terminated: dict[AgentID, bool],
+        is_truncated: dict[AgentID, bool],
+        shared_info: dict[str, Any],
+    ) -> dict[AgentID, RewardType]:
+        rewards = {}
+
+        for agent in agents:
+            car = state.cars[agent]
+
+            # Distance from car to ball
+            dist = np.linalg.norm(car.physics.position - state.ball.position)
+
+            # Penalize being close without touching
+            if dist < 800.0 and car.ball_touches == 0:
+                rewards[agent] = -0.02
+            else:
+                rewards[agent] = 0.0
+
+        return rewards
+
+
+class StepPenalty(RewardFunction):
+    """
+    Small per-step penalty to discourage stalling.
+    """
+
+    def reset(
+        self,
+        agents: list,
+        initial_state: Any,
+        shared_info: dict[str, Any],
+    ) -> None:
+        pass
+
+    def get_rewards(
+        self,
+        agents: List[AgentID],
+        state: GameState,
+        is_terminated: dict[AgentID, bool],
+        is_truncated: dict[AgentID, bool],
+        shared_info: dict[str, Any],
+    ) -> dict[AgentID, RewardType]:
+        return {agent: -0.001 for agent in agents}
+
+
 # --------------------------------------------------
 # OBSERVATION (DEPLOYABLE IN RLBOT)
 # --------------------------------------------------
@@ -593,12 +656,24 @@ def build_rlgym_v2_env():
     action_parser = RepeatAction(LookupTableAction(), repeats=8)
 
     reward_fn = CombinedReward(
+        # WIN CONDITION (dominates everything)
         (SignedGoalReward(), 10.0),
-        (ShotReward(), 1.0),
-        (BallControlReward(), 0.3),
-        (GoalSideReward(), 0.2),
-        (SpeedTowardBallReward(), 0.05),
+        # SPEED OF WIN
+        (FastGoalBonus(), 5.0),
+        # BALL PROGRESS (cannot be farmed)
+        (BallNetProgressReward(), 1.0),
+        # COMMITMENT SIGNALS
+        (ShotReward(), 0.5),
+        (TouchReward(), 0.5),
+        # APPROACH SHAPING (small)
+        (SpeedTowardBallReward(), 0.1),
+        # POSITION / EFFICIENCY (very small)
+        (BallControlReward(), 0.05),
+        (GoalSideReward(), 0.05),
         (BoostEfficiencyReward(), 0.02),
+        # ANTI-STALL
+        (NoTouchProximityPenalty(), 1.0),
+        (StepPenalty(), 1.0),
     )
 
     env = RLGym(
