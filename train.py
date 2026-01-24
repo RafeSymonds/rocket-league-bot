@@ -200,6 +200,112 @@ class GymEpisodeLoggingWrapper:
 # --------------------------------------------------
 
 
+class SignedGoalReward(RewardFunction):
+    def reset(self, agents, initial_state, shared_info):
+        pass
+
+    def get_rewards(
+        self,
+        agents,
+        state: GameState,
+        is_terminated,
+        is_truncated,
+        shared_info,
+    ):
+        rewards = {a: 0.0 for a in agents}
+
+        if not state.goal_scored:
+            return rewards
+
+        scoring_team = state.scoring_team  # 0 = blue, 1 = orange
+
+        for agent in agents:
+            car = state.cars[agent]
+            agent_team = 1 if car.is_orange else 0
+
+            rewards[agent] = 1.0 if agent_team == scoring_team else -1.0
+
+        return rewards
+
+
+class FastGoalBonus(RewardFunction):
+    def reset(self, agents, initial_state, shared_info):
+        self.steps = 0
+
+    def get_rewards(
+        self,
+        agents,
+        state: GameState,
+        is_terminated,
+        is_truncated,
+        shared_info,
+    ):
+        self.steps += 1
+        rewards = {a: 0.0 for a in agents}
+
+        if not state.goal_scored:
+            return rewards
+
+        bonus = np.exp(-self.steps / 400)
+        scoring_team = state.scoring_team
+
+        for agent in agents:
+            car = state.cars[agent]
+            agent_team = 1 if car.is_orange else 0
+            rewards[agent] = bonus if agent_team == scoring_team else -bonus
+
+        return rewards
+
+
+class BallNetProgressReward(RewardFunction):
+    """
+    Reward progress of the ball toward the opponent goal.
+    Penalizes regression.
+    """
+
+    def reset(self, agents, initial_state, shared_info):
+        self.prev_ball_dist = None
+
+    def get_rewards(
+        self,
+        agents,
+        state: GameState,
+        is_terminated,
+        is_truncated,
+        shared_info,
+    ):
+        rewards = {a: 0.0 for a in agents}
+
+        ball = state.ball
+
+        # Net position (blue scores at +Y, orange at -Y)
+        for agent in agents:
+            car = state.cars[agent]
+
+            goal_y = (
+                -common_values.BACK_NET_Y if car.is_orange else common_values.BACK_NET_Y
+            )
+
+            goal_pos = np.array([0.0, goal_y, 0.0])
+            ball_dist = np.linalg.norm(ball.position - goal_pos)
+
+            if self.prev_ball_dist is None:
+                self.prev_ball_dist = ball_dist
+                continue
+
+            delta = self.prev_ball_dist - ball_dist
+
+            # Small deadzone to ignore noise
+            if abs(delta) < 5:
+                delta = 0.0
+
+            rewards[agent] = np.clip(delta / 1000.0, -0.05, 0.05)
+
+            self.prev_ball_dist = ball_dist
+
+        return rewards
+
+
 class ShotReward(RewardFunction):
     """Reward ball velocity toward opponent goal AFTER a touch."""
 
@@ -241,91 +347,69 @@ class ShotReward(RewardFunction):
 
 
 class SpeedTowardBallReward(RewardFunction):
-    """Encourage accelerating toward the ball, scaled by distance."""
+    """
+    Reward *reducing distance* to the ball, not oscillating near it.
+    """
 
-    def reset(
-        self,
-        agents: list,
-        initial_state: Any,
-        shared_info: dict[str, Any],
-    ) -> None:
-        pass
+    def reset(self, agents, initial_state, shared_info):
+        self.prev_dist = {}
 
-    def get_rewards(
-        self,
-        agents: List[AgentID],
-        state: GameState,
-        is_terminated: dict[AgentID, bool],
-        is_truncated: dict[AgentID, bool],
-        shared_info: dict[str, Any],
-    ) -> dict[AgentID, RewardType]:
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
         rewards = {}
+
         for agent in agents:
             car = state.cars[agent]
             car_phys = car.physics if not car.is_orange else car.inverted_physics
             ball_phys = state.ball if not car.is_orange else state.inverted_ball
 
-            delta = ball_phys.position - car_phys.position
-            dist = np.linalg.norm(delta)
-            if dist < 1e-6:
-                rewards[agent] = 0.0
-                continue
+            dist = np.linalg.norm(ball_phys.position - car_phys.position)
 
-            dir_to_ball = delta / dist
-            speed = max(np.dot(car_phys.linear_velocity, dir_to_ball), 0.0)
-            dist_factor = np.exp(-dist / 3000)
+            prev = self.prev_dist.get(agent, dist)
+            delta = prev - dist  # positive = approaching
 
-            rewards[agent] = (speed / common_values.CAR_MAX_SPEED) * dist_factor
+            # deadzone to prevent jitter farming
+            if abs(delta) < 5:
+                delta = 0.0
+
+            rewards[agent] = np.clip(delta / 500.0, 0.0, 0.05)
+            self.prev_dist[agent] = dist
 
         return rewards
 
 
 class BallControlReward(RewardFunction):
-    """Encourage staying close to the ball."""
+    """
+    Reward staying close to the ball *after* touching it.
+    """
 
-    def reset(
-        self,
-        agents: list,
-        initial_state: Any,
-        shared_info: dict[str, Any],
-    ) -> None:
+    def reset(self, agents, initial_state, shared_info):
         pass
 
-    def get_rewards(
-        self,
-        agents: List[AgentID],
-        state: GameState,
-        is_terminated: dict[AgentID, bool],
-        is_truncated: dict[AgentID, bool],
-        shared_info: dict[str, Any],
-    ) -> dict[AgentID, RewardType]:
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
         rewards = {}
+
         for agent in agents:
             car = state.cars[agent]
+
+            if car.ball_touches == 0:
+                rewards[agent] = 0.0
+                continue
+
             dist = np.linalg.norm(car.physics.position - state.ball.position)
-            rewards[agent] = np.exp(-dist / 1200)
+            rewards[agent] = np.exp(-dist / 1000.0)
+
         return rewards
 
 
 class GoalSideReward(RewardFunction):
-    """Reward staying between the ball and your own goal."""
+    """
+    Reward moving to the correct side of the ball, not camping there.
+    """
 
-    def reset(
-        self,
-        agents: list,
-        initial_state: Any,
-        shared_info: dict[str, Any],
-    ) -> None:
-        pass
+    def reset(self, agents, initial_state, shared_info):
+        self.prev_delta = {}
 
-    def get_rewards(
-        self,
-        agents: List[AgentID],
-        state: GameState,
-        is_terminated: dict[AgentID, bool],
-        is_truncated: dict[AgentID, bool],
-        shared_info: dict[str, Any],
-    ) -> dict[AgentID, RewardType]:
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
         rewards = {}
 
         for agent in agents:
@@ -339,37 +423,35 @@ class GoalSideReward(RewardFunction):
             car_dist = abs(car.physics.position[1] - goal_y)
             ball_dist = abs(ball.position[1] - goal_y)
 
-            rewards[agent] = float(car_dist < ball_dist)
+            delta = ball_dist - car_dist  # positive = good position
+            prev = self.prev_delta.get(agent, delta)
+
+            improvement = delta - prev
+
+            rewards[agent] = np.clip(improvement / 500.0, 0.0, 0.03)
+            self.prev_delta[agent] = delta
 
         return rewards
 
 
 class BoostEfficiencyReward(RewardFunction):
-    """Encourage useful boost usage."""
+    """
+    Reward maintaining speed efficiently (not boost-spamming).
+    """
 
-    def reset(
-        self,
-        agents: list,
-        initial_state: Any,
-        shared_info: dict[str, Any],
-    ) -> None:
+    def reset(self, agents, initial_state, shared_info):
         pass
 
-    def get_rewards(
-        self,
-        agents: List[AgentID],
-        state: GameState,
-        is_terminated: dict[AgentID, bool],
-        is_truncated: dict[AgentID, bool],
-        shared_info: dict[str, Any],
-    ) -> dict[AgentID, RewardType]:
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
         rewards = {}
+
         for agent in agents:
             car = state.cars[agent]
             speed = np.linalg.norm(car.physics.linear_velocity)
-            rewards[agent] = (speed / common_values.CAR_MAX_SPEED) * (
-                car.boost_amount / 100.0
-            )
+            boost_frac = car.boost_amount / 100.0
+
+            rewards[agent] = (speed / common_values.CAR_MAX_SPEED) * (1.0 - boost_frac)
+
         return rewards
 
 
@@ -511,7 +593,7 @@ def build_rlgym_v2_env():
     action_parser = RepeatAction(LookupTableAction(), repeats=8)
 
     reward_fn = CombinedReward(
-        (GoalReward(), 10.0),
+        (SignedGoalReward(), 10.0),
         (ShotReward(), 1.0),
         (BallControlReward(), 0.3),
         (GoalSideReward(), 0.2),

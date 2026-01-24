@@ -12,19 +12,19 @@ import torch.nn as nn
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
-# Uses the same lookup table as training
+# Must match training: LookupTableAction wrapped by RepeatAction(repeats=8)
 from rlgym.rocket_league.action_parsers import LookupTableAction
 
 
 # ----------------------------
-# Constants (match RLGym common_values)
+# Constants (match rlgym.rocket_league.common_values)
 # ----------------------------
 SIDE_WALL_X = 4096.0
 BACK_NET_Y = 5120.0
 CEILING_Z = 2044.0
 
 CAR_MAX_SPEED = 2300.0
-CAR_MAX_ANG_VEL = 5.5  # matches typical rlgym common_values
+CAR_MAX_ANG_VEL = 5.5
 BALL_MAX_SPEED = 6000.0
 
 POS_COEF = np.array(
@@ -35,9 +35,14 @@ ANG_VEL_COEF = 1.0 / CAR_MAX_ANG_VEL
 BALL_VEL_COEF = 1.0 / BALL_MAX_SPEED
 BOOST_COEF = 1.0 / 100.0
 
+# Training SharedObs uses this:
+# max_dist = norm([SIDE_WALL_X, BACK_NET_Y, CEILING_Z])
+DIST_COEF = 1.0 / float(np.linalg.norm([SIDE_WALL_X, BACK_NET_Y, CEILING_Z]))
+
 
 # ----------------------------
-# Network (must match Learner policy_layer_sizes)
+# Network (MUST match training Learner.policy_layer_sizes)
+# policy_layer_sizes=(512, 512, 256)
 # ----------------------------
 class MLPPolicy(nn.Module):
     def __init__(self, obs_dim: int, act_dim: int, hidden_sizes: list[int]):
@@ -63,8 +68,7 @@ def _find_key(d: dict[str, Any], candidates: list[str]) -> Optional[str]:
 
 
 # ----------------------------
-# Rotation -> forward/up vectors (RLBot packet gives pitch/yaw/roll)
-# Standard Rocket League orientation formulas.
+# RL orientation helpers (packet gives pitch/yaw/roll)
 # ----------------------------
 def forward_vector(pitch: float, yaw: float) -> np.ndarray:
     cp = math.cos(pitch)
@@ -81,7 +85,6 @@ def up_vector(pitch: float, yaw: float, roll: float) -> np.ndarray:
     sy = math.sin(yaw)
     cr = math.cos(roll)
     sr = math.sin(roll)
-    # Up vector derived from RL orientation
     return np.array(
         [
             cr * sp * cy + sr * sy,
@@ -93,7 +96,7 @@ def up_vector(pitch: float, yaw: float, roll: float) -> np.ndarray:
 
 
 def invert_xy(v: np.ndarray) -> np.ndarray:
-    # Match RLGym "inverted" perspective: x,y flip, z unchanged
+    # Match rlgym "inverted" perspective: x,y flip, z unchanged
     v2 = v.copy()
     v2[0] = -v2[0]
     v2[1] = -v2[1]
@@ -107,21 +110,20 @@ class BotBoi(BaseAgent):
     def initialize_agent(self):
         bot_dir = os.path.dirname(__file__)
 
-        # Action lookup table (same as training)
+        # Action lookup table (must match training LookupTableAction)
         self.action_parser = LookupTableAction()
-        self.action_table = (
-            self.action_parser._lookup_table
-        )  # stable internal detail in rlgym
+        # rlgym stores the LUT internally; this is stable-enough in practice
+        self.action_table = self.action_parser._lookup_table
 
-        # Load bookkeeping if available (helps confirm act/obs dims)
+        # Load bookkeeping if available (helps confirm act_dim)
         book_path = os.path.join(bot_dir, "BOOK_KEEPING_VARS.json")
         book: dict[str, Any] = {}
         if os.path.exists(book_path):
             with open(book_path, "r", encoding="utf-8") as f:
                 book = json.load(f)
 
-        # Our obs is fixed (from SharedObs): 31 floats
-        self.obs_dim = 31
+        # MUST match training SharedObs.get_obs_space(): shape=(48,)
+        self.obs_dim = 47
 
         # Determine act_dim
         act_key = _find_key(book, ["action_dim", "action_size", "n_actions", "act_dim"])
@@ -136,8 +138,10 @@ class BotBoi(BaseAgent):
                 "If these differ, your actions won't map correctly."
             )
 
-        # Policy net sizes (must match training)
-        hidden_sizes = [2048, 2048, 1024, 1024]
+        # MUST match training Learner.policy_layer_sizes=(512, 512, 256)
+        hidden_sizes = [512, 512, 256]
+
+        # Use CPU for RLBot by default (stable, no GPU dependency)
         self.device = torch.device("cpu")
         self.policy = MLPPolicy(self.obs_dim, self.act_dim, hidden_sizes).to(
             self.device
@@ -145,16 +149,25 @@ class BotBoi(BaseAgent):
 
         policy_path = os.path.join(bot_dir, "PPO_POLICY.pt")
         state = torch.load(policy_path, map_location=self.device)
+
+        # If your training saved a dict with extra keys, this helps
+        if isinstance(state, dict) and "state_dict" in state:
+            state = state["state_dict"]
+
         self.policy.load_state_dict(state)
         self.policy.eval()
 
-        # Mimic RepeatAction(..., repeats=8) by holding chosen discrete action for 8 ticks
+        # Mimic RepeatAction(LookupTableAction(), repeats=8)
         self.hold_ticks = 8
         self._hold_counter = 0
         self._held_action_index = 0
 
         print(f"[BotBoi] Loaded policy. obs_dim={self.obs_dim}, act_dim={self.act_dim}")
 
+    # ----------------------------
+    # Build EXACT SharedObs (training) observation in RLBot:
+    # returns shape (48,)
+    # ----------------------------
     def build_obs(self, packet: GameTickPacket) -> np.ndarray:
         me = packet.game_cars[self.index]
         ball = packet.game_ball
@@ -165,6 +178,9 @@ class BotBoi(BaseAgent):
             if i != self.index:
                 opp = packet.game_cars[i]
                 break
+        if opp is None:
+            # fallback (shouldn't happen in 1v1)
+            opp = me
 
         # --- self raw ---
         car_pos = np.array(
@@ -183,11 +199,12 @@ class BotBoi(BaseAgent):
             ],
             dtype=np.float32,
         )
+
         pitch = float(me.physics.rotation.pitch)
         yaw = float(me.physics.rotation.yaw)
         roll = float(me.physics.rotation.roll)
-        fwd = forward_vector(pitch, yaw)
-        up = up_vector(pitch, yaw, roll)
+        car_fwd = forward_vector(pitch, yaw)
+        car_up = up_vector(pitch, yaw, roll)
 
         boost = float(me.boost)
         on_ground = 1.0 if me.has_wheel_contact else 0.0
@@ -203,38 +220,25 @@ class BotBoi(BaseAgent):
         )
 
         # --- opp raw ---
-        if opp is None:
-            opp_pos = np.zeros(3, dtype=np.float32)
-            opp_vel = np.zeros(3, dtype=np.float32)
-            opp_boost = 0.0
-            opp_ground = 0.0
-        else:
-            opp_pos = np.array(
-                [
-                    opp.physics.location.x,
-                    opp.physics.location.y,
-                    opp.physics.location.z,
-                ],
-                dtype=np.float32,
-            )
-            opp_vel = np.array(
-                [
-                    opp.physics.velocity.x,
-                    opp.physics.velocity.y,
-                    opp.physics.velocity.z,
-                ],
-                dtype=np.float32,
-            )
-            opp_boost = float(opp.boost)
-            opp_ground = 1.0 if opp.has_wheel_contact else 0.0
+        opp_pos = np.array(
+            [opp.physics.location.x, opp.physics.location.y, opp.physics.location.z],
+            dtype=np.float32,
+        )
+        opp_vel = np.array(
+            [opp.physics.velocity.x, opp.physics.velocity.y, opp.physics.velocity.z],
+            dtype=np.float32,
+        )
+        opp_boost = float(opp.boost)
+        opp_ground = 1.0 if opp.has_wheel_contact else 0.0
 
         # --- invert perspective for orange to match training ---
-        if self.team == 1:  # orange
+        # Training uses inverted_physics/inverted_ball for orange.
+        if self.team == 1:
             car_pos = invert_xy(car_pos)
             car_vel = invert_xy(car_vel)
             car_ang_vel = invert_xy(car_ang_vel)
-            fwd = invert_xy(fwd)
-            up = invert_xy(up)
+            car_fwd = invert_xy(car_fwd)
+            car_up = invert_xy(car_up)
 
             ball_pos = invert_xy(ball_pos)
             ball_vel = invert_xy(ball_vel)
@@ -242,34 +246,72 @@ class BotBoi(BaseAgent):
             opp_pos = invert_xy(opp_pos)
             opp_vel = invert_xy(opp_vel)
 
+        # --- relations (must match SharedObs) ---
+        to_ball = ball_pos - car_pos
+        to_ball_dist = float(np.linalg.norm(to_ball))
+        to_ball_dir = (to_ball / (to_ball_dist + 1e-6)).astype(np.float32)
+
+        to_opp = opp_pos - car_pos
+        to_opp_dist = float(np.linalg.norm(to_opp))
+        to_opp_dir = (to_opp / (to_opp_dist + 1e-6)).astype(np.float32)
+
+        # IMPORTANT: training computes goal_y AFTER inversion:
+        # goal_y = (-BACK_NET_Y if car.is_orange else BACK_NET_Y)
+        # We already inverted world for orange, so goal_y is always +BACK_NET_Y here.
+        goal_pos = np.array([0.0, BACK_NET_Y, 0.0], dtype=np.float32)
+
+        ball_to_goal = goal_pos - ball_pos
+        ball_to_goal_dist = float(np.linalg.norm(ball_to_goal))
+        ball_to_goal_dir = (ball_to_goal / (ball_to_goal_dist + 1e-6)).astype(
+            np.float32
+        )
+
+        rel_ball_vel = (ball_vel - car_vel) * BALL_VEL_COEF
+
+        approach_speed = float(np.dot(car_vel, to_ball_dir) / CAR_MAX_SPEED)
+
         # --- normalize exactly like training SharedObs ---
         obs = np.concatenate(
             [
+                # self
                 car_pos * POS_COEF,
                 car_vel * LIN_VEL_COEF,
-                fwd,
-                up,
+                car_fwd,
+                car_up,
                 car_ang_vel * ANG_VEL_COEF,
                 np.array([boost * BOOST_COEF], dtype=np.float32),
                 np.array([on_ground], dtype=np.float32),
+                # ball
                 ball_pos * POS_COEF,
                 ball_vel * BALL_VEL_COEF,
-                opp_pos * POS_COEF,
-                opp_vel * LIN_VEL_COEF,
+                rel_ball_vel.astype(np.float32),
+                # opponent (relative)
+                (opp_pos - car_pos) * POS_COEF,
+                (opp_vel - car_vel) * LIN_VEL_COEF,
                 np.array([opp_boost * BOOST_COEF], dtype=np.float32),
                 np.array([opp_ground], dtype=np.float32),
+                # relations
+                to_ball_dir,
+                np.array([to_ball_dist * DIST_COEF], dtype=np.float32),
+                to_opp_dir,
+                np.array([to_opp_dist * DIST_COEF], dtype=np.float32),
+                ball_to_goal_dir,
+                np.array([ball_to_goal_dist * DIST_COEF], dtype=np.float32),
+                np.array([approach_speed], dtype=np.float32),
             ],
             axis=0,
         ).astype(np.float32)
 
-        # Safety: ensure shape matches what policy expects
+        # Safety check
         if obs.shape[0] != self.obs_dim:
-            # This should never happen if you didn't change SharedObs.
             print(f"[BotBoi] ERROR: obs_len={obs.shape[0]} expected={self.obs_dim}")
             return np.zeros((self.obs_dim,), dtype=np.float32)
 
         return obs
 
+    # ----------------------------
+    # Discrete action index -> RLBot controller
+    # ----------------------------
     def action_index_to_controls(self, action_index: int) -> SimpleControllerState:
         a = self.action_table[action_index]
         c = SimpleControllerState()
@@ -283,13 +325,16 @@ class BotBoi(BaseAgent):
         c.handbrake = bool(a[7])
         return c
 
-    def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
-        # Hold action for N ticks to mimic RepeatAction(repeats=8)
+    # ----------------------------
+    # RLBot step
+    # ----------------------------
+    def get_output(self, game_tick_packet: GameTickPacket) -> SimpleControllerState:
+        # Mimic RepeatAction(repeats=8) by holding chosen action for 8 ticks
         if self._hold_counter > 0:
             self._hold_counter -= 1
             return self.action_index_to_controls(self._held_action_index)
 
-        obs = self.build_obs(packet)
+        obs = self.build_obs(game_tick_packet)
         obs_t = torch.from_numpy(obs).float().to(self.device)
 
         with torch.no_grad():
@@ -297,5 +342,5 @@ class BotBoi(BaseAgent):
             action_index = int(torch.argmax(logits).item())
 
         self._held_action_index = action_index
-        self._hold_counter = self.hold_ticks - 1  # we use it immediately this tick
+        self._hold_counter = self.hold_ticks - 1  # use immediately this tick
         return self.action_index_to_controls(action_index)
