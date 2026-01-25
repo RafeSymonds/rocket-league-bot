@@ -82,7 +82,13 @@ class EpisodeLogger:
         self.global_ts = 0
         self.episode_idx = 0
 
+        self.last_episodes = []
+        self.curriculum = None
+
         self._reset_episode()
+
+    def set_curriculum(self, curriculum):
+        self.curriculum = curriculum
 
     # --------------------------------------------------
     # Episode bookkeeping
@@ -242,6 +248,24 @@ class EpisodeLogger:
                     f"no_touch={int(self.ended_by_no_touch)} "
                     f"t_goal={self.goal_step}"
                 )
+
+            self.last_episodes.append(
+                {
+                    "touched": self.ball_touches > 0,
+                    "t_first": self.first_touch_step or 9999,
+                }
+            )
+
+            if len(self.last_episodes) >= 50 and self.curriculum is not None:
+                recent = self.last_episodes[-50:]
+                touch_rate = sum(e["touched"] for e in recent) / len(recent)
+                median_t_first = np.median([e["t_first"] for e in recent])
+
+                stats = type("Stats", (), {})()
+                stats.touch_rate = touch_rate
+                stats.median_t_first = median_t_first
+
+                self.curriculum.maybe_advance(stats)
 
             self._reset_episode()
 
@@ -821,6 +845,86 @@ class DistanceReductionReward(RewardFunction):
 
 
 # ==================================================
+# Curriculum utilities (LIVE, no restart)
+# ==================================================
+
+
+class CurriculumValue:
+    def __init__(self, value: float):
+        self.value = value
+
+    def get(self) -> float:
+        return self.value
+
+    def set(self, value: float) -> None:
+        self.value = value
+
+
+class CurriculumManager:
+    def __init__(self, min_dist, max_dist, max_angle, ball_velocity, p_easy_reset):
+        self.min_dist = min_dist
+        self.max_dist = max_dist
+        self.max_angle = max_angle
+        self.ball_velocity = ball_velocity
+        self.p_easy_reset = p_easy_reset
+        self.stage = 0
+
+    def maybe_advance(self, stats):
+        """
+        stats must contain:
+          - touch_rate (0–1)
+          - median_t_first
+        """
+
+        if self.stage == 0 and stats.touch_rate > 0.85:
+            print("➡️ Stage 1: farther + some kickoffs")
+            self.min_dist.set(500)
+            self.max_dist.set(900)
+            self.p_easy_reset.set(0.8)
+            self.stage += 1
+
+        elif self.stage == 1 and stats.touch_rate > 0.80:
+            print("➡️ Stage 2: wider angles")
+            self.max_angle.set(45)
+            self.p_easy_reset.set(0.6)
+            self.stage += 1
+
+        elif self.stage == 2 and stats.touch_rate > 0.75:
+            print("➡️ Stage 3: moving ball + more kickoffs")
+            self.ball_velocity.set(100)
+            self.p_easy_reset.set(0.4)
+            self.stage += 1
+
+        elif self.stage == 3 and stats.touch_rate > 0.70:
+            print("➡️ Stage 4: mostly real kickoffs")
+            self.p_easy_reset.set(0.2)
+            self.stage += 1
+
+        elif self.stage == 4 and stats.touch_rate > 0.65:
+            print("➡️ Stage 5: full real resets")
+            self.p_easy_reset.set(0.0)
+            self.stage += 1
+
+
+class ProgressiveResetMutator(StateMutator):
+    def __init__(
+        self,
+        easy_mutator: StateMutator,
+        p_easy: CurriculumValue,
+    ):
+        self.easy_mutator = easy_mutator
+        self.p_easy = p_easy
+
+    @override
+    def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
+        # Decide which reset to use
+        if np.random.rand() < self.p_easy.get():
+            # Easy curriculum reset
+            self.easy_mutator.apply(state, shared_info)
+        # else: do nothing → KickoffMutator will handle it
+
+
+# ==================================================
 # Env builder
 # ==================================================
 
@@ -828,36 +932,35 @@ class DistanceReductionReward(RewardFunction):
 class BallNearCarMutator(StateMutator):
     def __init__(
         self,
-        min_dist: float = 500.0,
-        max_dist: float = 700.0,
-        max_angle_deg: float = 20.0,
+        min_dist: CurriculumValue,
+        max_dist: CurriculumValue,
+        max_angle_deg: CurriculumValue,
+        ball_velocity: CurriculumValue,
     ):
         self.min_dist = min_dist
         self.max_dist = max_dist
-        self.max_angle = np.deg2rad(max_angle_deg)
+        self.max_angle = max_angle_deg
+        self.ball_velocity = ball_velocity
 
     @override
     def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
-        # Pick first car (single-agent bootstrap)
         car = next(iter(state.cars.values()))
-        car_phys = car.physics
+        phys = car.physics
 
-        car_pos = car_phys.position
-        forward = car_phys.forward
-        right = car_phys.right
+        forward = phys.forward
+        right = phys.right
 
-        # Sample random distance + horizontal angle
-        dist = np.random.uniform(self.min_dist, self.max_dist)
-        angle = np.random.uniform(-self.max_angle, self.max_angle)
+        dist = np.random.uniform(self.min_dist.get(), self.max_dist.get())
+        angle = np.deg2rad(
+            np.random.uniform(-self.max_angle.get(), self.max_angle.get())
+        )
 
-        # Forward rotated in horizontal plane
         dir_vec = np.cos(angle) * forward + np.sin(angle) * right
         dir_vec /= np.linalg.norm(dir_vec)
 
-        # Candidate position
-        pos = car_pos + dir_vec * dist
+        pos = phys.position + dir_vec * dist
 
-        # --- CLAMP INSIDE FIELD (CRITICAL) ---
+        # --- Clamp INSIDE FIELD ---
         pos[0] = np.clip(
             pos[0],
             -common_values.SIDE_WALL_X + 200,
@@ -868,12 +971,21 @@ class BallNearCarMutator(StateMutator):
             -common_values.BACK_NET_Y + 200,
             common_values.BACK_NET_Y - 200,
         )
-        pos[2] = common_values.BALL_RADIUS  # on ground, not embedded
+        pos[2] = common_values.BALL_RADIUS
 
-        # Apply
         state.ball.position[:] = pos
-        state.ball.linear_velocity[:] = 0.0
         state.ball.angular_velocity[:] = 0.0
+
+        v = self.ball_velocity.get()
+        if v > 0.0:
+            vel_dir = np.array(
+                [np.random.uniform(-1, 1), np.random.uniform(-1, 1), 0.0],
+                dtype=np.float32,
+            )
+            vel_dir /= np.linalg.norm(vel_dir)
+            state.ball.linear_velocity[:] = vel_dir * v
+        else:
+            state.ball.linear_velocity[:] = 0.0
 
 
 class TouchDoneCondition(DoneCondition[AgentID, GameState]):
@@ -935,11 +1047,35 @@ def build_rlgym_v2_env():
         (NoTouchTimeoutPressure(), 0.1),
     )
 
+    min_dist = CurriculumValue(300)
+    max_dist = CurriculumValue(600)
+    max_angle = CurriculumValue(20)
+    ball_velocity = CurriculumValue(0.0)
+    p_easy_reset = CurriculumValue(1.0)
+
+    curriculum = CurriculumManager(
+        min_dist,
+        max_dist,
+        max_angle,
+        ball_velocity,
+        p_easy_reset,
+    )
+
+    reset_mutator = ProgressiveResetMutator(
+        easy_mutator=BallNearCarMutator(
+            min_dist,
+            max_dist,
+            max_angle,
+            ball_velocity,
+        ),
+        p_easy=p_easy_reset,
+    )
+
     env = RLGym(
         state_mutator=MutatorSequence(
             FixedTeamSizeMutator(1, 0),  # how many players
             KickoffMutator(),
-            BallNearCarMutator(),
+            reset_mutator,
         ),
         obs_builder=SharedObs(),
         action_parser=action_parser,
@@ -956,6 +1092,7 @@ def build_rlgym_v2_env():
 
     logger = TBLogger("runs/shot_bot_v2")
     wrapped = EpisodeLogger(base, logger, print_every=10)
+    wrapped.set_curriculum(curriculum)
     return wrapped
 
 
