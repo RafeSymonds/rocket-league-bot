@@ -615,10 +615,6 @@ class SuccessfulDefenseReward(TouchBasedRewardBase):
 
 
 class SpeedTowardBallReward(RewardFunction):
-    """
-    Reward reducing distance to the ball, with deadzone.
-    """
-
     def reset(self, agents, initial_state, shared_info):
         self.prev_dist: Dict[AgentID, float] = {}
 
@@ -639,12 +635,14 @@ class SpeedTowardBallReward(RewardFunction):
 
             dist = float(np.linalg.norm(ball_phys.position - car_phys.position))
             prev = float(self.prev_dist.get(agent, dist))
-            delta = prev - dist
+            delta = prev - dist  # positive if moving toward ball
 
-            if abs(delta) < 5.0:
-                delta = 0.0
+            # distance-based fade: near ball → less shaping
+            fade = np.clip(dist / 1500.0, 0.0, 1.0)
 
-            rewards[agent] = float(np.clip(delta / 500.0, 0.0, 0.05))
+            reward = (delta / 500.0) * fade
+            rewards[agent] = float(np.clip(reward, 0.0, 0.05))
+
             self.prev_dist[agent] = dist
 
         return rewards
@@ -903,22 +901,30 @@ def build_rlgym_v2_env():
     action_parser = RepeatAction(LookupTableAction(), repeats=4)
 
     reward_fn = CombinedReward(
-        # win condition
-        (SignedGoalReward(), 10.0),
+        # ─────────────────────────────────────────
+        # TERMINAL OBJECTIVE (rare but decisive)
+        # ─────────────────────────────────────────
+        (SignedGoalReward(), 25.0),
         (FastGoalBonus(), 5.0),
-        # shaping toward scoring
-        (BallNetProgressReward(), 1.0),
-        # commitment signals (new-touch based)
-        (ShotReward(), 0.5),
-        (PowerHitReward(), 0.25),
-        (TouchReward(), 5),
-        # defense shaping (small)
+        # ─────────────────────────────────────────
+        # CORE SKILL SIGNALS (must dominate early)
+        # ─────────────────────────────────────────
+        (TouchReward(), 6.0),  # primary learning driver
+        (ShotReward(), 1.0),  # encourages forward hits
+        (PowerHitReward(), 0.5),  # discourages soft dribbles
+        # ─────────────────────────────────────────
+        # SHAPING (kept SMALL)
+        # ─────────────────────────────────────────
+        (BallNetProgressReward(), 0.5),  # direction, not farming
+        (SpeedTowardBallReward(), 0.3),  # approach only
+        # ─────────────────────────────────────────
+        # DEFENSE (harmless in 1v0, useful later)
+        # ─────────────────────────────────────────
         (SuccessfulDefenseReward(), 0.25),
-        # approach shaping
-        (SpeedTowardBallReward(), 1),
-        # anti-stall (mild + gated)
-        (NoTouchProximityPenalty(), 0.05),
-        (StepPenalty(), 0.1),
+        # ─────────────────────────────────────────
+        # ANTI-STALL (very mild)
+        # ─────────────────────────────────────────
+        (NoTouchProximityPenalty(), 0.02),
     )
 
     env = RLGym(
@@ -931,7 +937,7 @@ def build_rlgym_v2_env():
         reward_fn=reward_fn,
         termination_cond=GoalCondition(),
         truncation_cond=AnyCondition(
-            NoTouchTimeoutCondition(30),
+            NoTouchTimeoutCondition(10),
             TimeoutCondition(300),
         ),
         transition_engine=RocketSimEngine(),
