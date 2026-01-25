@@ -968,45 +968,125 @@ def make_stage_config(stage: Stage) -> StageConfig:
     )
 
 
-def build_reward_fn(cfg: StageConfig) -> RewardFunction:
-    # only include goal rewards if relevant
-    parts: list[tuple[RewardFunction, float]] = []
+class CurriculumReward(RewardFunction):
+    def __init__(self, stage_ref):
+        self.stage_ref = stage_ref
 
-    if cfg.w_goal > 0.0:
-        parts.append((SignedGoalReward(), cfg.w_goal))
-    if cfg.w_fast_goal > 0.0:
-        parts.append((FastGoalBonus(), cfg.w_fast_goal))
+        # underlying rewards (created once)
+        self.goal = SignedGoalReward()
+        self.fast_goal = FastGoalBonus()
+        self.shot = ShotReward()
+        self.touch = TouchReward()
+        self.power = PowerHitReward()
+        self.progress = BallNetProgressReward()
+        self.approach = SpeedTowardBallReward()
+        self.dist = DistanceReductionReward()
+        self.step = StepPenalty()
+        self.notouch = NoTouchTimeoutPressure()
 
-    parts += [
-        (ShotReward(), cfg.w_shot),
-        (TouchReward(), cfg.w_touch),
-        (PowerHitReward(), cfg.w_power),
-        (BallNetProgressReward(), cfg.w_progress),
-        (SpeedTowardBallReward(), cfg.w_approach),
-        (DistanceReductionReward(), cfg.w_dist),
-        (StepPenalty(), cfg.w_step_penalty),
-        (NoTouchTimeoutPressure(), cfg.w_notouch_pressure),
-    ]
+    def reset(self, agents, initial_state, shared_info):
+        for r in (
+            self.goal,
+            self.fast_goal,
+            self.shot,
+            self.touch,
+            self.power,
+            self.progress,
+            self.approach,
+            self.dist,
+            self.step,
+            self.notouch,
+        ):
+            r.reset(agents, initial_state, shared_info)
 
-    return CombinedReward(*parts)
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
+        stage = self.stage_ref.stage
+
+        if stage == Stage.TOUCH:
+            weights = dict(
+                goal=0.0,
+                fast_goal=0.0,
+                shot=6.0,
+                touch=2.0,
+                power=0.5,
+                progress=0.2,
+                approach=0.2,
+                dist=0.1,
+                step=1.0,
+                notouch=0.1,
+            )
+
+        elif stage == Stage.SCORE:
+            weights = dict(
+                goal=60.0,
+                fast_goal=15.0,
+                shot=8.0,
+                touch=1.0,
+                power=0.3,
+                progress=0.15,
+                approach=0.10,
+                dist=0.05,
+                step=0.2,
+                notouch=0.03,
+            )
+
+        else:  # SELFPLAY
+            weights = dict(
+                goal=35.0,
+                fast_goal=8.0,
+                shot=6.0,
+                touch=1.0,
+                power=0.3,
+                progress=0.10,
+                approach=0.05,
+                dist=0.05,
+                step=0.2,
+                notouch=0.02,
+            )
+
+        rewards = {a: 0.0 for a in agents}
+
+        def add(rwd, w):
+            if w == 0.0:
+                return
+            vals = rwd.get_rewards(
+                agents, state, is_terminated, is_truncated, shared_info
+            )
+            for a in agents:
+                rewards[a] += w * vals[a]
+
+        add(self.goal, weights["goal"])
+        add(self.fast_goal, weights["fast_goal"])
+        add(self.shot, weights["shot"])
+        add(self.touch, weights["touch"])
+        add(self.power, weights["power"])
+        add(self.progress, weights["progress"])
+        add(self.approach, weights["approach"])
+        add(self.dist, weights["dist"])
+        add(self.step, weights["step"])
+        add(self.notouch, weights["notouch"])
+
+        return rewards
 
 
-def build_done_conditions(cfg: StageConfig):
-    # termination
-    if cfg.end_on_touch:
-        termination = TouchDoneCondition()
-    elif cfg.end_on_goal:
-        termination = GoalCondition()
-    else:
-        # fallback: never terminate (not recommended)
-        termination = GoalCondition()
+class CurriculumDoneCondition(DoneCondition[AgentID, GameState]):
+    def __init__(self, stage_ref):
+        self.stage_ref = stage_ref
+        self.touch_done = TouchDoneCondition()
+        self.goal_done = GoalCondition()
 
-    # truncation: no-touch + timeout
-    truncation = AnyCondition(
-        NoTouchTimeoutCondition(cfg.no_touch_timeout_s),
-        TimeoutCondition(cfg.timeout_s),
-    )
-    return termination, truncation
+    def reset(self, agents, initial_state, shared_info):
+        self.touch_done.reset(agents, initial_state, shared_info)
+        self.goal_done.reset(agents, initial_state, shared_info)
+
+    def is_done(self, agents, state, shared_info):
+        stage = self.stage_ref.stage
+
+        if stage == Stage.TOUCH:
+            return self.touch_done.is_done(agents, state, shared_info)
+
+        # SCORE and SELFPLAY
+        return self.goal_done.is_done(agents, state, shared_info)
 
 
 class EnvBuilder:
@@ -1025,8 +1105,14 @@ class EnvBuilder:
         cfg = make_stage_config(self.stage)
 
         action_parser = RepeatAction(LookupTableAction(), repeats=2)
-        reward_fn = build_reward_fn(cfg)
-        termination_cond, truncation_cond = build_done_conditions(cfg)
+
+        reward_fn = CurriculumReward(stage_ref=self)
+
+        termination_cond = CurriculumDoneCondition(stage_ref=self)
+        truncation_cond = AnyCondition(
+            NoTouchTimeoutCondition(cfg.no_touch_timeout_s),
+            TimeoutCondition(cfg.timeout_s),
+        )
 
         reset_mutator = ProgressiveResetMutator(
             easy_mutator=BallNearCarMutator(
