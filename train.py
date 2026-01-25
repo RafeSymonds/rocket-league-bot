@@ -2,13 +2,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List
+from typing_extensions import override
 
 import numpy as np
 from gymnasium import spaces
 from torch.utils.tensorboard.writer import SummaryWriter
 
-from rlgym.api import AgentID, RLGym, RewardFunction, ObsBuilder
+from rlgym.api import (
+    AgentID,
+    DoneCondition,
+    RLGym,
+    RewardFunction,
+    ObsBuilder,
+    StateMutator,
+)
 from rlgym.api.typing import AgentID as AgentIDType
 from rlgym.rocket_league import common_values
 from rlgym.rocket_league.action_parsers import LookupTableAction, RepeatAction
@@ -88,9 +96,10 @@ class EpisodeLogger:
         self.ball_touches = 0
         self.shots = 0
         self.power_hits = 0
-        self.goals = 0
         self._prev_goal_scored = False
 
+        self.ended_by_goal = False
+        self.goal_step = None
         self.ended_by_no_touch = False
         self.ended_by_timeout = False
 
@@ -169,9 +178,6 @@ class EpisodeLogger:
 
             self._prev_ball_speed = ball_speed
 
-            if state.goal_scored and not self._prev_goal_scored:
-                self.goals += 1
-
             self._prev_goal_scored = state.goal_scored
 
         # --------------------------------------------------
@@ -183,6 +189,10 @@ class EpisodeLogger:
 
             if self.ball_touches == 0:
                 self.ended_by_no_touch = True
+            elif state is not None and state.goal_scored:
+                self.ended_by_goal = True
+                self.goal_step = self.ep_steps
+
             else:
                 self.ended_by_timeout = True
 
@@ -202,8 +212,12 @@ class EpisodeLogger:
             self.logger.scalar("episode/touches", self.ball_touches, self.global_ts)
             self.logger.scalar("episode/shots", self.shots, self.global_ts)
             self.logger.scalar("episode/power_hits", self.power_hits, self.global_ts)
-            self.logger.scalar("episode/goals", self.goals, self.global_ts)
 
+            self.logger.scalar(
+                "episode/ended_by_goal",
+                int(self.ended_by_goal),
+                self.global_ts,
+            )
             self.logger.scalar(
                 "episode/ended_by_no_touch",
                 int(self.ended_by_no_touch),
@@ -226,7 +240,7 @@ class EpisodeLogger:
                     f"t_first={self.first_touch_step} "
                     f"shots={self.shots:3d} "
                     f"no_touch={int(self.ended_by_no_touch)} "
-                    f"goals={self.goals}"
+                    f"t_goal={self.goal_step}"
                 )
 
             self._reset_episode()
@@ -238,6 +252,202 @@ class EpisodeLogger:
 
 
 # ==================================================
+# Observation (FIXED SHAPE)
+# ==================================================
+
+
+class SharedObs(ObsBuilder):
+    """
+    Agent-centric observation builder with safe derived geometry features.
+    """
+
+    OBS_SIZE = 44
+
+    def __init__(self):
+        super().__init__()
+
+        self.pos_coef = np.array(
+            [
+                1.0 / common_values.SIDE_WALL_X,
+                1.0 / common_values.BACK_NET_Y,
+                1.0 / common_values.CEILING_Z,
+            ],
+            dtype=np.float32,
+        )
+
+        self.car_vel_coef = 1.0 / common_values.CAR_MAX_SPEED
+        self.ball_vel_coef = 1.0 / common_values.BALL_MAX_SPEED
+        self.boost_coef = 1.0 / 100.0
+        self.height_coef = 1.0 / common_values.CEILING_Z
+
+        max_dist = float(
+            np.linalg.norm(
+                [
+                    common_values.SIDE_WALL_X,
+                    common_values.BACK_NET_Y,
+                    common_values.CEILING_Z,
+                ]
+            )
+        )
+        self.dist_coef = 1.0 / max_dist
+
+        # Goal positions in blue-team frame
+        self.blue_goal = np.array([0.0, -common_values.BACK_NET_Y, 0.0], np.float32)
+        self.orange_goal = np.array([0.0, common_values.BACK_NET_Y, 0.0], np.float32)
+
+    # --------------------------------------------------
+    # Helpers
+    # --------------------------------------------------
+
+    @staticmethod
+    def _dir_dist(vec: np.ndarray):
+        dist = float(np.linalg.norm(vec))
+        if dist > 1e-6:
+            return (vec / dist).astype(np.float32), dist
+        return np.zeros(3, dtype=np.float32), 0.0
+
+    def reset(self, agents, initial_state, shared_info):
+        pass
+
+    def get_obs_space(self, agent):
+        return spaces.Box(
+            low=-1.0,
+            high=1.0,
+            shape=(self.OBS_SIZE,),
+            dtype=np.float32,
+        ), None
+
+    # --------------------------------------------------
+    # Main builder
+    # --------------------------------------------------
+
+    def build_obs(self, agents, state: GameState, shared_info):
+        obs: Dict[AgentID, np.ndarray] = {}
+
+        for agent in agents:
+            car = state.cars[agent]
+
+            # Agent-centric frame
+            car_phys = car.inverted_physics if car.is_orange else car.physics
+            ball_phys = state.inverted_ball if car.is_orange else state.ball
+
+            my_goal = self.orange_goal if car.is_orange else self.blue_goal
+            enemy_goal = self.blue_goal if car.is_orange else self.orange_goal
+
+            # --------------------------------------------------
+            # Self
+            # --------------------------------------------------
+            forward = car_phys.forward.astype(np.float32)
+            self_vel = car_phys.linear_velocity * self.car_vel_coef
+
+            # --------------------------------------------------
+            # Ball (relative)
+            # --------------------------------------------------
+            rel_ball_pos = ball_phys.position - car_phys.position
+            rel_ball_vel = ball_phys.linear_velocity - car_phys.linear_velocity
+
+            to_ball_dir, to_ball_dist = self._dir_dist(rel_ball_pos)
+
+            ball_speed = np.linalg.norm(ball_phys.linear_velocity) * self.ball_vel_coef
+            ball_height = ball_phys.position[2] * self.height_coef
+
+            speed_toward_ball = (
+                float(np.dot(car_phys.linear_velocity, to_ball_dir)) * self.car_vel_coef
+            )
+
+            cos_forward_to_ball = float(np.dot(forward, to_ball_dir))
+
+            # Angle: ball → enemy goal
+            ball_to_goal = enemy_goal - ball_phys.position
+            ball_to_goal_dir, _ = self._dir_dist(ball_to_goal)
+            cos_ball_to_goal = float(np.dot(to_ball_dir, ball_to_goal_dir))
+
+            # --------------------------------------------------
+            # Goal distances & directions
+            # --------------------------------------------------
+            to_my_goal_dir, to_my_goal_dist = self._dir_dist(
+                my_goal - car_phys.position
+            )
+            to_enemy_goal_dir, to_enemy_goal_dist = self._dir_dist(
+                enemy_goal - car_phys.position
+            )
+
+            # --------------------------------------------------
+            # Closest opponent (relative)
+            # --------------------------------------------------
+            closest_dist = float("inf")
+            opp_rel_pos = np.zeros(3, np.float32)
+            opp_rel_vel = np.zeros(3, np.float32)
+            to_opp_dir = np.zeros(3, np.float32)
+            to_opp_dist = 0.0
+
+            for other in agents:
+                if other == agent:
+                    continue
+
+                other_car = state.cars[other]
+                if other_car.is_orange == car.is_orange:
+                    continue
+
+                other_phys = (
+                    other_car.inverted_physics if car.is_orange else other_car.physics
+                )
+
+                rel_pos = other_phys.position - car_phys.position
+                d = np.linalg.norm(rel_pos)
+
+                if d < closest_dist:
+                    closest_dist = d
+                    opp_rel_pos = rel_pos
+                    opp_rel_vel = other_phys.linear_velocity - car_phys.linear_velocity
+                    to_opp_dir, to_opp_dist = self._dir_dist(rel_pos)
+
+            # --------------------------------------------------
+            # Assemble observation
+            # --------------------------------------------------
+            vec = np.concatenate(
+                [
+                    # --- Self ---
+                    forward,  # 3
+                    car_phys.up.astype(np.float32),  # 3
+                    self_vel,  # 3
+                    np.array([car.boost_amount * self.boost_coef], np.float32),  # 1
+                    np.array([float(car.on_ground)], np.float32),  # 1
+                    # --- Ball ---
+                    rel_ball_pos * self.pos_coef,  # 3
+                    rel_ball_vel * self.ball_vel_coef,  # 3
+                    to_ball_dir,  # 3
+                    np.array([to_ball_dist * self.dist_coef], np.float32),  # 1
+                    np.array([ball_speed], np.float32),  # 1
+                    np.array([ball_height], np.float32),  # 1
+                    np.array([speed_toward_ball], np.float32),  # 1
+                    np.array([cos_forward_to_ball], np.float32),  # 1
+                    np.array([cos_ball_to_goal], np.float32),  # 1
+                    # --- Goals ---
+                    to_my_goal_dir,  # 3
+                    to_enemy_goal_dir,  # 3
+                    np.array([to_my_goal_dist * self.dist_coef], np.float32),  # 1
+                    np.array([to_enemy_goal_dist * self.dist_coef], np.float32),  # 1
+                    # --- Opponent ---
+                    opp_rel_pos * self.pos_coef,  # 3
+                    opp_rel_vel * self.car_vel_coef,  # 3
+                    to_opp_dir,  # 3
+                    np.array([to_opp_dist * self.dist_coef], np.float32),  # 1
+                ],
+                dtype=np.float32,
+            )
+
+            if vec.shape != (self.OBS_SIZE,):
+                raise ValueError(
+                    f"Obs size mismatch: got {vec.shape}, expected {(self.OBS_SIZE,)}"
+                )
+
+            obs[agent] = vec
+
+        return obs
+
+
+# ==================================================
 # Rewards
 # ==================================================
 
@@ -246,12 +456,17 @@ class SignedGoalReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         pass
 
-    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self,
+        agents,
+        state: GameState,
+        is_terminated,
+        is_truncated,
+        shared_info,
+    ):
         rewards = {a: 0.0 for a in agents}
 
-        goal_now = state.goal_scored and not self.prev_goal
-        self.prev_goal = state.goal_scored
-        if not goal_now:
+        if not state.goal_scored:
             return rewards
 
         scoring_team = state.scoring_team
@@ -267,13 +482,18 @@ class FastGoalBonus(RewardFunction):
         self.steps = 0
         self.prev_goal = False
 
-    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self,
+        agents,
+        state: GameState,
+        is_terminated,
+        is_truncated,
+        shared_info,
+    ):
         self.steps += 1
         rewards = {a: 0.0 for a in agents}
 
-        goal_now = state.goal_scored and not self.prev_goal
-        self.prev_goal = state.goal_scored
-        if not goal_now:
+        if not state.goal_scored:
             return rewards
 
         bonus = float(np.exp(-self.steps / 400.0))
@@ -540,36 +760,25 @@ class SpeedTowardBallReward(RewardFunction):
         return rewards
 
 
-class NoTouchProximityPenalty(RewardFunction):
-    """
-    Penalize stalling near the ball WITHOUT touching it, gated by low speed.
-    (This is intentionally mild so it doesn't teach "avoid the ball".)
-    """
-
+class NoTouchTimeoutPressure(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
-        pass
+        self.steps_since_touch = {a: 0 for a in agents}
+        self.prev_touches = {a: int(initial_state.cars[a].ball_touches) for a in agents}
 
-    def get_rewards(
-        self,
-        agents,
-        state: GameState,
-        is_terminated,
-        is_truncated,
-        shared_info,
-    ):
-        rewards: Dict[AgentID, float] = {}
-
-        for agent in agents:
-            car = state.cars[agent]
-            dist = float(np.linalg.norm(car.physics.position - state.ball.position))
-            speed = float(np.linalg.norm(car.physics.linear_velocity))
-
-            # Only penalize if close, no touches yet, AND basically stalling.
-            if dist < 800.0 and int(car.ball_touches) == 0 and speed < 300.0:
-                rewards[agent] = -0.002
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
+        rewards = {a: 0.0 for a in agents}
+        for a in agents:
+            cur = int(state.cars[a].ball_touches)
+            if cur > self.prev_touches[a]:
+                self.steps_since_touch[a] = 0
             else:
-                rewards[agent] = 0.0
+                self.steps_since_touch[a] += 1
+            self.prev_touches[a] = cur
 
+            # free grace period, then ramp
+            t = self.steps_since_touch[a]
+            if t > 60:
+                rewards[a] = -min(0.002 * (t - 60), 0.2)  # caps at -0.2/step
         return rewards
 
 
@@ -588,199 +797,27 @@ class StepPenalty(RewardFunction):
         return {agent: -0.001 for agent in agents}
 
 
-# ==================================================
-# Observation (FIXED SHAPE)
-# ==================================================
-
-
-class SharedObs(ObsBuilder):
-    """
-    Explicit, symmetric observation vector.
-    """
-
-    OBS_SIZE = 47
-
-    def __init__(self):
-        super().__init__()
-
-        self.pos_coef = np.array(
-            [
-                1.0 / common_values.SIDE_WALL_X,
-                1.0 / common_values.BACK_NET_Y,
-                1.0 / common_values.CEILING_Z,
-            ],
-            dtype=np.float32,
-        )
-
-        self.car_vel_coef = 1.0 / common_values.CAR_MAX_SPEED
-        self.ball_vel_coef = 1.0 / common_values.BALL_MAX_SPEED
-        self.ang_vel_coef = 1.0 / common_values.CAR_MAX_ANG_VEL
-        self.boost_coef = 1.0 / 100.0
-
-        max_dist = float(
-            np.linalg.norm(
-                [
-                    common_values.SIDE_WALL_X,
-                    common_values.BACK_NET_Y,
-                    common_values.CEILING_Z,
-                ]
-            )
-        )
-        self.dist_coef = 1.0 / max_dist
-
-    @staticmethod
-    def _dir_dist(a: np.ndarray, b: np.ndarray):
-        d = b - a
-        dist = float(np.linalg.norm(d))
-        if dist > 1e-6:
-            return (d / dist).astype(np.float32), float(dist)
-        return np.zeros(3, dtype=np.float32), 0.0
-
+class DistanceReductionReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
-        pass
+        self.prev_dist = {}
 
-    def get_obs_space(self, agent):
-        return spaces.Box(
-            low=-1.0,
-            high=1.0,
-            shape=(self.OBS_SIZE,),
-            dtype=np.float32,
-        ), None
-
-    def build_obs(self, agents, state: GameState, shared_info):
-        obs: Dict[AgentID, np.ndarray] = {}
-
-        for agent in agents:
-            car = state.cars[agent]
-
-            car_phys = car.physics if not car.is_orange else car.inverted_physics
-            ball_phys = state.ball if not car.is_orange else state.inverted_ball
-
-            # --------------------------------------------------
-            # Find closest opponent (if any)
-            # --------------------------------------------------
-            closest_opp = None
-            closest_opp_dist = float("inf")
-
-            for other in agents:
-                if other == agent:
-                    continue
-
-                other_car = state.cars[other]
-                if other_car.is_orange == car.is_orange:
-                    continue  # same team → ignore
-
-                other_phys = (
-                    other_car.physics
-                    if not car.is_orange
-                    else other_car.inverted_physics
-                )
-
-                d = np.linalg.norm(other_phys.position - car_phys.position)
-                if d < closest_opp_dist:
-                    closest_opp_dist = d
-                    closest_opp = other
-
-            # --------------------------------------------------
-            # Opponent features (zero-filled if none)
-            # --------------------------------------------------
-            if closest_opp is not None:
-                opp_car = state.cars[closest_opp]
-                opp_phys = (
-                    opp_car.physics if not car.is_orange else opp_car.inverted_physics
-                )
-
-                opp_pos = (opp_phys.position - car_phys.position) * self.pos_coef
-                opp_vel = (
-                    opp_phys.linear_velocity - car_phys.linear_velocity
-                ) * self.car_vel_coef
-                opp_boost = np.array(
-                    [opp_car.boost_amount * self.boost_coef], dtype=np.float32
-                )
-                opp_ground = np.array([float(opp_car.on_ground)], dtype=np.float32)
-
-                to_opp_dir, to_opp_dist = self._dir_dist(
-                    car_phys.position, opp_phys.position
-                )
-                to_opp_dist = np.array([to_opp_dist * self.dist_coef], dtype=np.float32)
-            else:
-                # single-agent or no opponents
-                opp_pos = np.zeros(3, dtype=np.float32)
-                opp_vel = np.zeros(3, dtype=np.float32)
-                opp_boost = np.zeros(1, dtype=np.float32)
-                opp_ground = np.zeros(1, dtype=np.float32)
-                to_opp_dir = np.zeros(3, dtype=np.float32)
-                to_opp_dist = np.zeros(1, dtype=np.float32)
-
-            # --------------------------------------------------
-            # Ball relations
-            # --------------------------------------------------
-            to_ball_dir, to_ball_dist = self._dir_dist(
-                car_phys.position, ball_phys.position
-            )
-
-            goal_y = (
-                -common_values.BACK_NET_Y if car.is_orange else common_values.BACK_NET_Y
-            )
-            goal_pos = np.array([0.0, goal_y, 0.0], dtype=np.float32)
-            ball_to_goal_dir, ball_to_goal_dist = self._dir_dist(
-                ball_phys.position, goal_pos
-            )
-
-            rel_ball_vel = (
-                ball_phys.linear_velocity - car_phys.linear_velocity
-            ) * self.ball_vel_coef
-
-            approach_speed = np.array(
-                [
-                    np.dot(car_phys.linear_velocity, to_ball_dir)
-                    / common_values.CAR_MAX_SPEED
-                ],
-                dtype=np.float32,
-            )
-
-            # --------------------------------------------------
-            # Final observation vector (FIXED SIZE)
-            # --------------------------------------------------
-            vec = np.concatenate(
-                [
-                    # self (17)
-                    car_phys.position * self.pos_coef,  # 3
-                    car_phys.linear_velocity * self.car_vel_coef,  # 3
-                    car_phys.forward.astype(np.float32),  # 3
-                    car_phys.up.astype(np.float32),  # 3
-                    car_phys.angular_velocity * self.ang_vel_coef,  # 3
-                    np.array([car.boost_amount * self.boost_coef], np.float32),  # 1
-                    np.array([float(car.on_ground)], np.float32),  # 1
-                    # ball (9)
-                    ball_phys.position * self.pos_coef,  # 3
-                    ball_phys.linear_velocity * self.ball_vel_coef,  # 3
-                    rel_ball_vel.astype(np.float32),  # 3
-                    # closest opponent (8)
-                    opp_pos,  # 3
-                    opp_vel,  # 3
-                    opp_boost,  # 1
-                    opp_ground,  # 1
-                    # relations (13)
-                    to_ball_dir.astype(np.float32),  # 3
-                    np.array([to_ball_dist * self.dist_coef], np.float32),  # 1
-                    to_opp_dir.astype(np.float32),  # 3
-                    to_opp_dist,  # 1
-                    ball_to_goal_dir.astype(np.float32),  # 3
-                    np.array([ball_to_goal_dist * self.dist_coef], np.float32),  # 1
-                    approach_speed,  # 1
-                ],
-                dtype=np.float32,
-            )
-
-            if vec.shape != (self.OBS_SIZE,):
-                raise ValueError(
-                    f"Obs size mismatch: got {vec.shape}, expected {(self.OBS_SIZE,)}"
-                )
-
-            obs[agent] = vec
-
-        return obs
+    def get_rewards(
+        self,
+        agents,
+        state: GameState,
+        is_terminated,
+        is_truncated,
+        shared_info,
+    ):
+        rewards = {}
+        for a in agents:
+            car = state.cars[a]
+            ball = state.ball
+            d = np.linalg.norm(car.physics.position - ball.position)
+            prev = self.prev_dist.get(a, d)
+            rewards[a] = np.clip((prev - d) / 1000.0, 0.0, 0.05)
+            self.prev_dist[a] = d
+        return rewards
 
 
 # ==================================================
@@ -788,46 +825,126 @@ class SharedObs(ObsBuilder):
 # ==================================================
 
 
+class BallNearCarMutator(StateMutator):
+    def __init__(
+        self,
+        min_dist: float = 500.0,
+        max_dist: float = 700.0,
+        max_angle_deg: float = 20.0,
+    ):
+        self.min_dist = min_dist
+        self.max_dist = max_dist
+        self.max_angle = np.deg2rad(max_angle_deg)
+
+    @override
+    def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
+        # Pick first car (single-agent bootstrap)
+        car = next(iter(state.cars.values()))
+        car_phys = car.physics
+
+        car_pos = car_phys.position
+        forward = car_phys.forward
+        right = car_phys.right
+
+        # Sample random distance + horizontal angle
+        dist = np.random.uniform(self.min_dist, self.max_dist)
+        angle = np.random.uniform(-self.max_angle, self.max_angle)
+
+        # Forward rotated in horizontal plane
+        dir_vec = np.cos(angle) * forward + np.sin(angle) * right
+        dir_vec /= np.linalg.norm(dir_vec)
+
+        # Candidate position
+        pos = car_pos + dir_vec * dist
+
+        # --- CLAMP INSIDE FIELD (CRITICAL) ---
+        pos[0] = np.clip(
+            pos[0],
+            -common_values.SIDE_WALL_X + 200,
+            common_values.SIDE_WALL_X - 200,
+        )
+        pos[1] = np.clip(
+            pos[1],
+            -common_values.BACK_NET_Y + 200,
+            common_values.BACK_NET_Y - 200,
+        )
+        pos[2] = common_values.BALL_RADIUS  # on ground, not embedded
+
+        # Apply
+        state.ball.position[:] = pos
+        state.ball.linear_velocity[:] = 0.0
+        state.ball.angular_velocity[:] = 0.0
+
+
+class TouchDoneCondition(DoneCondition[AgentID, GameState]):
+    """
+    Episode ends when the ball is touched for the first time.
+    """
+
+    def reset(
+        self,
+        agents: List[AgentID],
+        initial_state: GameState,
+        shared_info: Dict[str, Any],
+    ) -> None:
+        self.prev_touches = {a: int(initial_state.cars[a].ball_touches) for a in agents}
+
+    def is_done(
+        self,
+        agents: List[AgentID],
+        state: GameState,
+        shared_info: Dict[str, Any],
+    ) -> Dict[AgentID, bool]:
+        touched = False
+
+        for a in agents:
+            cur = int(state.cars[a].ball_touches)
+            if cur > self.prev_touches.get(a, cur):
+                touched = True
+            self.prev_touches[a] = cur
+
+        return {a: touched for a in agents}
+
+
 def build_rlgym_v2_env():
     # Lower repeats helps a *lot* with early learning/control
-    action_parser = RepeatAction(LookupTableAction(), repeats=4)
+    action_parser = RepeatAction(LookupTableAction(), repeats=2)
 
     reward_fn = CombinedReward(
         # ─────────────────────────────────────────
-        # TERMINAL OBJECTIVE (rare but decisive)
+        # TERMINAL OBJECTIVE (dominates everything)
         # ─────────────────────────────────────────
-        (SignedGoalReward(), 25.0),
-        (FastGoalBonus(), 5.0),
+        (SignedGoalReward(), 40.0),  # scoring ends the episode → must be king
+        (FastGoalBonus(), 10.0),  # faster goals strictly better
         # ─────────────────────────────────────────
-        # CORE SKILL SIGNALS (must dominate early)
+        # CORE SKILL SIGNALS (guidance, not farming)
         # ─────────────────────────────────────────
-        (TouchReward(), 6.0),  # primary learning driver
-        (ShotReward(), 10.0),  # encourages forward hits
-        (PowerHitReward(), 0.5),  # discourages soft dribbles
+        (ShotReward(), 10.0),  # meaningful but < goal
+        (TouchReward(), 2.0),  # learning signal only
+        (PowerHitReward(), 0.5),  # reward decisive contact
         # ─────────────────────────────────────────
-        # SHAPING (kept SMALL)
+        # SHAPING (directional, non-exploitable)
         # ─────────────────────────────────────────
-        (BallNetProgressReward(), 0.5),  # direction, not farming
-        (SpeedTowardBallReward(), 0.3),  # approach only
+        (BallNetProgressReward(), 0.2),  # must correlate with scoring
+        (SpeedTowardBallReward(), 0.2),  # approach help only
+        (DistanceReductionReward(), 0.1),  # approach help only
         # ─────────────────────────────────────────
-        # DEFENSE (harmless in 1v0, useful later)
+        # ANTI-STALL (this matters a LOT)
         # ─────────────────────────────────────────
-        (SuccessfulDefenseReward(), 0.25),
-        # ─────────────────────────────────────────
-        # ANTI-STALL (very mild)
-        # ─────────────────────────────────────────
-        (NoTouchProximityPenalty(), 0.02),
+        (StepPenalty(), 1.0),
+        (NoTouchTimeoutPressure(), 0.1),
     )
 
     env = RLGym(
         state_mutator=MutatorSequence(
             FixedTeamSizeMutator(1, 0),  # how many players
             KickoffMutator(),
+            BallNearCarMutator(),
         ),
         obs_builder=SharedObs(),
         action_parser=action_parser,
         reward_fn=reward_fn,
-        termination_cond=None,
+        termination_cond=TouchDoneCondition(),  # normally GoalCondition()
         truncation_cond=AnyCondition(
             NoTouchTimeoutCondition(10),
             TimeoutCondition(300),
@@ -872,3 +989,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
