@@ -19,7 +19,7 @@ from rlgym.rocket_league.done_conditions import (
     NoTouchTimeoutCondition,
     TimeoutCondition,
 )
-from rlgym.rocket_league.reward_functions import CombinedReward, TouchReward
+from rlgym.rocket_league.reward_functions import CombinedReward, GoalReward, TouchReward
 from rlgym.rocket_league.sim import RocketSimEngine
 from rlgym.rocket_league.state_mutators import (
     FixedTeamSizeMutator,
@@ -52,295 +52,184 @@ class TBLogger:
 # ==================================================
 
 
-@dataclass
-class EpisodeStats:
-    ep: int = 0
-    steps: int = 0
-    return_sum: float = 0.0
+class EpisodeLogger:
+    """
+    Clean per-episode logger with explicit episode semantics.
 
-    goals: int = 0
-    ball_touches: int = 0
+    Logs:
+      - episode length
+      - episode return
+      - time to first touch
+      - touches per episode
+      - shots per episode
+      - power hits per episode
+      - termination reason (goal / no-touch / timeout)
+    """
 
-    shots: int = 0  # touches that create a shot toward opponent goal
-    power_hits: int = 0  # touches that significantly increase ball speed
-    defenses: int = 0  # touches that avert a near-term threat to own goal
+    def __init__(self, env, logger: TBLogger, print_every: int = 10):
+        self.env = env
+        self.logger = logger
+        self.print_every = print_every
 
-    power_sum: float = 0.0  # sum of "power" values for analysis (avg power)
+        self.global_ts = 0
+        self.episode_idx = 0
 
-    def reset_episode_counters(self) -> None:
-        self.steps = 0
-        self.return_sum = 0.0
-        self.goals = 0
+        self._reset_episode()
+
+    # --------------------------------------------------
+    # Episode bookkeeping
+    # --------------------------------------------------
+
+    def _reset_episode(self):
+        self.ep_steps = 0
+        self.ep_return = 0.0
+
+        self.first_touch_step = None
         self.ball_touches = 0
         self.shots = 0
         self.power_hits = 0
-        self.defenses = 0
-        self.power_sum = 0.0
+        self.goals = 0
+        self._prev_goal_scored = False
 
+        self.ended_by_no_touch = False
+        self.ended_by_timeout = False
 
-class GymEpisodeLoggingWrapper:
-    """
-    Logs per-episode skill signals:
-      - goals (team goals during the episode)
-      - touches (new touches only)
-      - shots (new touch + ball velocity toward opponent goal)
-      - power hits (new touch + ball speed jump)
-      - successful defenses (new touch that stops a dangerous ball toward own net)
-      - episodic return + length
-    """
-
-    def __init__(self, env, logger: TBLogger, print_every_episodes: int = 10):
-        self.env = env
-        self.logger = logger
-        self.print_every = print_every_episodes
-
-        self.global_ts = 0
-        self.stats = EpisodeStats()
-
-        # per-agent touch tracking so "touch" means "new touch this step"
         self._prev_touches: Dict[AgentID, int] = {}
+        self._prev_ball_speed = 0.0
 
-        # ball speed tracking for "power hit"
-        self._prev_ball_speed: float = 0.0
-
-        # threat/defense tracking (near own goal + moving toward it)
-        self._prev_ball_dist_to_blue: float = 0.0
-        self._prev_ball_dist_to_orange: float = 0.0
-        self._prev_ball_vel_y: float = 0.0
+    # --------------------------------------------------
+    # Gym API
+    # --------------------------------------------------
 
     def reset(self, **kwargs):
         out = self.env.reset(**kwargs)
 
-        # rlgym_ppo may return obs OR (obs, info)
+        # Handle both obs and (obs, info)
         if isinstance(out, tuple) and len(out) == 2:
             obs, info = out
         else:
-            obs, info = out, None
+            obs, info = out, {}
 
-        self.stats = EpisodeStats()
-        self._prev_touches = {}
-        self._prev_ball_speed = 0.0
-        self._prev_ball_vel_y = 0.0
+        self._reset_episode()
 
-        if isinstance(info, dict):
-            state = info.get("state")
-        else:
-            state = None
-
+        state = info.get("state")
         if state is not None:
             self._prev_ball_speed = float(np.linalg.norm(state.ball.linear_velocity))
-            self._prev_ball_vel_y = float(state.ball.linear_velocity[1])
-
-            self._prev_ball_dist_to_blue = float(
-                np.linalg.norm(
-                    state.ball.position - np.array([0.0, common_values.BACK_NET_Y, 0.0])
-                )
-            )
-            self._prev_ball_dist_to_orange = float(
-                np.linalg.norm(
-                    state.ball.position
-                    - np.array([0.0, -common_values.BACK_NET_Y, 0.0])
-                )
-            )
-
             for a, car in state.cars.items():
                 self._prev_touches[a] = int(car.ball_touches)
 
-        return obs if info is None else (obs, info)
-
-    @staticmethod
-    def _goal_y_for_team(team_is_orange: bool) -> float:
-        # blue scores at +Y, orange scores at -Y
-        return -common_values.BACK_NET_Y if team_is_orange else common_values.BACK_NET_Y
-
-    @staticmethod
-    def _dist_to_goal(ball_pos: np.ndarray, goal_y: float) -> float:
-        return float(np.linalg.norm(ball_pos - np.array([0.0, goal_y, 0.0])))
-
-    @staticmethod
-    def _vel_toward_goal(
-        ball_vel: np.ndarray, ball_pos: np.ndarray, goal_y: float
-    ) -> float:
-        to_goal = np.array([0.0, goal_y, 0.0], dtype=np.float32) - ball_pos.astype(
-            np.float32
-        )
-        n = float(np.linalg.norm(to_goal))
-        if n < 1e-6:
-            return 0.0
-        to_goal /= n
-        return float(np.dot(ball_vel, to_goal))
+        return obs if not info else (obs, info)
 
     def step(self, action):
         obs, reward, terminated, truncated, info = self.env.step(action)
 
-        r = float(np.sum(reward))
-        self.stats.steps += 1
-        self.stats.return_sum += r
         self.global_ts += 1
+        self.ep_steps += 1
+        self.ep_return += float(np.sum(reward))
 
         state: GameState | None = info.get("state")
 
-        # If wrapper isn't passing state, we can still log return/len, but not skill metrics.
+        # --------------------------------------------------
+        # Per-step skill signals
+        # --------------------------------------------------
         if state is not None:
-            ball = state.ball
-            ball_speed = float(np.linalg.norm(ball.linear_velocity))
+            ball_speed = float(np.linalg.norm(state.ball.linear_velocity))
 
-            # Precompute ball distances to each net (world frame)
-            dist_to_blue = self._dist_to_goal(ball.position, common_values.BACK_NET_Y)
-            dist_to_orange = self._dist_to_goal(
-                ball.position, -common_values.BACK_NET_Y
-            )
-            vel_y = float(ball.linear_velocity[1])
-
-            # Detect goal scored (team event)
-            if state.goal_scored:
-                self.stats.goals += 1
-
-            # For each car, detect new touches and derived events
             for agent, car in state.cars.items():
-                prev_t = self._prev_touches.get(agent, int(car.ball_touches))
-                cur_t = int(car.ball_touches)
-                new_touch = cur_t > prev_t
-                self._prev_touches[agent] = cur_t
+                prev = self._prev_touches.get(agent, int(car.ball_touches))
+                cur = int(car.ball_touches)
+                self._prev_touches[agent] = cur
 
-                if not new_touch:
+                if cur <= prev:
                     continue
 
-                # Count touch
-                self.stats.ball_touches += 1
+                # NEW TOUCH
+                self.ball_touches += 1
 
-                # ---- Power hit detection (speed jump after touch)
-                # We use last-step ball speed as baseline; after touch, speed should spike.
-                speed_delta = ball_speed - self._prev_ball_speed
-                # conservative threshold; tune if needed
-                if speed_delta > 600.0:
-                    self.stats.power_hits += 1
-                    self.stats.power_sum += speed_delta
+                if self.first_touch_step is None:
+                    self.first_touch_step = self.ep_steps
 
-                # ---- Shot detection (touch + ball velocity toward opponent goal)
-                # If the toucher is orange, opponent goal is +Y (blue net). If blue, opponent is -Y.
+                # power hit
+                if ball_speed - self._prev_ball_speed > 600.0:
+                    self.power_hits += 1
+
+                # shot proxy (velocity toward opponent goal)
                 opp_goal_y = (
                     common_values.BACK_NET_Y
                     if car.is_orange
                     else -common_values.BACK_NET_Y
                 )
-                vel_toward_opp = self._vel_toward_goal(
-                    ball.linear_velocity, ball.position, opp_goal_y
-                )
-                if vel_toward_opp > 500.0:
-                    self.stats.shots += 1
+                to_goal = np.array([0.0, opp_goal_y, 0.0]) - state.ball.position
+                n = np.linalg.norm(to_goal)
+                if n > 1e-6:
+                    to_goal /= n
+                    vel = np.dot(state.ball.linear_velocity, to_goal)
+                    if vel > 500.0:
+                        self.shots += 1
 
-                # ---- Successful defense detection
-                # A "danger" is: ball near your own net AND moving toward it (roughly via Y direction),
-                # and a touch occurs that reduces that danger immediately.
-                #
-                # For blue net at +Y: ball moving toward it => vel_y > 0
-                # For orange net at -Y: ball moving toward it => vel_y < 0
-                own_goal_y = (
-                    -common_values.BACK_NET_Y
-                    if car.is_orange
-                    else common_values.BACK_NET_Y
-                )
-                own_dist_prev = (
-                    self._prev_ball_dist_to_orange
-                    if car.is_orange
-                    else self._prev_ball_dist_to_blue
-                )
-                own_dist_now = dist_to_orange if car.is_orange else dist_to_blue
-
-                moving_toward_own = (
-                    (self._prev_ball_vel_y < -300.0)
-                    if car.is_orange
-                    else (self._prev_ball_vel_y > 300.0)
-                )
-                dangerous_close = own_dist_prev < 2500.0
-
-                # A defense is: was dangerous + moving toward own net, and after touch either:
-                #  - distance to own net increases meaningfully, OR
-                #  - ball's Y-velocity flips away from your goal (or at least reduces strongly)
-                dist_increase = (own_dist_now - own_dist_prev) > 250.0
-                vel_flip_away = (vel_y > 200.0) if car.is_orange else (vel_y < -200.0)
-                vel_reduced = abs(vel_y) < abs(self._prev_ball_vel_y) - 300.0
-
-                if (
-                    dangerous_close
-                    and moving_toward_own
-                    and (dist_increase or vel_flip_away or vel_reduced)
-                ):
-                    self.stats.defenses += 1
-
-            # Update ball baselines for next step
             self._prev_ball_speed = ball_speed
-            self._prev_ball_vel_y = vel_y
-            self._prev_ball_dist_to_blue = dist_to_blue
-            self._prev_ball_dist_to_orange = dist_to_orange
 
-            done = bool(np.any(terminated)) or bool(np.any(truncated))
-            if done:
-                self.stats.ep += 1
+            if state.goal_scored and not self._prev_goal_scored:
+                self.goals += 1
 
+            self._prev_goal_scored = state.goal_scored
+
+        # --------------------------------------------------
+        # Episode termination
+        # --------------------------------------------------
+        done = bool(np.any(terminated)) or bool(np.any(truncated))
+        if done:
+            self.episode_idx += 1
+
+            if self.ball_touches == 0:
+                self.ended_by_no_touch = True
+            else:
+                self.ended_by_timeout = True
+
+            # --------------------------------------------------
+            # TensorBoard logs (ONCE per episode)
+            # --------------------------------------------------
+            self.logger.scalar("episode/return", self.ep_return, self.global_ts)
+            self.logger.scalar("episode/length", self.ep_steps, self.global_ts)
+
+            if self.first_touch_step is not None:
                 self.logger.scalar(
-                    "episode/return", self.stats.return_sum, self.global_ts
-                )
-                self.logger.scalar("episode/length", self.stats.steps, self.global_ts)
-                self.logger.scalar("episode/goals", self.stats.goals, self.global_ts)
-                self.logger.scalar(
-                    "episode/ball_touches", self.stats.ball_touches, self.global_ts
-                )
-                self.logger.scalar("episode/shots", self.stats.shots, self.global_ts)
-                self.logger.scalar(
-                    "episode/power_hits", self.stats.power_hits, self.global_ts
-                )
-                self.logger.scalar(
-                    "episode/defenses", self.stats.defenses, self.global_ts
+                    "episode/time_to_first_touch",
+                    self.first_touch_step,
+                    self.global_ts,
                 )
 
-                if self.stats.ball_touches > 0:
-                    self.logger.scalar(
-                        "episode/shot_rate",
-                        self.stats.shots / self.stats.ball_touches,
-                        self.global_ts,
-                    )
-                    self.logger.scalar(
-                        "episode/power_hit_rate",
-                        self.stats.power_hits / self.stats.ball_touches,
-                        self.global_ts,
-                    )
-                    self.logger.scalar(
-                        "episode/defense_rate",
-                        self.stats.defenses / self.stats.ball_touches,
-                        self.global_ts,
-                    )
+            self.logger.scalar("episode/touches", self.ball_touches, self.global_ts)
+            self.logger.scalar("episode/shots", self.shots, self.global_ts)
+            self.logger.scalar("episode/power_hits", self.power_hits, self.global_ts)
+            self.logger.scalar("episode/goals", self.goals, self.global_ts)
 
-                if self.stats.power_hits > 0:
-                    self.logger.scalar(
-                        "episode/avg_power_delta",
-                        self.stats.power_sum / self.stats.power_hits,
-                        self.global_ts,
-                    )
+            self.logger.scalar(
+                "episode/ended_by_no_touch",
+                int(self.ended_by_no_touch),
+                self.global_ts,
+            )
+            self.logger.scalar(
+                "episode/ended_by_timeout",
+                int(self.ended_by_timeout),
+                self.global_ts,
+            )
 
-                self.logger.flush()
+            self.logger.flush()
 
-                if self.stats.ep % self.print_every == 0:
-                    avg_pow = (
-                        (self.stats.power_sum / self.stats.power_hits)
-                        if self.stats.power_hits
-                        else 0.0
-                    )
-                    print(
-                        f"[ep {self.stats.ep:6d}] "
-                        f"ret={self.stats.return_sum:8.1f} "
-                        f"len={self.stats.steps:4d} "
-                        f"goals={self.stats.goals} "
-                        f"touches={self.stats.ball_touches} "
-                        f"shots={self.stats.shots} "
-                        f"power_hits={self.stats.power_hits} "
-                        f"avg_powΔ={avg_pow:6.1f} "
-                        f"defenses={self.stats.defenses} "
-                        f"ts={self.global_ts}"
-                    )
+            if self.episode_idx % self.print_every == 0:
+                print(
+                    f"[ep {self.episode_idx:5d}] "
+                    f"ret={self.ep_return:7.1f} "
+                    f"len={self.ep_steps:4d} "
+                    f"touches={self.ball_touches:3d} "
+                    f"t_first={self.first_touch_step} "
+                    f"shots={self.shots:3d} "
+                    f"no_touch={int(self.ended_by_no_touch)} "
+                    f"goals={self.goals}"
+                )
 
-                self.stats.reset_episode_counters()
+            self._reset_episode()
 
         return obs, reward, terminated, truncated, info
 
@@ -355,16 +244,17 @@ class GymEpisodeLoggingWrapper:
 
 class SignedGoalReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
-        pass
+        self.prev_goal = False
 
-    def get_rewards(
-        self, agents, state: GameState, is_terminated, is_truncated, shared_info
-    ):
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
         rewards = {a: 0.0 for a in agents}
-        if not state.goal_scored:
+
+        goal_now = state.goal_scored and not self.prev_goal
+        self.prev_goal = state.goal_scored
+        if not goal_now:
             return rewards
 
-        scoring_team = state.scoring_team  # 0 blue, 1 orange
+        scoring_team = state.scoring_team
         for agent in agents:
             car = state.cars[agent]
             agent_team = 1 if car.is_orange else 0
@@ -375,13 +265,15 @@ class SignedGoalReward(RewardFunction):
 class FastGoalBonus(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         self.steps = 0
+        self.prev_goal = False
 
-    def get_rewards(
-        self, agents, state: GameState, is_terminated, is_truncated, shared_info
-    ):
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
         self.steps += 1
         rewards = {a: 0.0 for a in agents}
-        if not state.goal_scored:
+
+        goal_now = state.goal_scored and not self.prev_goal
+        self.prev_goal = state.goal_scored
+        if not goal_now:
             return rewards
 
         bonus = float(np.exp(-self.steps / 400.0))
@@ -910,7 +802,7 @@ def build_rlgym_v2_env():
         # CORE SKILL SIGNALS (must dominate early)
         # ─────────────────────────────────────────
         (TouchReward(), 6.0),  # primary learning driver
-        (ShotReward(), 1.0),  # encourages forward hits
+        (ShotReward(), 10.0),  # encourages forward hits
         (PowerHitReward(), 0.5),  # discourages soft dribbles
         # ─────────────────────────────────────────
         # SHAPING (kept SMALL)
@@ -935,7 +827,7 @@ def build_rlgym_v2_env():
         obs_builder=SharedObs(),
         action_parser=action_parser,
         reward_fn=reward_fn,
-        termination_cond=GoalCondition(),
+        termination_cond=None,
         truncation_cond=AnyCondition(
             NoTouchTimeoutCondition(10),
             TimeoutCondition(300),
@@ -946,7 +838,7 @@ def build_rlgym_v2_env():
     base = RLGymV2GymWrapper(env)
 
     logger = TBLogger("runs/shot_bot_v2")
-    wrapped = GymEpisodeLoggingWrapper(base, logger, print_every_episodes=10)
+    wrapped = EpisodeLogger(base, logger, print_every=10)
     return wrapped
 
 
