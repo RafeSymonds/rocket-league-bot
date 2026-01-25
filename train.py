@@ -95,6 +95,7 @@ class StageConfig:
 
     # reward weights (single place to tune)
     w_goal: float
+    ball_to_net: float
     w_fast_goal: float
     w_shot: float
     w_touch: float
@@ -665,6 +666,53 @@ class NoTouchTimeoutPressure(RewardFunction):
         return rewards
 
 
+class BallTowardNetReward(RewardFunction):
+    """
+    Reward change in ball distance toward opponent net.
+    Dense, directional, and non-exploitable.
+    """
+
+    def reset(self, agents, initial_state, shared_info):
+        self.prev_dist = {}
+        if initial_state is None:
+            return
+
+        for a in agents:
+            car = initial_state.cars[a]
+            goal_y = (
+                common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
+            )
+            goal = np.array([0.0, goal_y, 0.0], dtype=np.float32)
+            self.prev_dist[a] = float(
+                np.linalg.norm(initial_state.ball.position - goal)
+            )
+
+    def get_rewards(self, agents, state, *_):
+        rewards = {}
+
+        for a in agents:
+            car = state.cars[a]
+            goal_y = (
+                common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
+            )
+            goal = np.array([0.0, goal_y, 0.0], dtype=np.float32)
+
+            dist = float(np.linalg.norm(state.ball.position - goal))
+            prev = self.prev_dist.get(a, dist)
+
+            delta = prev - dist  # positive = closer to net
+
+            # deadzone to avoid jitter farming
+            if abs(delta) < 10.0:
+                delta = 0.0
+
+            # scale + clamp
+            rewards[a] = float(np.clip(delta / 2000.0, -0.05, 0.05))
+            self.prev_dist[a] = dist
+
+        return rewards
+
+
 class StepPenalty(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         pass
@@ -912,6 +960,7 @@ def make_stage_config(stage: Stage) -> StageConfig:
             timeout_s=300,
             # reward weights: touch/shot dominate, goal is irrelevant
             w_goal=0.0,
+            ball_to_net=0.0,
             w_fast_goal=0.0,
             w_shot=6.0,
             w_touch=2.0,
@@ -934,6 +983,7 @@ def make_stage_config(stage: Stage) -> StageConfig:
             timeout_s=300,
             # reward weights: goal dominates now
             w_goal=40.0,
+            ball_to_net=1,
             w_fast_goal=10.0,
             w_shot=10.0,
             w_touch=2.0,
@@ -956,6 +1006,7 @@ def make_stage_config(stage: Stage) -> StageConfig:
         timeout_s=300,
         # reward weights: goal still king, but shaping lower to avoid farming
         w_goal=35.0,
+        ball_to_net=0.4,
         w_fast_goal=8.0,
         w_shot=6.0,
         w_touch=1.0,
@@ -983,6 +1034,7 @@ class CurriculumReward(RewardFunction):
         self.dist = DistanceReductionReward()
         self.step = StepPenalty()
         self.notouch = NoTouchTimeoutPressure()
+        self.ball_to_net = BallTowardNetReward()
 
     def reset(self, agents, initial_state, shared_info):
         for r in (
@@ -1000,71 +1052,30 @@ class CurriculumReward(RewardFunction):
             r.reset(agents, initial_state, shared_info)
 
     def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
-        stage = self.stage_ref.stage
-
-        if stage == Stage.TOUCH:
-            weights = dict(
-                goal=0.0,
-                fast_goal=0.0,
-                shot=6.0,
-                touch=2.0,
-                power=0.5,
-                progress=0.2,
-                approach=0.2,
-                dist=0.1,
-                step=1.0,
-                notouch=0.1,
-            )
-
-        elif stage == Stage.SCORE:
-            weights = dict(
-                goal=60.0,
-                fast_goal=15.0,
-                shot=8.0,
-                touch=1.0,
-                power=0.3,
-                progress=0.15,
-                approach=0.10,
-                dist=0.05,
-                step=0.2,
-                notouch=0.03,
-            )
-
-        else:  # SELFPLAY
-            weights = dict(
-                goal=35.0,
-                fast_goal=8.0,
-                shot=6.0,
-                touch=1.0,
-                power=0.3,
-                progress=0.10,
-                approach=0.05,
-                dist=0.05,
-                step=0.2,
-                notouch=0.02,
-            )
+        cfg = make_stage_config(self.stage_ref.stage)
 
         rewards = {a: 0.0 for a in agents}
 
-        def add(rwd, w):
-            if w == 0.0:
+        def add(rwd, weight):
+            if weight == 0.0:
                 return
             vals = rwd.get_rewards(
                 agents, state, is_terminated, is_truncated, shared_info
             )
             for a in agents:
-                rewards[a] += w * vals[a]
+                rewards[a] += weight * float(vals[a])
 
-        add(self.goal, weights["goal"])
-        add(self.fast_goal, weights["fast_goal"])
-        add(self.shot, weights["shot"])
-        add(self.touch, weights["touch"])
-        add(self.power, weights["power"])
-        add(self.progress, weights["progress"])
-        add(self.approach, weights["approach"])
-        add(self.dist, weights["dist"])
-        add(self.step, weights["step"])
-        add(self.notouch, weights["notouch"])
+        add(self.goal, cfg.w_goal)
+        add(self.ball_to_net, cfg.ball_to_net)
+        add(self.fast_goal, cfg.w_fast_goal)
+        add(self.shot, cfg.w_shot)
+        add(self.touch, cfg.w_touch)
+        add(self.power, cfg.w_power)
+        add(self.progress, cfg.w_progress)
+        add(self.approach, cfg.w_approach)
+        add(self.dist, cfg.w_dist)
+        add(self.step, cfg.w_step_penalty)
+        add(self.notouch, cfg.w_notouch_pressure)
 
         return rewards
 
