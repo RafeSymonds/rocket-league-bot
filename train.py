@@ -244,7 +244,7 @@ class EpisodeLogger:
 
 class SignedGoalReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
-        self.prev_goal = False
+        pass
 
     def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
         rewards = {a: 0.0 for a in agents}
