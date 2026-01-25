@@ -672,6 +672,10 @@ class BallTowardNetReward(RewardFunction):
     Dense, directional, and non-exploitable.
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.prev_dist = {}
+
     def reset(self, agents, initial_state, shared_info):
         self.prev_dist = {}
         if initial_state is None:
@@ -687,7 +691,7 @@ class BallTowardNetReward(RewardFunction):
                 np.linalg.norm(initial_state.ball.position - goal)
             )
 
-    def get_rewards(self, agents, state, *_):
+    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
         rewards = {}
 
         for a in agents:
@@ -698,15 +702,19 @@ class BallTowardNetReward(RewardFunction):
             goal = np.array([0.0, goal_y, 0.0], dtype=np.float32)
 
             dist = float(np.linalg.norm(state.ball.position - goal))
-            prev = self.prev_dist.get(a, dist)
 
-            delta = prev - dist  # positive = closer to net
+            # ---- REQUIRED DEFENSIVE INITIALIZATION ----
+            if a not in self.prev_dist:
+                self.prev_dist[a] = dist
+                rewards[a] = 0.0
+                continue
 
-            # deadzone to avoid jitter farming
+            prev = self.prev_dist[a]
+            delta = prev - dist
+
             if abs(delta) < 10.0:
                 delta = 0.0
 
-            # scale + clamp
             rewards[a] = float(np.clip(delta / 2000.0, -0.05, 0.05))
             self.prev_dist[a] = dist
 
@@ -874,36 +882,74 @@ class CurriculumManager:
     def maybe_advance(self, stats) -> None:
         stage: Stage = self.stage_ref.stage
 
-        # Stage 0: learn to touch quickly & reliably
+        # -------------------------
+        # Stage 0: TOUCH curriculum
+        # -------------------------
         if stage == Stage.TOUCH:
-            # tighten: once touch_rate is high, make resets harder until p_easy=0
-            if stats.touch_rate > 0.85 and self.p_easy_reset.get() > 0.0:
-                self.min_dist.set(min(self.min_dist.get() + 100, 900))
-                self.max_dist.set(min(self.max_dist.get() + 150, 1400))
-                self.max_angle.set(min(self.max_angle.get() + 10, 60))
-                self.ball_velocity.set(min(self.ball_velocity.get() + 50, 600))
-                self.p_easy_reset.set(max(self.p_easy_reset.get() - 0.2, 0.0))
+            # --- 1. Difficulty factor from touch quality ---
+            # touch_rate in [0.3, 0.95] → difficulty in [0, 1]
+            touch_factor = np.clip((stats.touch_rate - 0.3) / 0.65, 0.0, 1.0)
+
+            # median_t_first in [150, 50] → speed factor in [0, 1]
+            speed_factor = np.clip((150 - stats.median_t_first) / 100.0, 0.0, 1.0)
+
+            # combine (touch reliability matters more than speed early)
+            progress = 0.85 * touch_factor + 0.15 * speed_factor
+
+            # --- 2. Smoothly update curriculum knobs ---
+            # target values as a function of progress
+            target_min_dist = 300 + 600 * progress  # 300 → 900
+            target_max_dist = 600 + 800 * progress  # 600 → 1400
+            target_angle = 20 + 40 * progress  # 20° → 60°
+            target_ball_vel = 0 + 600 * progress  # 0 → 600
+            target_p_easy = 1.0 - progress  # 1.0 → 0.0
+
+            # exponential smoothing (prevents oscillation)
+            alpha = 0.15
+
+            self.min_dist.set(
+                (1 - alpha) * self.min_dist.get() + alpha * target_min_dist
+            )
+            self.max_dist.set(
+                (1 - alpha) * self.max_dist.get() + alpha * target_max_dist
+            )
+            self.max_angle.set(
+                (1 - alpha) * self.max_angle.get() + alpha * target_angle
+            )
+            self.ball_velocity.set(
+                (1 - alpha) * self.ball_velocity.get() + alpha * target_ball_vel
+            )
+            self.p_easy_reset.set(
+                (1 - alpha) * self.p_easy_reset.get() + alpha * target_p_easy
+            )
+
+            # optional: periodic debug print
+            if np.random.rand() < 0.05:
                 print(
-                    f"➡️ touch curriculum harder: "
-                    f"min={self.min_dist.get():.0f} max={self.max_dist.get():.0f} "
-                    f"angle={self.max_angle.get():.0f} v={self.ball_velocity.get():.0f} p_easy={self.p_easy_reset.get():.2f}"
+                    f"📈 TOUCH progress={progress:.2f} "
+                    f"touch={stats.touch_rate:.2f} "
+                    f"t_first={stats.median_t_first:.0f} "
+                    f"min={self.min_dist.get():.0f} "
+                    f"max={self.max_dist.get():.0f} "
+                    f"angle={self.max_angle.get():.0f} "
+                    f"v={self.ball_velocity.get():.0f} "
+                    f"p_easy={self.p_easy_reset.get():.2f}"
                 )
 
-            # switch to scoring curriculum when touch is consistent AND first touch is fast
-            if (
-                stats.touch_rate > 0.90
-                and stats.median_t_first < 200
-                and self.p_easy_reset.get() <= 0.2
-            ):
+            # --- 3. Graduation condition ---
+            if progress > 0.75:
                 self._set_stage(Stage.SCORE)
 
-        # Stage 1: learn to score (goal condition + goal-centric reward)
+        # -------------------------
+        # Stage 1: SCORE curriculum
+        # -------------------------
         elif stage == Stage.SCORE:
-            # once it can score with some frequency and not take forever, go to selfplay
             if stats.goal_rate > 0.25 and stats.median_t_goal < 250:
                 self._set_stage(Stage.SELFPLAY)
 
-        # Stage 2: selfplay is open-ended; you can add snapshot gating here later
+        # -------------------------
+        # Stage 2: SELFPLAY
+        # -------------------------
         elif stage == Stage.SELFPLAY:
             pass
 
