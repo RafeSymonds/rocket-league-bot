@@ -844,7 +844,7 @@ class CurriculumManager:
             # switch to scoring curriculum when touch is consistent AND first touch is fast
             if (
                 stats.touch_rate > 0.90
-                and stats.median_t_first < 80
+                and stats.median_t_first < 200
                 and self.p_easy_reset.get() <= 0.2
             ):
                 self._set_stage(Stage.SCORE)
