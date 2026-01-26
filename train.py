@@ -28,7 +28,7 @@ from rlgym.rocket_league.done_conditions import (
     NoTouchTimeoutCondition,
     TimeoutCondition,
 )
-from rlgym.rocket_league.reward_functions import CombinedReward, TouchReward
+from rlgym.rocket_league.reward_functions import TouchReward
 from rlgym.rocket_league.sim import RocketSimEngine
 from rlgym.rocket_league.state_mutators import (
     FixedTeamSizeMutator,
@@ -53,7 +53,6 @@ class TBLogger:
         self.w.add_scalar(tag, float(value), step)
 
     def text(self, tag: str, text: str, step: int) -> None:
-        # tensorboard supports add_text; SummaryWriter has add_text
         self.w.add_text(tag, text, step)
 
     def flush(self) -> None:
@@ -94,17 +93,26 @@ class StageConfig:
     timeout_s: int
 
     # reward weights (single place to tune)
+    # --- terminal-ish ---
     w_goal: float
-    ball_to_net: float
     w_fast_goal: float
-    w_shot: float
+
+    # --- score-safe dense / touch-gated ---
+    w_ball_vel_to_goal: float
+    w_ball_dist_to_goal: float
+    w_shot_commit: float
+    w_align: float
+    w_hard_hit: float
+
+    # --- touch-stage shaping ---
     w_touch: float
     w_power: float
-    w_progress: float
     w_approach: float
-    w_dist: float
+
+    # --- universal hygiene ---
     w_step_penalty: float
     w_notouch_pressure: float
+    w_camp_penalty: float
 
 
 # ==================================================
@@ -153,6 +161,7 @@ class EpisodeLogger:
 
         self._prev_ball_speed = 0.0
         self._prev_touches: Dict[AgentID, int] = {}
+        self._prev_goal_scored = False
 
     def reset(self, **kwargs):
         out = self.env.reset(**kwargs)
@@ -167,6 +176,7 @@ class EpisodeLogger:
         state = info.get("state")
         if state is not None:
             self._prev_ball_speed = float(np.linalg.norm(state.ball.linear_velocity))
+            self._prev_goal_scored = bool(state.goal_scored)
             for a, car in state.cars.items():
                 self._prev_touches[a] = int(car.ball_touches)
 
@@ -217,6 +227,11 @@ class EpisodeLogger:
 
             self._prev_ball_speed = ball_speed
 
+            goal_now = bool(state.goal_scored) and not bool(self._prev_goal_scored)
+            self._prev_goal_scored = bool(state.goal_scored)
+            if goal_now and self.goal_step is None:
+                self.goal_step = self.ep_steps
+
         # ----------------------------
         # Episode termination
         # ----------------------------
@@ -228,7 +243,6 @@ class EpisodeLogger:
                 self.ended_by_no_touch = True
             elif state is not None and state.goal_scored:
                 self.ended_by_goal = True
-                self.goal_step = self.ep_steps
             else:
                 self.ended_by_timeout = True
 
@@ -314,7 +328,7 @@ class EpisodeLogger:
 
 
 # ==================================================
-# Observation (unchanged, fixed-shape)
+# Observation (fixed-shape)
 # ==================================================
 
 
@@ -467,19 +481,34 @@ class SharedObs(ObsBuilder):
 
 
 # ==================================================
-# Rewards (reuse your existing ones)
+# Rewards
+#   - TOUCH stage: allow simple shaping
+#   - SCORE/SELFPLAY: replace exploitable shaping with touch-gated goal-directed rewards
 # ==================================================
 
 
-class SignedGoalReward(RewardFunction):
+class GoalEventMixin:
+    """Helper to make 'goal_scored' pay only once per goal event."""
+
     def reset(self, agents, initial_state, shared_info):
-        pass
+        self._prev_goal = False
+
+    def goal_event(self, state: GameState) -> bool:
+        now = bool(state.goal_scored)
+        evt = now and not bool(self._prev_goal)
+        self._prev_goal = now
+        return evt
+
+
+class SignedGoalReward(GoalEventMixin, RewardFunction):
+    def reset(self, agents, initial_state, shared_info):
+        GoalEventMixin.reset(self, agents, initial_state, shared_info)
 
     def get_rewards(
         self, agents, state: GameState, is_terminated, is_truncated, shared_info
     ):
         rewards = {a: 0.0 for a in agents}
-        if not state.goal_scored:
+        if not self.goal_event(state):
             return rewards
 
         scoring_team = state.scoring_team
@@ -490,8 +519,9 @@ class SignedGoalReward(RewardFunction):
         return rewards
 
 
-class FastGoalBonus(RewardFunction):
+class FastGoalBonus(GoalEventMixin, RewardFunction):
     def reset(self, agents, initial_state, shared_info):
+        GoalEventMixin.reset(self, agents, initial_state, shared_info)
         self.steps = 0
 
     def get_rewards(
@@ -499,7 +529,7 @@ class FastGoalBonus(RewardFunction):
     ):
         self.steps += 1
         rewards = {a: 0.0 for a in agents}
-        if not state.goal_scored:
+        if not self.goal_event(state):
             return rewards
 
         bonus = float(np.exp(-self.steps / 400.0))
@@ -508,35 +538,6 @@ class FastGoalBonus(RewardFunction):
             car = state.cars[agent]
             agent_team = 1 if car.is_orange else 0
             rewards[agent] = bonus if agent_team == scoring_team else -bonus
-        return rewards
-
-
-class BallNetProgressReward(RewardFunction):
-    def reset(self, agents, initial_state, shared_info):
-        self.prev_ball_dist: Dict[AgentID, float] = {}
-
-    def get_rewards(
-        self, agents, state: GameState, is_terminated, is_truncated, shared_info
-    ):
-        rewards: Dict[AgentID, float] = {}
-        ball = state.ball
-
-        for agent in agents:
-            car = state.cars[agent]
-            goal_y = (
-                common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
-            )
-            goal_pos = np.array([0.0, goal_y, 0.0], dtype=np.float32)
-
-            dist = float(np.linalg.norm(ball.position.astype(np.float32) - goal_pos))
-            prev = self.prev_ball_dist.get(agent, dist)
-            delta = prev - dist
-            if abs(delta) < 5.0:
-                delta = 0.0
-
-            rewards[agent] = float(np.clip(delta / 1000.0, -0.05, 0.05))
-            self.prev_ball_dist[agent] = dist
-
         return rewards
 
 
@@ -556,7 +557,16 @@ class TouchBasedRewardBase(RewardFunction):
         return cur > prev
 
 
-class ShotReward(TouchBasedRewardBase):
+class ShotCommitReward(TouchBasedRewardBase):
+    """
+    Binary: after a touch, if ball velocity toward opponent goal is high enough, reward.
+    This prevents sideways farming.
+    """
+
+    def __init__(self, threshold: float = 1400.0):
+        super().__init__()
+        self.threshold = float(threshold)
+
     def get_rewards(
         self,
         agents: List[AgentIDType],
@@ -580,20 +590,172 @@ class ShotReward(TouchBasedRewardBase):
             to_goal = np.array(
                 [0.0, opp_goal_y, 0.0], dtype=np.float32
             ) - ball.position.astype(np.float32)
-
             n = float(np.linalg.norm(to_goal))
             if n < 1e-6:
                 rewards[agent] = 0.0
                 continue
             to_goal /= n
 
-            vel = float(np.dot(ball.linear_velocity.astype(np.float32), to_goal))
-            rewards[agent] = max(vel / common_values.BALL_MAX_SPEED, 0.0)
+            vel_toward = float(np.dot(ball.linear_velocity.astype(np.float32), to_goal))
+            rewards[agent] = 1.0 if vel_toward > self.threshold else 0.0
 
         return rewards
 
 
+class BallVelocityTowardGoalReward(TouchBasedRewardBase):
+    """
+    Dense but touch-gated: after a touch, reward positive ball velocity component toward opponent net.
+    """
+
+    def __init__(self, scale: float = 3000.0, cap: float = 1.0):
+        super().__init__()
+        self.scale = float(scale)
+        self.cap = float(cap)
+
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
+        rewards: Dict[AgentID, float] = {}
+        ball = state.ball
+
+        for a in agents:
+            if not self._new_touch(a, state):
+                rewards[a] = 0.0
+                continue
+
+            car = state.cars[a]
+            opp_goal_y = (
+                common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
+            )
+            goal = np.array([0.0, opp_goal_y, 0.0], dtype=np.float32)
+
+            to_goal = goal - ball.position.astype(np.float32)
+            n = float(np.linalg.norm(to_goal))
+            if n < 1e-6:
+                rewards[a] = 0.0
+                continue
+            to_goal /= n
+
+            vel = float(np.dot(ball.linear_velocity.astype(np.float32), to_goal))
+            rewards[a] = float(np.clip(max(vel, 0.0) / self.scale, 0.0, self.cap))
+
+        return rewards
+
+
+class TouchWindowBallDistanceToGoalDelta(RewardFunction):
+    """
+    After a touch, open a short window where we reward *reducing distance to goal*.
+    This gives dense follow-through without allowing endless camping.
+    """
+
+    def __init__(self, window_steps: int = 15):
+        super().__init__()
+        self.window_steps = int(window_steps)
+
+    def reset(self, agents, initial_state, shared_info):
+        self.prev_touches = {a: int(initial_state.cars[a].ball_touches) for a in agents}
+        self.window_left = {a: 0 for a in agents}
+        self.prev_dist = {}
+
+        if initial_state is not None:
+            for a in agents:
+                car = initial_state.cars[a]
+                opp_goal_y = (
+                    common_values.BACK_NET_Y
+                    if car.is_orange
+                    else -common_values.BACK_NET_Y
+                )
+                goal = np.array([0.0, opp_goal_y, 0.0], dtype=np.float32)
+                self.prev_dist[a] = float(
+                    np.linalg.norm(initial_state.ball.position - goal)
+                )
+
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
+        rewards: Dict[AgentID, float] = {}
+        ball_pos = state.ball.position.astype(np.float32)
+
+        for a in agents:
+            car = state.cars[a]
+            cur_t = int(car.ball_touches)
+            if cur_t > self.prev_touches.get(a, cur_t):
+                self.window_left[a] = self.window_steps
+                opp_goal_y = (
+                    common_values.BACK_NET_Y
+                    if car.is_orange
+                    else -common_values.BACK_NET_Y
+                )
+                goal = np.array([0.0, opp_goal_y, 0.0], dtype=np.float32)
+                self.prev_dist[a] = float(np.linalg.norm(ball_pos - goal))
+
+            self.prev_touches[a] = cur_t
+
+            if self.window_left.get(a, 0) <= 0:
+                rewards[a] = 0.0
+                continue
+
+            opp_goal_y = (
+                common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
+            )
+            goal = np.array([0.0, opp_goal_y, 0.0], dtype=np.float32)
+            dist = float(np.linalg.norm(ball_pos - goal))
+
+            prev = float(self.prev_dist.get(a, dist))
+            delta = prev - dist  # positive is good (closer)
+            self.prev_dist[a] = dist
+            self.window_left[a] -= 1
+
+            # small, capped, and ignores tiny jitter
+            if abs(delta) < 10.0:
+                delta = 0.0
+            rewards[a] = float(np.clip(delta / 2000.0, -0.02, 0.05))
+
+        return rewards
+
+
+class GoalAlignmentReward(RewardFunction):
+    """
+    Dense, not touch-gated: rewards ball velocity direction aligning with the opponent goal.
+    Kept low-weight. Discourages sideways dribbling.
+    """
+
+    def reset(self, agents, initial_state, shared_info):
+        pass
+
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
+        ball_v = state.ball.linear_velocity.astype(np.float32)
+        speed = float(np.linalg.norm(ball_v))
+        if speed < 300.0:
+            return {a: 0.0 for a in agents}
+
+        rewards: Dict[AgentID, float] = {}
+        for a in agents:
+            car = state.cars[a]
+            opp_goal_y = (
+                common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
+            )
+            to_goal = np.array(
+                [0.0, opp_goal_y, 0.0], dtype=np.float32
+            ) - state.ball.position.astype(np.float32)
+            n = float(np.linalg.norm(to_goal))
+            if n < 1e-6:
+                rewards[a] = 0.0
+                continue
+            to_goal /= n
+            align = float(np.dot(ball_v / speed, to_goal))
+            rewards[a] = float(np.clip(align, 0.0, 1.0))
+        return rewards
+
+
 class PowerHitReward(TouchBasedRewardBase):
+    """
+    Touch-gated: reward speed increase of the ball after the touch.
+    Good for hard shots / clears, but capped.
+    """
+
     def reset(self, agents, initial_state, shared_info):
         super().reset(agents, initial_state, shared_info)
         self.prev_ball_speed = (
@@ -614,11 +776,13 @@ class PowerHitReward(TouchBasedRewardBase):
             if not self._new_touch(a, state):
                 rewards[a] = 0.0
                 continue
-            rewards[a] = float(np.clip(delta_speed / 3000.0, 0.0, 0.2))
+            rewards[a] = float(np.clip(delta_speed / 3000.0, 0.0, 0.3))
         return rewards
 
 
 class SpeedTowardBallReward(RewardFunction):
+    """TOUCH-stage shaping: reward decreasing distance to ball (capped)."""
+
     def reset(self, agents, initial_state, shared_info):
         self.prev_dist: Dict[AgentID, float] = {}
 
@@ -626,22 +790,20 @@ class SpeedTowardBallReward(RewardFunction):
         self, agents, state: GameState, is_terminated, is_truncated, shared_info
     ):
         rewards: Dict[AgentID, float] = {}
-
-        for agent in agents:
-            car = state.cars[agent]
+        for a in agents:
+            car = state.cars[a]
             car_phys = car.physics if not car.is_orange else car.inverted_physics
             ball_phys = state.ball if not car.is_orange else state.inverted_ball
 
             dist = float(np.linalg.norm(ball_phys.position - car_phys.position))
-            prev = float(self.prev_dist.get(agent, dist))
+            prev = float(self.prev_dist.get(a, dist))
             delta = prev - dist
 
             fade = np.clip(dist / 1500.0, 0.0, 1.0)
             reward = (delta / 500.0) * fade
-            rewards[agent] = float(np.clip(reward, 0.0, 0.05))
+            rewards[a] = float(np.clip(reward, 0.0, 0.05))
 
-            self.prev_dist[agent] = dist
-
+            self.prev_dist[a] = dist
         return rewards
 
 
@@ -666,61 +828,6 @@ class NoTouchTimeoutPressure(RewardFunction):
         return rewards
 
 
-class BallTowardNetReward(RewardFunction):
-    """
-    Reward change in ball distance toward opponent net.
-    Dense, directional, and non-exploitable.
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.prev_dist = {}
-
-    def reset(self, agents, initial_state, shared_info):
-        self.prev_dist = {}
-        if initial_state is None:
-            return
-
-        for a in agents:
-            car = initial_state.cars[a]
-            goal_y = (
-                common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
-            )
-            goal = np.array([0.0, goal_y, 0.0], dtype=np.float32)
-            self.prev_dist[a] = float(
-                np.linalg.norm(initial_state.ball.position - goal)
-            )
-
-    def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
-        rewards = {}
-
-        for a in agents:
-            car = state.cars[a]
-            goal_y = (
-                common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
-            )
-            goal = np.array([0.0, goal_y, 0.0], dtype=np.float32)
-
-            dist = float(np.linalg.norm(state.ball.position - goal))
-
-            # ---- REQUIRED DEFENSIVE INITIALIZATION ----
-            if a not in self.prev_dist:
-                self.prev_dist[a] = dist
-                rewards[a] = 0.0
-                continue
-
-            prev = self.prev_dist[a]
-            delta = prev - dist
-
-            if abs(delta) < 10.0:
-                delta = 0.0
-
-            rewards[a] = float(np.clip(delta / 2000.0, -0.05, 0.05))
-            self.prev_dist[a] = dist
-
-        return rewards
-
-
 class StepPenalty(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         pass
@@ -731,26 +838,33 @@ class StepPenalty(RewardFunction):
         return {agent: -0.001 for agent in agents}
 
 
-class DistanceReductionReward(RewardFunction):
+class GoalMouthCampingPenalty(RewardFunction):
+    """
+    Penalize sitting deep in / behind the goal mouth.
+    Helps prevent 'park in net' exploits in SCORE.
+    """
+
     def reset(self, agents, initial_state, shared_info):
-        self.prev_dist = {}
+        pass
 
     def get_rewards(
         self, agents, state: GameState, is_terminated, is_truncated, shared_info
     ):
-        rewards = {}
+        rewards: Dict[AgentID, float] = {}
         for a in agents:
             car = state.cars[a]
-            ball = state.ball
-            d = np.linalg.norm(car.physics.position - ball.position)
-            prev = self.prev_dist.get(a, d)
-            rewards[a] = np.clip((prev - d) / 1000.0, 0.0, 0.05)
-            self.prev_dist[a] = d
+            # absolute y, near back wall/net
+            y = float(abs(car.physics.position[1]))
+            # start penalizing in the last ~600uu of the field
+            if y > common_values.BACK_NET_Y - 600:
+                rewards[a] = -0.01
+            else:
+                rewards[a] = 0.0
         return rewards
 
 
 # ==================================================
-# Curriculum mutators (same spirit, just cleaner wiring)
+# Curriculum mutators
 # ==================================================
 
 
@@ -769,8 +883,6 @@ class BallNearCarMutator(StateMutator):
 
     @override
     def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
-        # pick "a" car to place ball near; in selfplay you could do per-team logic,
-        # but keeping it simple: first car in dict.
         car = next(iter(state.cars.values()))
         phys = car.physics
 
@@ -861,7 +973,7 @@ class CurriculumManager:
         max_angle: CurriculumValue,
         ball_velocity: CurriculumValue,
         p_easy_reset: CurriculumValue,
-        stage_ref: EnvBuilder,
+        stage_ref: "EnvBuilder",
     ):
         self.logger = episode_logger
 
@@ -871,7 +983,6 @@ class CurriculumManager:
         self.ball_velocity = ball_velocity
         self.p_easy_reset = p_easy_reset
 
-        # stage_ref is a mutable dict so env factory can read the current stage
         self.stage_ref = stage_ref
 
     def _set_stage(self, stage: Stage) -> None:
@@ -886,7 +997,6 @@ class CurriculumManager:
         # Stage 0: TOUCH curriculum
         # -------------------------
         if stage == Stage.TOUCH:
-            # --- 1. Difficulty factor from touch quality ---
             # touch_rate in [0.3, 0.95] → difficulty in [0, 1]
             touch_factor = np.clip((stats.touch_rate - 0.3) / 0.65, 0.0, 1.0)
 
@@ -896,17 +1006,15 @@ class CurriculumManager:
             # combine (touch reliability matters more than speed early)
             progress = 0.85 * touch_factor + 0.15 * speed_factor
 
-            # --- 2. Smoothly update curriculum knobs ---
-            # target values as a function of progress
+            # targets as a function of progress
             target_min_dist = 300 + 600 * progress  # 300 → 900
             target_max_dist = 600 + 800 * progress  # 600 → 1400
             target_angle = 20 + 40 * progress  # 20° → 60°
             target_ball_vel = 0 + 600 * progress  # 0 → 600
             target_p_easy = 1.0 - progress  # 1.0 → 0.0
 
-            # exponential smoothing (prevents oscillation)
+            # smoothing
             alpha = 0.15
-
             self.min_dist.set(
                 (1 - alpha) * self.min_dist.get() + alpha * target_min_dist
             )
@@ -923,7 +1031,6 @@ class CurriculumManager:
                 (1 - alpha) * self.p_easy_reset.get() + alpha * target_p_easy
             )
 
-            # optional: periodic debug print
             if np.random.rand() < 0.05:
                 print(
                     f"📈 TOUCH progress={progress:.2f} "
@@ -936,7 +1043,6 @@ class CurriculumManager:
                     f"p_easy={self.p_easy_reset.get():.2f}"
                 )
 
-            # --- 3. Graduation condition ---
             if progress > 0.75:
                 self._set_stage(Stage.SCORE)
 
@@ -944,7 +1050,8 @@ class CurriculumManager:
         # Stage 1: SCORE curriculum
         # -------------------------
         elif stage == Stage.SCORE:
-            if stats.goal_rate > 0.25 and stats.median_t_goal < 250:
+            # graduate when scoring is somewhat consistent and not too slow
+            if stats.goal_rate > 0.20 and stats.median_t_goal < 260:
                 self._set_stage(Stage.SELFPLAY)
 
         # -------------------------
@@ -955,39 +1062,7 @@ class CurriculumManager:
 
 
 # ==================================================
-# Optional hook for "vs old versions" (stub)
-# ==================================================
-
-
-class OpponentSnapshotManager:
-    """
-    Placeholder. Use this once you implement a mixed-policy action pipeline.
-
-    Strategy you likely want:
-      - periodically select a checkpoint from ./checkpoints/
-      - load it into a frozen opponent policy
-      - during rollouts, use current policy for blue and frozen for orange
-    """
-
-    def __init__(self, checkpoints_dir: str = "checkpoints", prob_old: float = 0.5):
-        self.dir = Path(checkpoints_dir)
-        self.prob_old = prob_old
-
-    def choose_opponent_checkpoint(self) -> Optional[Path]:
-        if np.random.rand() > self.prob_old:
-            return None
-        if not self.dir.exists():
-            return None
-        ckpts = sorted(self.dir.glob("**/*"), key=lambda p: p.stat().st_mtime)
-        # pick an older one (not the newest)
-        if len(ckpts) < 2:
-            return None
-        idx = np.random.randint(0, max(1, len(ckpts) - 1))
-        return ckpts[idx]
-
-
-# ==================================================
-# Central env factory (the big win)
+# Central env factory
 # ==================================================
 
 
@@ -1002,20 +1077,22 @@ def make_stage_config(stage: Stage) -> StageConfig:
             orange_players=0,
             end_on_touch=True,
             end_on_goal=False,
-            no_touch_timeout_s=10,
+            no_touch_timeout_s=5,
             timeout_s=300,
-            # reward weights: touch/shot dominate, goal is irrelevant
+            # rewards: learn contact + meaningful touch
             w_goal=0.0,
-            ball_to_net=0.0,
             w_fast_goal=0.0,
-            w_shot=6.0,
+            w_ball_vel_to_goal=0.0,
+            w_ball_dist_to_goal=0.0,
+            w_shot_commit=0.0,
+            w_align=0.0,
+            w_hard_hit=0.0,
             w_touch=2.0,
-            w_power=0.5,
-            w_progress=0.2,
-            w_approach=0.2,
-            w_dist=0.1,
+            w_power=0.6,
+            w_approach=0.25,
             w_step_penalty=1.0,
-            w_notouch_pressure=0.1,
+            w_notouch_pressure=0.10,
+            w_camp_penalty=0.0,
         )
 
     if stage == Stage.SCORE:
@@ -1027,18 +1104,22 @@ def make_stage_config(stage: Stage) -> StageConfig:
             end_on_goal=True,
             no_touch_timeout_s=10,
             timeout_s=300,
-            # reward weights: goal dominates now
+            # rewards: force real shots / conversions (score-safe)
             w_goal=40.0,
-            ball_to_net=1,
             w_fast_goal=10.0,
-            w_shot=10.0,
-            w_touch=2.0,
-            w_power=0.5,
-            w_progress=0.2,
-            w_approach=0.2,
-            w_dist=0.1,
-            w_step_penalty=1.0,
-            w_notouch_pressure=0.1,
+            w_ball_vel_to_goal=8.0,
+            w_ball_dist_to_goal=3.0,
+            w_shot_commit=6.0,
+            w_align=1.5,
+            w_hard_hit=4.0,
+            # turn off comfort shaping
+            w_touch=0.0,
+            w_power=0.0,
+            w_approach=0.0,
+            # punish stalling more than TOUCH
+            w_step_penalty=1.5,
+            w_notouch_pressure=0.25,
+            w_camp_penalty=1.0,
         )
 
     # SELFPLAY
@@ -1050,59 +1131,71 @@ def make_stage_config(stage: Stage) -> StageConfig:
         end_on_goal=True,
         no_touch_timeout_s=10,
         timeout_s=300,
-        # reward weights: goal still king, but shaping lower to avoid farming
+        # rewards: still goal-focused, slightly less dense to avoid farming
         w_goal=35.0,
-        ball_to_net=0.4,
         w_fast_goal=8.0,
-        w_shot=6.0,
-        w_touch=1.0,
-        w_power=0.3,
-        w_progress=0.15,
-        w_approach=0.10,
-        w_dist=0.05,
-        w_step_penalty=1.0,
-        w_notouch_pressure=0.1,
+        w_ball_vel_to_goal=6.0,
+        w_ball_dist_to_goal=2.0,
+        w_shot_commit=4.0,
+        w_align=1.0,
+        w_hard_hit=2.5,
+        w_touch=0.0,
+        w_power=0.0,
+        w_approach=0.0,
+        w_step_penalty=1.3,
+        w_notouch_pressure=0.20,
+        w_camp_penalty=1.0,
     )
 
 
 class CurriculumReward(RewardFunction):
-    def __init__(self, stage_ref):
+    def __init__(self, stage_ref: "EnvBuilder"):
         self.stage_ref = stage_ref
 
         # underlying rewards (created once)
         self.goal = SignedGoalReward()
         self.fast_goal = FastGoalBonus()
-        self.shot = ShotReward()
+
+        # score-safe, goal-directed rewards
+        self.ball_vel_to_goal = BallVelocityTowardGoalReward()
+        self.ball_dist_to_goal = TouchWindowBallDistanceToGoalDelta(window_steps=15)
+        self.shot_commit = ShotCommitReward(threshold=1400.0)
+        self.align = GoalAlignmentReward()
+        self.hard_hit = PowerHitReward()  # already touch-gated and based on delta speed
+
+        # touch-stage shaping
         self.touch = TouchReward()
-        self.power = PowerHitReward()
-        self.progress = BallNetProgressReward()
         self.approach = SpeedTowardBallReward()
-        self.dist = DistanceReductionReward()
+        self.power = PowerHitReward()
+
+        # hygiene
         self.step = StepPenalty()
         self.notouch = NoTouchTimeoutPressure()
-        self.ball_to_net = BallTowardNetReward()
+        self.camp = GoalMouthCampingPenalty()
 
     def reset(self, agents, initial_state, shared_info):
         for r in (
             self.goal,
             self.fast_goal,
-            self.shot,
+            self.ball_vel_to_goal,
+            self.ball_dist_to_goal,
+            self.shot_commit,
+            self.align,
+            self.hard_hit,
             self.touch,
-            self.power,
-            self.progress,
             self.approach,
-            self.dist,
+            self.power,
             self.step,
             self.notouch,
+            self.camp,
         ):
             r.reset(agents, initial_state, shared_info)
 
     def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
         cfg = make_stage_config(self.stage_ref.stage)
-
         rewards = {a: 0.0 for a in agents}
 
-        def add(rwd, weight):
+        def add(rwd, weight: float) -> None:
             if weight == 0.0:
                 return
             vals = rwd.get_rewards(
@@ -1111,23 +1204,32 @@ class CurriculumReward(RewardFunction):
             for a in agents:
                 rewards[a] += weight * float(vals[a])
 
+        # terminal-ish
         add(self.goal, cfg.w_goal)
-        add(self.ball_to_net, cfg.ball_to_net)
         add(self.fast_goal, cfg.w_fast_goal)
-        add(self.shot, cfg.w_shot)
+
+        # score-safe, goal-directed
+        add(self.ball_vel_to_goal, cfg.w_ball_vel_to_goal)
+        add(self.ball_dist_to_goal, cfg.w_ball_dist_to_goal)
+        add(self.shot_commit, cfg.w_shot_commit)
+        add(self.align, cfg.w_align)
+        add(self.hard_hit, cfg.w_hard_hit)
+
+        # touch-stage shaping only
         add(self.touch, cfg.w_touch)
         add(self.power, cfg.w_power)
-        add(self.progress, cfg.w_progress)
         add(self.approach, cfg.w_approach)
-        add(self.dist, cfg.w_dist)
+
+        # hygiene
         add(self.step, cfg.w_step_penalty)
         add(self.notouch, cfg.w_notouch_pressure)
+        add(self.camp, cfg.w_camp_penalty)
 
         return rewards
 
 
 class CurriculumDoneCondition(DoneCondition[AgentID, GameState]):
-    def __init__(self, stage_ref):
+    def __init__(self, stage_ref: "EnvBuilder"):
         self.stage_ref = stage_ref
         self.touch_done = TouchDoneCondition()
         self.goal_done = GoalCondition()
@@ -1138,11 +1240,8 @@ class CurriculumDoneCondition(DoneCondition[AgentID, GameState]):
 
     def is_done(self, agents, state, shared_info):
         stage = self.stage_ref.stage
-
         if stage == Stage.TOUCH:
             return self.touch_done.is_done(agents, state, shared_info)
-
-        # SCORE and SELFPLAY
         return self.goal_done.is_done(agents, state, shared_info)
 
 
@@ -1162,7 +1261,6 @@ class EnvBuilder:
         cfg = make_stage_config(self.stage)
 
         action_parser = RepeatAction(LookupTableAction(), repeats=2)
-
         reward_fn = CurriculumReward(stage_ref=self)
 
         termination_cond = CurriculumDoneCondition(stage_ref=self)
@@ -1197,7 +1295,7 @@ class EnvBuilder:
 
         base = RLGymV2GymWrapper(env)
 
-        logger = TBLogger("runs/shot_bot_v2_curriculum")
+        logger = TBLogger("runs/shot_bot_v3_progressive_fixed")
         wrapped = EpisodeLogger(base, logger, print_every=10)
         wrapped.set_stage(cfg.stage)
 
@@ -1208,7 +1306,7 @@ class EnvBuilder:
             max_angle=self.max_angle,
             ball_velocity=self.ball_velocity,
             p_easy_reset=self.p_easy_reset,
-            stage_ref=self,  # pass *this* object
+            stage_ref=self,
         )
         wrapped.set_curriculum(curriculum)
 
