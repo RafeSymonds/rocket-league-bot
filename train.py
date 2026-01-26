@@ -114,6 +114,8 @@ class StageConfig:
     w_notouch_pressure: float
     w_camp_penalty: float
 
+    w_ball_dist: float
+
 
 # ==================================================
 # Episode logging + curriculum handshake
@@ -863,6 +865,26 @@ class GoalMouthCampingPenalty(RewardFunction):
         return rewards
 
 
+class DistanceToBallReward(RewardFunction):
+    def __init__(self) -> None:
+        super().__init__()
+        self.prev_dist = {}
+
+    def reset(self, agents, initial_state, shared_info):
+        self.prev_dist = {}
+
+    def get_rewards(self, agents, state, *_):
+        rewards = {}
+        for a in agents:
+            car = state.cars[a]
+            ball = state.ball
+            d = np.linalg.norm(car.physics.position - ball.position)
+            prev = self.prev_dist.get(a, d)
+            rewards[a] = np.clip((prev - d) / 500.0, 0.0, 0.05)
+            self.prev_dist[a] = d
+        return rewards
+
+
 # ==================================================
 # Curriculum mutators
 # ==================================================
@@ -1043,7 +1065,7 @@ class CurriculumManager:
                     f"p_easy={self.p_easy_reset.get():.2f}"
                 )
 
-            if progress > 0.75:
+            if stats.touch_rate > 0.85:
                 self._set_stage(Stage.SCORE)
 
         # -------------------------
@@ -1075,7 +1097,7 @@ def make_stage_config(stage: Stage) -> StageConfig:
             stage=stage,
             blue_players=1,
             orange_players=0,
-            end_on_touch=True,
+            end_on_touch=False,
             end_on_goal=False,
             no_touch_timeout_s=5,
             timeout_s=300,
@@ -1087,9 +1109,10 @@ def make_stage_config(stage: Stage) -> StageConfig:
             w_shot_commit=0.0,
             w_align=0.0,
             w_hard_hit=0.0,
-            w_touch=2.0,
+            w_touch=5.0,
             w_power=0.6,
-            w_approach=0.25,
+            w_approach=0.5,
+            w_ball_dist=0.3,
             w_step_penalty=1.0,
             w_notouch_pressure=0.10,
             w_camp_penalty=0.0,
@@ -1116,6 +1139,7 @@ def make_stage_config(stage: Stage) -> StageConfig:
             w_touch=0.0,
             w_power=0.0,
             w_approach=0.0,
+            w_ball_dist=0.0,
             # punish stalling more than TOUCH
             w_step_penalty=1.5,
             w_notouch_pressure=0.25,
@@ -1142,6 +1166,7 @@ def make_stage_config(stage: Stage) -> StageConfig:
         w_touch=0.0,
         w_power=0.0,
         w_approach=0.0,
+        w_ball_dist=0.0,
         w_step_penalty=1.3,
         w_notouch_pressure=0.20,
         w_camp_penalty=1.0,
@@ -1172,6 +1197,8 @@ class CurriculumReward(RewardFunction):
         self.step = StepPenalty()
         self.notouch = NoTouchTimeoutPressure()
         self.camp = GoalMouthCampingPenalty()
+
+        self.ball_distance = DistanceToBallReward()
 
     def reset(self, agents, initial_state, shared_info):
         for r in (
@@ -1225,6 +1252,8 @@ class CurriculumReward(RewardFunction):
         add(self.notouch, cfg.w_notouch_pressure)
         add(self.camp, cfg.w_camp_penalty)
 
+        add(self.ball_distance, cfg.w_ball_dist)
+
         return rewards
 
 
@@ -1239,9 +1268,6 @@ class CurriculumDoneCondition(DoneCondition[AgentID, GameState]):
         self.goal_done.reset(agents, initial_state, shared_info)
 
     def is_done(self, agents, state, shared_info):
-        stage = self.stage_ref.stage
-        if stage == Stage.TOUCH:
-            return self.touch_done.is_done(agents, state, shared_info)
         return self.goal_done.is_done(agents, state, shared_info)
 
 
