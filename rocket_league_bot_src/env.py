@@ -22,7 +22,7 @@ from .curriculum import CurriculumManager
 from .mutators import BallNearCarMutator, ProgressiveResetMutator
 from .obs import SharedObs
 from .rewards import CurriculumReward
-from .utils import CurriculumValue
+from .utils import CurriculumValue, Stats
 
 from rlgym.rocket_league.done_conditions import (
     AnyCondition,
@@ -71,6 +71,9 @@ class ProcessIterationLogger:  # No longer inherits from gym.Wrapper
         self.ep_first_touch_step = -1
         self.ep_goal_step = -1
         self._prev_touches = {}
+
+    def close(self, **kwargs):
+        pass
 
     def reset(self, **kwargs):
         # This is called at the start of a new episode
@@ -179,25 +182,27 @@ class ProcessIterationLogger:  # No longer inherits from gym.Wrapper
         stage = self.cm.stage_ref.stage.value
 
         self.log_counter += 1
-        # if self.pid == 0 and self.log_counter % 1000 == 1:
-        #     print(
-        #         f"[P-{self.pid:02d} | {stage:<8}] "
-        #         f"SPS: {sps:7.1f} | "
-        #         f"Eps: {self.iteration_episodes:4d} | "
-        #         f"Avg Ret: {avg_return:8.2f} | "
-        #         f"Touch Rate: {touch_rate:5.2f} | "
-        #         f"Goal Rate: {goal_rate:5.2f} | "
-        #         f"Med T_Touch: {median_t_first:5.0f} | "
-        #         f"Med T_Goal: {median_t_goal:5.0f}"
-        #     )
+        if self.pid == 0 and self.log_counter % 10000 == 1:
+            print(
+                f"[P-{self.pid:02d} | {stage:<8}] "
+                f"SPS: {sps:7.1f} | "
+                f"Eps: {self.iteration_episodes:4d} | "
+                f"Avg Ret: {avg_return:8.2f} | "
+                f"Touch Rate: {touch_rate:5.2f} | "
+                f"Goal Rate: {goal_rate:5.2f} | "
+                f"Med T_Touch: {median_t_first:5.0f} | "
+                f"Med T_Goal: {median_t_goal:5.0f}"
+            )
 
         # Advance curriculum
         if self.cm:
-            stats = type("Stats", (), {})()
+            stats = Stats()
             stats.touch_rate = touch_rate
             stats.goal_rate = goal_rate
-            stats.median_t_first = median_t_first if median_t_first != -1 else 9999
-            stats.median_t_goal = median_t_goal if median_t_goal != -1 else 9999
+            stats.median_t_first = float(
+                median_t_first if median_t_first != -1 else 9999
+            )
+            stats.median_t_goal = float(median_t_goal if median_t_goal != -1 else 9999)
             self.cm.maybe_advance(stats)
 
         # Reset
@@ -208,8 +213,8 @@ class EnvBuilder:
     def __init__(self, iteration_timesteps: int):
         # curriculum knobs
         self.min_dist = CurriculumValue(300)
-        self.max_dist = CurriculumValue(600)
-        self.max_angle = CurriculumValue(20)
+        self.max_dist = CurriculumValue(400)
+        self.max_angle = CurriculumValue(10)
         self.ball_velocity = CurriculumValue(0.0)
         self.p_easy_reset = CurriculumValue(1.0)
 
@@ -272,4 +277,3 @@ class EnvBuilder:
         )
 
         return wrapped
-

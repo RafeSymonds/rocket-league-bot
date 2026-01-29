@@ -73,7 +73,7 @@ class CurriculumManager:
                 (1 - alpha) * self.p_easy_reset.get() + alpha * target_p_easy
             )
 
-            if np.random.rand() < 0.05:
+            if np.random.rand() < 0.00001:
                 print(
                     f"📈 TOUCH progress={progress:.2f} "
                     f"touch={stats.touch_rate:.2f} "
@@ -85,8 +85,8 @@ class CurriculumManager:
                     f"p_easy={self.p_easy_reset.get():.2f}"
                 )
 
-            if stats.touch_rate > 0.85:
-                self._set_stage(Stage.SCORE)
+            # if stats.touch_rate > 0.85:
+            #     self._set_stage(Stage.SCORE)
 
         # -------------------------
         # Stage 1: SCORE curriculum

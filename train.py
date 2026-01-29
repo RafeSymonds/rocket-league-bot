@@ -1,17 +1,7 @@
 from __future__ import annotations
 
-import os
-from pathlib import Path
-from typing import Any, Dict, List, Optional
-from typing_extensions import override
-
-import gymnasium as gym
-import numpy as np
-from gymnasium import spaces
-from torch.utils.tensorboard.writer import SummaryWriter
 
 from rlgym_ppo import Learner
-from rlgym_ppo.util import RLGymV2GymWrapper
 
 from rocket_league_bot_src.env import EnvBuilder
 
@@ -31,16 +21,16 @@ def _create_rlgym_env(process_id: int = 0):  # Provide a default value for proce
 
 def main():
     global _global_iteration_timesteps
-    ts_per_iteration = 1_000_000
+    ts_per_iteration = 100_000
     _global_iteration_timesteps = ts_per_iteration
 
     learner = Learner(
         _create_rlgym_env,
-        n_proc=16,
+        n_proc=1,
         min_inference_size=12,
         policy_layer_sizes=(512, 512, 256),
         critic_layer_sizes=(512, 512, 256),
-        ppo_batch_size=1_000_000,
+        ppo_batch_size=100_000,
         ppo_minibatch_size=25_000,
         ppo_epochs=2,
         ppo_ent_coef=0.01,
