@@ -23,6 +23,7 @@ class StageConfig:
     w_fast_goal: float
     w_ball_vel_to_goal: float
     w_ball_dist_to_goal: float
+    w_ball_progress: float
     w_shot_commit: float
     w_align: float
     w_hard_hit: float
@@ -55,6 +56,7 @@ def make_stage_config(stage: Stage) -> StageConfig:
             w_fast_goal=0.0,
             w_ball_vel_to_goal=0.0,
             w_ball_dist_to_goal=0.0,
+            w_ball_progress=0.0,
             w_shot_commit=0.0,
             w_align=0.0,
             w_hard_hit=0.0,
@@ -82,6 +84,7 @@ def make_stage_config(stage: Stage) -> StageConfig:
             w_fast_goal=4.0,
             w_ball_vel_to_goal=3.0,
             w_ball_dist_to_goal=2.0,
+            w_ball_progress=1.8,
             w_shot_commit=1.5,
             w_align=0.4,
             w_hard_hit=0.6,
@@ -109,6 +112,7 @@ def make_stage_config(stage: Stage) -> StageConfig:
         w_fast_goal=3.0,
         w_ball_vel_to_goal=2.0,
         w_ball_dist_to_goal=1.2,
+        w_ball_progress=1.2,
         w_shot_commit=1.0,
         w_align=0.2,
         w_hard_hit=0.4,

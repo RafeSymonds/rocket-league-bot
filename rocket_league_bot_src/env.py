@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import csv
+import os
 import time
 from typing import Any, Dict
 
@@ -43,6 +45,73 @@ class ProcessIterationLogger:  # No longer inherits from gym.Wrapper
 
         self._reset_iteration_stats()
         self._reset_episode_stats()
+        self._init_metrics_file()
+
+    def _init_metrics_file(self):
+        self._metrics_path = None
+        if self.pid != 0:
+            return
+        os.makedirs("data", exist_ok=True)
+        self._metrics_path = os.path.join("data", "training_metrics.csv")
+        if not os.path.exists(self._metrics_path):
+            with open(self._metrics_path, "w", newline="", encoding="utf-8") as f:
+                w = csv.writer(f)
+                w.writerow(
+                    [
+                        "unix_time",
+                        "stage",
+                        "sps",
+                        "episodes",
+                        "avg_return",
+                        "touch_rate",
+                        "goal_rate",
+                        "median_t_first",
+                        "median_t_goal",
+                        "ema_touch",
+                        "ema_goal",
+                        "p_easy",
+                        "min_dist",
+                        "max_dist",
+                        "max_angle",
+                        "ball_velocity",
+                    ]
+                )
+
+    def _append_metrics_row(
+        self,
+        stage: str,
+        sps: float,
+        avg_return: float,
+        touch_rate: float,
+        goal_rate: float,
+        median_t_first: float,
+        median_t_goal: float,
+        snap: dict[str, float],
+    ):
+        if self._metrics_path is None:
+            return
+        with open(self._metrics_path, "a", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(
+                [
+                    f"{time.time():.3f}",
+                    stage,
+                    f"{sps:.3f}",
+                    int(self.iteration_episodes),
+                    f"{avg_return:.6f}",
+                    f"{touch_rate:.6f}",
+                    f"{goal_rate:.6f}",
+                    f"{median_t_first:.3f}",
+                    f"{median_t_goal:.3f}",
+                    f"{snap['ema_touch']:.6f}",
+                    f"{snap['ema_goal']:.6f}",
+                    f"{snap['p_easy']:.6f}",
+                    f"{snap['min_dist']:.6f}",
+                    f"{snap['max_dist']:.6f}",
+                    f"{snap['max_angle']:.6f}",
+                    f"{snap['ball_velocity']:.6f}",
+                ]
+            )
 
     def _reset_iteration_stats(self):
         self.iteration_start_time = time.time()
@@ -174,6 +243,17 @@ class ProcessIterationLogger:  # No longer inherits from gym.Wrapper
         stage = self.cm.stage_ref.stage.value
 
         self.log_counter += 1
+        snap = self.cm.snapshot()
+        self._append_metrics_row(
+            stage=stage,
+            sps=sps,
+            avg_return=avg_return,
+            touch_rate=touch_rate,
+            goal_rate=goal_rate,
+            median_t_first=float(median_t_first),
+            median_t_goal=float(median_t_goal),
+            snap=snap,
+        )
         if self.pid == 0 and self.log_counter % 5 == 1:
             print(
                 f"[P-{self.pid:02d} | {stage:<8}] "
@@ -183,7 +263,9 @@ class ProcessIterationLogger:  # No longer inherits from gym.Wrapper
                 f"Touch Rate: {touch_rate:5.2f} | "
                 f"Goal Rate: {goal_rate:5.2f} | "
                 f"Med T_Touch: {median_t_first:5.0f} | "
-                f"Med T_Goal: {median_t_goal:5.0f}"
+                f"Med T_Goal: {median_t_goal:5.0f} | "
+                f"EMA(T/G): {snap['ema_touch']:.2f}/{snap['ema_goal']:.2f} | "
+                f"p_easy: {snap['p_easy']:.2f}"
             )
 
         # Advance curriculum

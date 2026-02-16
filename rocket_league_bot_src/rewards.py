@@ -205,6 +205,37 @@ class TouchWindowBallDistanceToGoalDelta(RewardFunction):
         return rewards
 
 
+class BallDistanceToGoalDeltaReward(RewardFunction):
+    """Dense reward for reducing ball distance to opponent goal each step."""
+
+    def reset(self, agents, initial_state, shared_info):
+        self.prev_dist = {}
+        if initial_state is None:
+            return
+        for a in agents:
+            car = initial_state.cars[a]
+            opp_goal_y = (
+                common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
+            )
+            goal = np.array([0.0, opp_goal_y, 0.0], dtype=np.float32)
+            self.prev_dist[a] = float(np.linalg.norm(initial_state.ball.position - goal))
+
+    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+        rewards: Dict[AgentID, float] = {}
+        ball_pos = state.ball.position
+        for a in agents:
+            car = state.cars[a]
+            opp_goal_y = (
+                common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
+            )
+            goal = np.array([0.0, opp_goal_y, 0.0], dtype=np.float32)
+            dist = float(np.linalg.norm(ball_pos - goal))
+            prev = float(self.prev_dist.get(a, dist))
+            self.prev_dist[a] = dist
+            rewards[a] = float(np.clip((prev - dist) / 2500.0, -0.03, 0.03))
+        return rewards
+
+
 class GoalAlignmentReward(RewardFunction):
     """Small dense reward for ball velocity alignment toward opponent goal."""
 
@@ -391,6 +422,7 @@ class CurriculumReward(RewardFunction):
         self.fast_goal = FastGoalBonus()
         self.ball_vel_to_goal = BallVelocityTowardGoalReward()
         self.ball_dist_to_goal = TouchWindowBallDistanceToGoalDelta(window_steps=15)
+        self.ball_progress = BallDistanceToGoalDeltaReward()
         self.shot_commit = ShotCommitReward(threshold=1300.0)
         self.align = GoalAlignmentReward()
         self.hard_hit = PowerHitReward()
@@ -411,6 +443,7 @@ class CurriculumReward(RewardFunction):
             self.fast_goal,
             self.ball_vel_to_goal,
             self.ball_dist_to_goal,
+            self.ball_progress,
             self.shot_commit,
             self.align,
             self.hard_hit,
@@ -446,6 +479,7 @@ class CurriculumReward(RewardFunction):
 
         add(self.ball_vel_to_goal, cfg.w_ball_vel_to_goal)
         add(self.ball_dist_to_goal, cfg.w_ball_dist_to_goal)
+        add(self.ball_progress, cfg.w_ball_progress)
         add(self.shot_commit, cfg.w_shot_commit)
         add(self.align, cfg.w_align)
         add(self.hard_hit, cfg.w_hard_hit)

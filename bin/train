@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+python3 - <<'PY'
+try:
+    import numpy  # noqa: F401
+except Exception as exc:  # pragma: no cover
+    raise SystemExit(
+        "Missing Python dependencies. Install them first with: pip3 install -r requirements.txt\n"
+        f"Details: {exc}"
+    )
+PY
+
+python3 train.py \
+  --n-proc 1 \
+  --min-inference-size 1 \
+  --ts-per-iteration 50000 \
+  --ppo-batch-size 50000 \
+  --ppo-minibatch-size 10000 \
+  --ppo-epochs 3 \
+  --policy-lr 2.5e-4 \
+  --critic-lr 2.5e-4 \
+  --ent-coef 0.003 \
+  --exp-buffer-size 200000 \
+  --save-every-ts 2000000 \
+  --resume-latest \
+  "$@"

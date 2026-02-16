@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+
+def main() -> int:
+    root = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("data/checkpoints")
+    if not root.exists():
+        print(f"Missing path: {root}")
+        return 1
+
+    books = sorted(root.rglob("BOOK_KEEPING_VARS.json"), key=lambda p: p.stat().st_mtime)
+    if not books:
+        print(f"No checkpoints found under {root}")
+        return 1
+
+    rows = []
+    for p in books:
+        try:
+            data = json.loads(p.read_text())
+        except Exception:
+            continue
+
+        reward = float(data.get("policy_average_reward", 0.0))
+        timesteps = int(data.get("cumulative_timesteps", 0))
+        rows.append((timesteps, reward, p))
+
+    if not rows:
+        print("No readable BOOK_KEEPING_VARS.json files found")
+        return 1
+
+    rows.sort(key=lambda x: (x[0], x[2].as_posix()))
+
+    print("timesteps | avg_reward | checkpoint")
+    print("-" * 80)
+    for ts, r, p in rows[-20:]:
+        print(f"{ts:9d} | {r:10.2f} | {p.parent}")
+
+    first_ts, first_r, _ = rows[0]
+    last_ts, last_r, _ = rows[-1]
+    delta = last_r - first_r
+    pct = (delta / abs(first_r) * 100.0) if abs(first_r) > 1e-6 else 0.0
+
+    print("\nSummary")
+    print(f"start: ts={first_ts}, reward={first_r:.2f}")
+    print(f"end:   ts={last_ts}, reward={last_r:.2f}")
+    print(f"delta: {delta:.2f} ({pct:.1f}%)")
+
+    trend = "improving" if delta > 0 else "flat/down"
+    print(f"trend: {trend}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -36,10 +36,14 @@ class CurriculumManager:
 
         self._touch_pass_streak = 0
         self._score_pass_streak = 0
+        self._stage_iters = 0
+        self._ema_touch_rate = 0.0
+        self._ema_goal_rate = 0.0
 
     def _set_stage(self, stage: Stage) -> None:
         if self.stage_ref.stage != stage:
             self.stage_ref.stage = stage
+            self._stage_iters = 0
             print(f"✅ Curriculum stage -> {stage.value}")
 
     @staticmethod
@@ -67,25 +71,44 @@ class CurriculumManager:
 
     def maybe_advance(self, stats) -> None:
         stage: Stage = self.stage_ref.stage
+        self._stage_iters += 1
+        self._ema_touch_rate = self._smooth(self._ema_touch_rate, float(stats.touch_rate), alpha=0.2)
+        self._ema_goal_rate = self._smooth(self._ema_goal_rate, float(stats.goal_rate), alpha=0.2)
 
         if stage == Stage.TOUCH:
             self._update_touch_difficulty(stats)
 
-            touch_pass = stats.touch_rate >= 0.78 and stats.median_t_first <= 120.0
+            touch_pass = self._ema_touch_rate >= 0.74 and stats.median_t_first <= 130.0
             self._touch_pass_streak = self._touch_pass_streak + 1 if touch_pass else 0
 
-            if self._touch_pass_streak >= 4:
+            rescue_pass = self._stage_iters >= 25 and self._ema_touch_rate >= 0.62
+
+            if self._touch_pass_streak >= 4 or rescue_pass:
                 self._set_stage(Stage.SCORE)
                 self._touch_pass_streak = 0
                 self._score_pass_streak = 0
 
         elif stage == Stage.SCORE:
-            score_pass = stats.goal_rate >= 0.16 and stats.median_t_goal <= 230.0
+            score_pass = self._ema_goal_rate >= 0.14 and stats.median_t_goal <= 250.0
             self._score_pass_streak = self._score_pass_streak + 1 if score_pass else 0
 
-            if self._score_pass_streak >= 6:
+            rescue_pass = self._stage_iters >= 35 and self._ema_goal_rate >= 0.10
+
+            if self._score_pass_streak >= 6 or rescue_pass:
                 self._set_stage(Stage.SELFPLAY)
                 self._score_pass_streak = 0
 
         elif stage == Stage.SELFPLAY:
             pass
+
+    def snapshot(self) -> dict[str, float]:
+        return {
+            "stage_iters": float(self._stage_iters),
+            "ema_touch": float(self._ema_touch_rate),
+            "ema_goal": float(self._ema_goal_rate),
+            "min_dist": float(self.min_dist.get()),
+            "max_dist": float(self.max_dist.get()),
+            "max_angle": float(self.max_angle.get()),
+            "ball_velocity": float(self.ball_velocity.get()),
+            "p_easy": float(self.p_easy_reset.get()),
+        }
