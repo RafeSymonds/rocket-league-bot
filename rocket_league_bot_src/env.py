@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import time
 from typing import Any, Dict
-import gymnasium as gym
 
 import numpy as np
 
@@ -10,25 +9,18 @@ from rlgym.api import RLGym
 from rlgym.rocket_league.action_parsers import LookupTableAction, RepeatAction
 from rlgym.rocket_league.sim import RocketSimEngine
 from rlgym.rocket_league.state_mutators import (
-    FixedTeamSizeMutator,
     KickoffMutator,
     MutatorSequence,
 )
 from rlgym_ppo.util import RLGymV2GymWrapper
 
-from .config import Stage, make_stage_config
-from .conditions import CurriculumDoneCondition
+from .config import Stage
+from .conditions import CurriculumDoneCondition, CurriculumTruncationCondition
 from .curriculum import CurriculumManager
-from .mutators import BallNearCarMutator, ProgressiveResetMutator
+from .mutators import BallNearCarMutator, DynamicTeamSizeMutator, ProgressiveResetMutator
 from .obs import SharedObs
 from .rewards import CurriculumReward
 from .utils import CurriculumValue, Stats
-
-from rlgym.rocket_league.done_conditions import (
-    AnyCondition,
-    NoTouchTimeoutCondition,
-    TimeoutCondition,
-)
 
 
 class ProcessIterationLogger:  # No longer inherits from gym.Wrapper
@@ -182,7 +174,7 @@ class ProcessIterationLogger:  # No longer inherits from gym.Wrapper
         stage = self.cm.stage_ref.stage.value
 
         self.log_counter += 1
-        if self.pid == 0 and self.log_counter % 10000 == 1:
+        if self.pid == 0 and self.log_counter % 5 == 1:
             print(
                 f"[P-{self.pid:02d} | {stage:<8}] "
                 f"SPS: {sps:7.1f} | "
@@ -223,16 +215,11 @@ class EnvBuilder:
         self.iteration_timesteps = iteration_timesteps
 
     def __call__(self, process_id: int):
-        cfg = make_stage_config(self.stage)
-
         action_parser = RepeatAction(LookupTableAction(), repeats=2)
         reward_fn = CurriculumReward(stage_ref=self)
 
         termination_cond = CurriculumDoneCondition(stage_ref=self)
-        truncation_cond = AnyCondition(
-            NoTouchTimeoutCondition(cfg.no_touch_timeout_s),
-            TimeoutCondition(cfg.timeout_s),
-        )
+        truncation_cond = CurriculumTruncationCondition(stage_ref=self)
 
         reset_mutator = ProgressiveResetMutator(
             easy_mutator=BallNearCarMutator(
@@ -246,7 +233,7 @@ class EnvBuilder:
 
         env = RLGym(
             state_mutator=MutatorSequence(
-                FixedTeamSizeMutator(cfg.blue_players, cfg.orange_players),
+                DynamicTeamSizeMutator(self),
                 KickoffMutator(),
                 reset_mutator,
             ),

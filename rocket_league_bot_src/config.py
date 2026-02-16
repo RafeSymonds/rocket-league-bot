@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 
@@ -37,7 +38,8 @@ class StageConfig:
 
 def make_stage_config(stage: Stage) -> StageConfig:
     """
-    Single source of truth for how each phase behaves.
+    Single source of truth for stage setup and reward weights.
+    Keep each stage small and explicit.
     """
     if stage == Stage.TOUCH:
         return StageConfig(
@@ -47,8 +49,8 @@ def make_stage_config(stage: Stage) -> StageConfig:
             end_on_touch=True,
             end_on_goal=False,
             no_touch_timeout_s=8,
-            timeout_s=300,
-            # rewards: learn contact + meaningful touch
+            timeout_s=40,
+            # learn to reach and contact the ball quickly
             w_goal=0.0,
             w_fast_goal=0.0,
             w_ball_vel_to_goal=0.0,
@@ -56,13 +58,13 @@ def make_stage_config(stage: Stage) -> StageConfig:
             w_shot_commit=0.0,
             w_align=0.0,
             w_hard_hit=0.0,
-            w_touch=5.0,
-            w_power=0.0,
-            w_approach=0.2,
-            w_face_ball=0.1,
+            w_touch=3.0,
+            w_power=0.4,
+            w_approach=0.25,
+            w_face_ball=0.05,
             w_ball_dist=0.0,
-            w_step_penalty=15.0,
-            w_notouch_pressure=0.0,
+            w_step_penalty=1.0,
+            w_notouch_pressure=0.2,
             w_camp_penalty=0.0,
         )
 
@@ -74,25 +76,23 @@ def make_stage_config(stage: Stage) -> StageConfig:
             end_on_touch=False,
             end_on_goal=True,
             no_touch_timeout_s=10,
-            timeout_s=300,
-            # rewards: force real shots / conversions (score-safe)
-            w_goal=40.0,
-            w_fast_goal=10.0,
-            w_ball_vel_to_goal=8.0,
-            w_ball_dist_to_goal=3.0,
-            w_shot_commit=6.0,
-            w_align=1.5,
-            w_hard_hit=4.0,
-            # turn off comfort shaping
-            w_touch=0.0,
-            w_power=0.0,
-            w_approach=0.0,
+            timeout_s=70,
+            # convert touches into goals
+            w_goal=20.0,
+            w_fast_goal=4.0,
+            w_ball_vel_to_goal=3.0,
+            w_ball_dist_to_goal=2.0,
+            w_shot_commit=1.5,
+            w_align=0.4,
+            w_hard_hit=0.6,
+            w_touch=0.8,
+            w_power=0.3,
+            w_approach=0.05,
             w_face_ball=0.0,
             w_ball_dist=0.0,
-            # punish stalling more than TOUCH
-            w_step_penalty=1.5,
-            w_notouch_pressure=0.25,
-            w_camp_penalty=1.0,
+            w_step_penalty=1.0,
+            w_notouch_pressure=0.35,
+            w_camp_penalty=0.5,
         )
 
     # SELFPLAY
@@ -103,21 +103,21 @@ def make_stage_config(stage: Stage) -> StageConfig:
         end_on_touch=False,
         end_on_goal=True,
         no_touch_timeout_s=10,
-        timeout_s=300,
-        # rewards: still goal-focused, slightly less dense to avoid farming
-        w_goal=35.0,
-        w_fast_goal=8.0,
-        w_ball_vel_to_goal=6.0,
-        w_ball_dist_to_goal=2.0,
-        w_shot_commit=4.0,
-        w_align=1.0,
-        w_hard_hit=2.5,
-        w_touch=0.0,
-        w_power=0.0,
+        timeout_s=90,
+        # sparse objective + light shaping
+        w_goal=18.0,
+        w_fast_goal=3.0,
+        w_ball_vel_to_goal=2.0,
+        w_ball_dist_to_goal=1.2,
+        w_shot_commit=1.0,
+        w_align=0.2,
+        w_hard_hit=0.4,
+        w_touch=0.4,
+        w_power=0.2,
         w_approach=0.0,
         w_face_ball=0.0,
         w_ball_dist=0.0,
-        w_step_penalty=1.3,
-        w_notouch_pressure=0.20,
-        w_camp_penalty=1.0,
+        w_step_penalty=1.0,
+        w_notouch_pressure=0.35,
+        w_camp_penalty=0.6,
     )
