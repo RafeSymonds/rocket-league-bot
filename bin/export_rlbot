@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import shutil
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from rocket_league_bot_src.checkpoints import build_runtime_config, find_latest_checkpoint
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Export the latest trained checkpoint into the RLBot package.")
+    parser.add_argument("--checkpoint-root", default="data/checkpoints")
+    parser.add_argument("--checkpoint-dir", default="")
+    parser.add_argument("--bot-dir", default="BotBoi_v1/src")
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    checkpoint_dir = args.checkpoint_dir or find_latest_checkpoint(args.checkpoint_root)
+    if not checkpoint_dir:
+        raise SystemExit("No checkpoint found to export")
+
+    src = Path(checkpoint_dir)
+    bot_dir = Path(args.bot_dir)
+    bot_dir.mkdir(parents=True, exist_ok=True)
+
+    required = ["PPO_POLICY.pt", "BOOK_KEEPING_VARS.json"]
+    for name in required:
+        source = src / name
+        if not source.exists():
+            raise SystemExit(f"Missing expected checkpoint file: {source}")
+        shutil.copy2(source, bot_dir / name)
+
+    runtime_config = build_runtime_config(str(src))
+    (bot_dir / "runtime_config.json").write_text(json.dumps(runtime_config, indent=2, sort_keys=True))
+
+    print(f"Exported checkpoint to {bot_dir}")
+    print(f"source={src}")
+    print(f"timesteps={runtime_config['cumulative_timesteps']}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

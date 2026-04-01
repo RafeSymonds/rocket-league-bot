@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import csv
+import json
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from rocket_league_bot_src.checkpoints import find_latest_checkpoint, load_checkpoint_book
+
+
+def parse_args():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Show current training / export status.")
+    parser.add_argument("--watch", type=float, default=0.0, help="Refresh every N seconds.")
+    return parser.parse_args()
+
+
+def read_metrics(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
+
+
+def render() -> None:
+    checkpoint_root = Path("data/checkpoints")
+    metrics_path = Path("data/training_metrics.csv")
+    league_path = Path("data/league/snapshots.json")
+    runtime_config_path = Path("BotBoi_v1/src/runtime_config.json")
+
+    latest_checkpoint = find_latest_checkpoint(str(checkpoint_root))
+    print("Latest checkpoint:")
+    if latest_checkpoint:
+        book = load_checkpoint_book(latest_checkpoint)
+        print(f"  dir: {latest_checkpoint}")
+        print(f"  timesteps: {int(book.get('cumulative_timesteps', 0))}")
+        print(f"  avg_reward: {float(book.get('policy_average_reward', 0.0)):.3f}")
+    else:
+        print("  none")
+
+    rows = read_metrics(metrics_path)
+    print("\nTraining metrics:")
+    if rows:
+        last = rows[-1]
+        print(f"  stage: {last.get('stage', '')}")
+        print(f"  difficulty: {last.get('difficulty', '')}")
+        print(f"  touch_rate: {last.get('touch_rate', '')}")
+        print(f"  goal_rate: {last.get('goal_rate', '')}")
+        print(f"  median_t_first: {last.get('median_t_first', '')}")
+        print(f"  median_t_goal: {last.get('median_t_goal', '')}")
+    else:
+        print("  no metrics yet")
+
+    print("\nLeague snapshots:")
+    if league_path.exists():
+        snapshots = json.loads(league_path.read_text())
+        print(f"  count: {len(snapshots)}")
+        if snapshots:
+            latest = snapshots[-1]
+            print(f"  latest ts: {latest.get('cumulative_timesteps', 0)}")
+            print(f"  latest stage: {latest.get('stage', '')}")
+    else:
+        print("  none")
+
+    print("\nRLBot package:")
+    if runtime_config_path.exists():
+        runtime = json.loads(runtime_config_path.read_text())
+        print(f"  checkpoint: {runtime.get('checkpoint_dir', '')}")
+        print(f"  timesteps: {runtime.get('cumulative_timesteps', 0)}")
+        print(f"  action_repeat: {runtime.get('action_repeat', '')}")
+        print(f"  obs_dim: {runtime.get('obs_dim', '')}")
+    else:
+        print("  no exported runtime_config.json")
+
+
+def main() -> int:
+    args = parse_args()
+    if args.watch and args.watch > 0:
+        while True:
+            print("\033[2J\033[H", end="")
+            render()
+            time.sleep(args.watch)
+    render()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

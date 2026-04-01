@@ -1,0 +1,18 @@
+{
+  "action_dim": null,
+  "action_repeat": 8,
+  "checkpoint_dir": "data/checkpoints/rlgym-ppo-run-1769303493850384184/24801974",
+  "critic_hidden_sizes": [
+    512,
+    512,
+    256
+  ],
+  "cumulative_timesteps": 24801974,
+  "obs_dim": 44,
+  "policy_average_reward": 74973.66936032378,
+  "policy_hidden_sizes": [
+    512,
+    512,
+    256
+  ]
+}

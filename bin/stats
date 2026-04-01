@@ -2,10 +2,13 @@
 set -euo pipefail
 
 echo "Checkpoint trend:"
-bin/progress_report data/checkpoints || true
+python3 bin/progress_report data/checkpoints || true
 echo
 echo "Live training metrics:"
-bin/metrics_report data/training_metrics.csv || true
+python3 bin/metrics_report data/training_metrics.csv || true
+echo
+echo "Training dashboard:"
+python3 bin/progress_dashboard || true
 echo
 echo "TensorBoard:"
 tensorboard --logdir runs

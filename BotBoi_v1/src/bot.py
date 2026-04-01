@@ -29,6 +29,7 @@ HEIGHT_COEF = 1.0 / CEILING_Z
 DIST_COEF = 1.0 / float(np.linalg.norm([SIDE_WALL_X, BACK_NET_Y, CEILING_Z]))
 
 OBS_DIM = 44
+DEFAULT_HIDDEN_SIZES = [512, 512, 256]
 
 
 class MLPPolicy(nn.Module):
@@ -106,16 +107,28 @@ class BotBoi(BaseAgent):
             with open(book_path, "r", encoding="utf-8") as f:
                 book = json.load(f)
 
-        self.obs_dim = OBS_DIM
+        runtime_config_path = os.path.join(bot_dir, "runtime_config.json")
+        runtime_config: dict[str, Any] = {}
+        if os.path.exists(runtime_config_path):
+            with open(runtime_config_path, "r", encoding="utf-8") as f:
+                runtime_config = json.load(f)
 
+        self.obs_dim = int(runtime_config.get("obs_dim", OBS_DIM))
+
+        act_dim_from_runtime = runtime_config.get("action_dim")
         act_key = _find_key(book, ["action_dim", "action_size", "n_actions", "act_dim"])
-        self.act_dim = int(book[act_key]) if act_key is not None else len(self.action_table)
+        if act_dim_from_runtime is not None:
+            self.act_dim = int(act_dim_from_runtime)
+        elif act_key is not None:
+            self.act_dim = int(book[act_key])
+        else:
+            self.act_dim = len(self.action_table)
         if self.act_dim != len(self.action_table):
             print(
                 f"[BotBoi] WARNING: act_dim={self.act_dim} but lookup table has {len(self.action_table)} actions"
             )
 
-        hidden_sizes = [512, 512, 256]
+        hidden_sizes = list(runtime_config.get("policy_hidden_sizes", DEFAULT_HIDDEN_SIZES))
         self.device = torch.device("cpu")
         self.policy = MLPPolicy(self.obs_dim, self.act_dim, hidden_sizes).to(self.device)
 
@@ -127,12 +140,16 @@ class BotBoi(BaseAgent):
         self.policy.load_state_dict(state)
         self.policy.eval()
 
-        # Must match training RepeatAction(..., repeats=2)
-        self.hold_ticks = 2
+        self.hold_ticks = int(runtime_config.get("action_repeat", 8))
         self._hold_counter = 0
         self._held_action_index = 0
 
-        print(f"[BotBoi] Loaded policy. obs_dim={self.obs_dim}, act_dim={self.act_dim}")
+        checkpoint_dir = runtime_config.get("checkpoint_dir", "")
+        cumulative_timesteps = runtime_config.get("cumulative_timesteps", "")
+        print(
+            f"[BotBoi] Loaded policy. obs_dim={self.obs_dim}, act_dim={self.act_dim}, "
+            f"hold_ticks={self.hold_ticks}, checkpoint={checkpoint_dir}, ts={cumulative_timesteps}"
+        )
 
     def build_obs(self, packet: GameTickPacket) -> np.ndarray:
         me = packet.game_cars[self.index]

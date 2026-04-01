@@ -9,9 +9,11 @@ from rlgym.api import AgentID, ObsBuilder
 from rlgym.rocket_league import common_values
 from rlgym.rocket_league.api import GameState
 
+from .config import OBS_DIM
+
 
 class SharedObs(ObsBuilder):
-    OBS_SIZE = 44
+    OBS_SIZE = OBS_DIM
 
     def __init__(self):
         super().__init__()

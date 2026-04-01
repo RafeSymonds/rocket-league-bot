@@ -88,7 +88,25 @@ bin/progress_report data/checkpoints
 Inspect live training metrics:
 
 ```bash
-bin/metrics_report data/training_metrics.csv
+python3 bin/metrics_report data/training_metrics.csv
+```
+
+Watch the full training/export dashboard live:
+
+```bash
+python3 bin/progress_dashboard --watch 5
+```
+
+Export the latest checkpoint into the RLBot package:
+
+```bash
+python3 bin/export_rlbot
+```
+
+Validate the RLBot package before opening RLBot:
+
+```bash
+python3 bin/validate_rlbot_package
 ```
 
 ## Notes
@@ -97,6 +115,8 @@ bin/metrics_report data/training_metrics.csv
 - Training uses `RepeatAction(LookupTableAction(), repeats=8)` to match common RLGym practice more closely than the old `repeats=2`.
 - Observation compatibility still matters. If you change `rocket_league_bot_src/obs.py`, review `BotBoi_v1/src/bot.py` as well.
 - Snapshot metadata for future old-version self-play is stored under `data/league/snapshots.json`.
+- The RLBot package lives at `BotBoi_v1/src/bot.cfg`. After exporting, load that bot in RLBot GUI.
+- `BotBoi_v1/src/runtime_config.json` is now the contract between training and the in-game bot package.
 
 ## Further Reading
 

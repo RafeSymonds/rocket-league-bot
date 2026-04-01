@@ -5,6 +5,7 @@ from enum import Enum
 
 
 ACTION_REPEAT = 8
+OBS_DIM = 44
 POLICY_LAYER_SIZES = (512, 512, 256)
 CRITIC_LAYER_SIZES = (512, 512, 256)
 DEFAULT_CHECKPOINT_ROOT = "data/checkpoints"

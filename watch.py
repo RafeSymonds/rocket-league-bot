@@ -5,13 +5,13 @@ import torch
 
 from rlgym_ppo import Learner
 
+from rocket_league_bot_src.checkpoints import find_latest_checkpoint
 from rocket_league_bot_src.config import (
     CRITIC_LAYER_SIZES,
     DEFAULT_CHECKPOINT_ROOT,
     POLICY_LAYER_SIZES,
 )
 from rocket_league_bot_src.env import EnvBuilder
-from train import find_latest_checkpoint
 
 RUN_FOLDER = find_latest_checkpoint(DEFAULT_CHECKPOINT_ROOT)
 

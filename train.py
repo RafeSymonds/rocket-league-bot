@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import argparse
-import json
-from pathlib import Path
 
 from rlgym_ppo import Learner
 
+from rocket_league_bot_src.checkpoints import find_latest_checkpoint
 from rocket_league_bot_src.config import (
     CRITIC_LAYER_SIZES,
     DEFAULT_CHECKPOINT_ROOT,
@@ -46,28 +45,6 @@ def parse_args() -> argparse.Namespace:
     parser.set_defaults(resume_latest=True)
 
     return parser.parse_args()
-
-
-def find_latest_checkpoint(checkpoint_root: str) -> str:
-    root = Path(checkpoint_root)
-    if not root.exists():
-        return ""
-
-    candidates: list[tuple[int, float, str]] = []
-    for book in root.rglob("BOOK_KEEPING_VARS.json"):
-        try:
-            data = json.loads(book.read_text())
-            ts = int(data.get("cumulative_timesteps", 0))
-        except Exception:
-            ts = 0
-        candidates.append((ts, book.stat().st_mtime, str(book.parent)))
-
-    if not candidates:
-        return ""
-
-    candidates.sort(key=lambda x: (x[0], x[1]))
-    return candidates[-1][2]
-
 
 def main():
     global _global_iteration_timesteps, _global_env_builder

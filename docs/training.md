@@ -131,6 +131,14 @@ Interpretation:
 - In `DEFEND`, survival and clears matter more than pretty offense, so progress may look noisier.
 - In `SELF_PLAY`, progress is slower and noisier, so stage-aware resets and evaluation become more important.
 
+Practical monitoring commands:
+
+```bash
+python3 bin/progress_dashboard --watch 5
+python3 bin/metrics_report data/training_metrics.csv
+python3 bin/progress_report data/checkpoints
+```
+
 ## Known Limits
 
 This repo still does not have everything needed for a strong long-term training system.
@@ -192,6 +200,32 @@ What it does not do yet:
 - sample an old checkpoint as a live opponent during training
 
 That limitation comes from the current training architecture using one shared policy across all agents. A future pass needs a multi-policy action path or an opponent-serving wrapper around inference.
+
+## Exporting To RLBot
+
+The in-game bot package is `BotBoi_v1/src/`.
+
+After training:
+
+```bash
+python3 bin/export_rlbot
+python3 bin/validate_rlbot_package
+```
+
+That export copies:
+
+- latest `PPO_POLICY.pt`
+- latest `BOOK_KEEPING_VARS.json`
+- generated `runtime_config.json`
+
+The RLBot runtime bot reads `runtime_config.json` to stay aligned with training-side values such as:
+
+- observation size
+- action repeat
+- policy hidden sizes
+- checkpoint provenance
+
+Load `BotBoi_v1/src/bot.cfg` in RLBot GUI after export.
 
 ## Practical Guidance For Future Edits
 
