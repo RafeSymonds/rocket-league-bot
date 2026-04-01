@@ -13,6 +13,11 @@ from rlgym.rocket_league.done_conditions import (
 
 from .config import Stage
 
+try:
+    from rlgym_tools.rocket_league.done_conditions.game_condition import GameCondition
+except Exception:  # pragma: no cover - optional dependency until installed
+    GameCondition = None
+
 
 class TouchDoneCondition(DoneCondition[str, GameState]):
     def reset(
@@ -43,13 +48,22 @@ class CurriculumDoneCondition(DoneCondition[str, GameState]):
         self.curriculum_manager = curriculum_manager
         self.touch_done = TouchDoneCondition()
         self.goal_done = GoalCondition()
+        self.game_done = GameCondition() if GameCondition is not None else None
 
     def reset(self, agents, initial_state, shared_info):
         self.touch_done.reset(agents, initial_state, shared_info)
         self.goal_done.reset(agents, initial_state, shared_info)
+        if self.game_done is not None:
+            self.game_done.reset(agents, initial_state, shared_info)
 
     def is_done(self, agents, state, shared_info):
         cfg = self.curriculum_manager.current_config()
+        if cfg.full_match:
+            if self.game_done is None:
+                raise RuntimeError(
+                    "Full-match training requires rlgym-tools. Install it with: pip install -U rlgym-tools"
+                )
+            return self.game_done.is_done(agents, state, shared_info)
         if cfg.end_on_touch:
             return self.touch_done.is_done(agents, state, shared_info)
         return self.goal_done.is_done(agents, state, shared_info)
@@ -76,4 +90,6 @@ class CurriculumTruncationCondition(DoneCondition[str, GameState]):
 
     def is_done(self, agents, state, shared_info):
         stage = self.curriculum_manager.stage
+        if self.curriculum_manager.current_config().full_match:
+            return {agent: False for agent in agents}
         return self._conditions[stage].is_done(agents, state, shared_info)

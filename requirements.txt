@@ -50,6 +50,7 @@ rlgym==2.0.1
 rlgym-api==2.0.0
 rlgym-ppo @ git+https://github.com/AechPro/rlgym-ppo@4ffd2e924198bf4b2d59f4bf280b29919d7c07ea
 rlgym-rocket-league==2.0.1
+rlgym-tools==2.6.0
 rocketsim==2.1.1.post4
 sentry-sdk==2.50.0
 smmap==5.0.2

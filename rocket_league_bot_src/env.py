@@ -11,17 +11,24 @@ import numpy as np
 from rlgym.api import RLGym
 from rlgym.rocket_league.action_parsers import LookupTableAction, RepeatAction
 from rlgym.rocket_league.sim import RocketSimEngine
-from rlgym.rocket_league.state_mutators import KickoffMutator, MutatorSequence
 from rlgym_ppo.util import RLGymV2GymWrapper
 
 from .conditions import CurriculumDoneCondition, CurriculumTruncationCondition
 from .config import ACTION_REPEAT
 from .curriculum import CurriculumManager
 from .league import SnapshotLeague
-from .mutators import DynamicTeamSizeMutator, ScenarioResetMutator
+from .mutators import DynamicMatchMutator
 from .obs import SharedObs
+from .reporting import write_training_report
 from .rewards import CurriculumReward
 from .utils import Stats
+
+try:
+    from rlgym_tools.rocket_league.shared_info_providers.scoreboard_provider import (
+        ScoreboardProvider,
+    )
+except Exception:  # pragma: no cover - optional dependency until installed
+    ScoreboardProvider = None
 
 
 class ProcessIterationLogger:
@@ -39,6 +46,7 @@ class ProcessIterationLogger:
         self.cm = curriculum_manager
         self.checkpoint_root = checkpoint_root
         self.league = SnapshotLeague()
+        self._last_exported_checkpoint = ""
         self.log_counter = 0
 
         self.observation_space = env.observation_space
@@ -125,6 +133,10 @@ class ProcessIterationLogger:
                     f"{snap.ema_goal:.6f}",
                 ]
             )
+        try:
+            write_training_report(metrics_path=self._metrics_path)
+        except Exception as exc:
+            print(f"[report] failed to update training report: {exc}")
 
     def close(self, **kwargs):
         pass
@@ -231,6 +243,7 @@ class ProcessIterationLogger:
         )
         self.cm.maybe_advance(stats)
         self._maybe_register_league_snapshot()
+        self._maybe_auto_export_latest_checkpoint()
         self._reset_iteration_stats()
 
     def _maybe_register_league_snapshot(self) -> None:
@@ -260,6 +273,24 @@ class ProcessIterationLogger:
             stage=cfg.stage.value,
             difficulty=self.cm.snapshot().difficulty,
         )
+
+    def _maybe_auto_export_latest_checkpoint(self) -> None:
+        if self.pid != 0:
+            return
+        latest = self._find_latest_checkpoint()
+        if latest is None:
+            return
+        latest_str = str(latest)
+        if latest_str == self._last_exported_checkpoint:
+            return
+        self._last_exported_checkpoint = latest_str
+
+        try:
+            from .export import export_checkpoint_to_rlbot_package
+
+            export_checkpoint_to_rlbot_package(latest_str)
+        except Exception as exc:
+            print(f"[export] failed to export latest checkpoint: {exc}")
 
     def _find_latest_checkpoint(self):
         root = Path(self.checkpoint_root)
@@ -292,17 +323,18 @@ class EnvBuilder:
         action_parser = RepeatAction(LookupTableAction(), repeats=ACTION_REPEAT)
 
         env = RLGym(
-            state_mutator=MutatorSequence(
-                DynamicTeamSizeMutator(curriculum_manager),
-                KickoffMutator(),
-                ScenarioResetMutator(curriculum_manager),
-            ),
+            state_mutator=DynamicMatchMutator(curriculum_manager),
             obs_builder=SharedObs(),
             action_parser=action_parser,
             reward_fn=CurriculumReward(curriculum_manager),
             termination_cond=CurriculumDoneCondition(curriculum_manager),
             truncation_cond=CurriculumTruncationCondition(curriculum_manager),
             transition_engine=RocketSimEngine(),
+            **(
+                {"shared_info_provider": ScoreboardProvider()}
+                if ScoreboardProvider is not None
+                else {}
+            ),
         )
 
         wrapped = ProcessIterationLogger(

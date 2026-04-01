@@ -137,7 +137,40 @@ Practical monitoring commands:
 python3 bin/progress_dashboard --watch 5
 python3 bin/metrics_report data/training_metrics.csv
 python3 bin/progress_report data/checkpoints
+python3 bin/render_training_report
+python3 bin/manage_training status
+python3 bin/manage_training logs -f
 ```
+
+The graph report is written to `data/training_report.html` and auto-refreshes every 5 seconds. It includes:
+
+- average return
+- touch rate
+- goal rate
+- curriculum difficulty
+
+Stage changes are shown as background color bands in the graphs.
+
+## Unattended Running And Resume
+
+The training entrypoint already uses `--resume-latest`, so background restarts continue from the newest checkpoint by default.
+
+Typical unattended workflow:
+
+```bash
+python3 bin/manage_training start
+python3 bin/manage_training status
+python3 bin/manage_training logs -f
+python3 bin/manage_training stop
+python3 bin/manage_training start
+```
+
+What this gives you:
+
+- background training process
+- persisted PID / command metadata in `data/training_run.json`
+- rolling log file at `data/logs/train_latest.log`
+- resume from the newest checkpoint on restart
 
 ## Known Limits
 
@@ -211,6 +244,8 @@ After training:
 python3 bin/export_rlbot
 python3 bin/validate_rlbot_package
 ```
+
+During unattended training, the main process also attempts to auto-export the newest checkpoint into `BotBoi_v1/src/` whenever a fresh checkpoint appears.
 
 That export copies:
 

@@ -11,7 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from rocket_league_bot_src.checkpoints import build_runtime_config, find_latest_checkpoint
+from rocket_league_bot_src.checkpoints import find_latest_checkpoint
+from rocket_league_bot_src.export import export_checkpoint_to_rlbot_package
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,17 +31,8 @@ def main() -> int:
 
     src = Path(checkpoint_dir)
     bot_dir = Path(args.bot_dir)
-    bot_dir.mkdir(parents=True, exist_ok=True)
-
-    required = ["PPO_POLICY.pt", "BOOK_KEEPING_VARS.json"]
-    for name in required:
-        source = src / name
-        if not source.exists():
-            raise SystemExit(f"Missing expected checkpoint file: {source}")
-        shutil.copy2(source, bot_dir / name)
-
-    runtime_config = build_runtime_config(str(src))
-    (bot_dir / "runtime_config.json").write_text(json.dumps(runtime_config, indent=2, sort_keys=True))
+    export_checkpoint_to_rlbot_package(str(src), str(bot_dir))
+    runtime_config = json.loads((bot_dir / "runtime_config.json").read_text())
 
     print(f"Exported checkpoint to {bot_dir}")
     print(f"source={src}")

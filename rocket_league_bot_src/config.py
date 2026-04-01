@@ -36,6 +36,7 @@ class StageConfig:
     stage: Stage
     blue_players: int
     orange_players: int
+    full_match: bool
     end_on_touch: bool
     end_on_goal: bool
     no_touch_timeout_s: int
@@ -63,6 +64,7 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
             stage=stage,
             blue_players=1,
             orange_players=0,
+            full_match=False,
             end_on_touch=True,
             end_on_goal=False,
             no_touch_timeout_s=8,
@@ -88,6 +90,7 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
             stage=stage,
             blue_players=1,
             orange_players=0,
+            full_match=False,
             end_on_touch=False,
             end_on_goal=True,
             no_touch_timeout_s=10,
@@ -116,6 +119,7 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
             stage=stage,
             blue_players=1,
             orange_players=0,
+            full_match=False,
             end_on_touch=False,
             end_on_goal=True,
             no_touch_timeout_s=10,
@@ -144,6 +148,7 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
             stage=stage,
             blue_players=1,
             orange_players=1,
+            full_match=False,
             end_on_touch=False,
             end_on_goal=True,
             no_touch_timeout_s=12,
@@ -171,6 +176,7 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
         stage=stage,
         blue_players=1,
         orange_players=1,
+        full_match=True,
         end_on_touch=False,
         end_on_goal=True,
         no_touch_timeout_s=15,

@@ -67,6 +67,30 @@ Start training:
 bin/train
 ```
 
+Start unattended background training:
+
+```bash
+python3 bin/manage_training start
+```
+
+Check whether it is still running, what checkpoint it last saved, and the recent log tail:
+
+```bash
+python3 bin/manage_training status
+```
+
+Follow the live training log:
+
+```bash
+python3 bin/manage_training logs -f
+```
+
+Stop the background training process cleanly:
+
+```bash
+python3 bin/manage_training stop
+```
+
 Train directly with custom flags:
 
 ```bash
@@ -97,6 +121,12 @@ Watch the full training/export dashboard live:
 python3 bin/progress_dashboard --watch 5
 ```
 
+Generate the HTML graph report manually:
+
+```bash
+python3 bin/render_training_report
+```
+
 Export the latest checkpoint into the RLBot package:
 
 ```bash
@@ -117,6 +147,9 @@ python3 bin/validate_rlbot_package
 - Snapshot metadata for future old-version self-play is stored under `data/league/snapshots.json`.
 - The RLBot package lives at `BotBoi_v1/src/bot.cfg`. After exporting, load that bot in RLBot GUI.
 - `BotBoi_v1/src/runtime_config.json` is now the contract between training and the in-game bot package.
+- During unattended training, PID 0 now auto-exports the newest checkpoint into the RLBot package when it detects a fresh save.
+- Background run state is stored in `data/training_run.json` and logs go to `data/logs/train_latest.log`.
+- The graph report is written to `data/training_report.html` whenever a new metrics row is logged.
 
 ## Further Reading
 

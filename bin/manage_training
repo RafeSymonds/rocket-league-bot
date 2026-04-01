@@ -1,0 +1,233 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import signal
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from rocket_league_bot_src.checkpoints import find_latest_checkpoint, load_checkpoint_book
+
+
+STATE_PATH = ROOT / "data" / "training_run.json"
+LOG_DIR = ROOT / "data" / "logs"
+LOG_PATH = LOG_DIR / "train_latest.log"
+
+
+def _read_json(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text())
+    except Exception:
+        return {}
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True))
+
+
+def _is_pid_running(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    return True
+
+
+def _tail_lines(path: Path, n: int) -> list[str]:
+    if not path.exists():
+        return []
+    lines = path.read_text(errors="replace").splitlines()
+    return lines[-n:]
+
+
+def _default_train_command(extra_args: list[str]) -> list[str]:
+    return [
+        sys.executable,
+        "train.py",
+        "--n-proc",
+        "1",
+        "--min-inference-size",
+        "1",
+        "--ts-per-iteration",
+        "50000",
+        "--ppo-batch-size",
+        "50000",
+        "--ppo-minibatch-size",
+        "10000",
+        "--ppo-epochs",
+        "3",
+        "--policy-lr",
+        "2.5e-4",
+        "--critic-lr",
+        "2.5e-4",
+        "--ent-coef",
+        "0.003",
+        "--exp-buffer-size",
+        "200000",
+        "--save-every-ts",
+        "2000000",
+        "--resume-latest",
+        *extra_args,
+    ]
+
+
+def cmd_start(args: argparse.Namespace) -> int:
+    state = _read_json(STATE_PATH)
+    pid = int(state.get("pid", 0))
+    if _is_pid_running(pid):
+        print(f"Training is already running with pid={pid}")
+        print(f"log={state.get('log_path', str(LOG_PATH))}")
+        return 1
+
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    log_handle = LOG_PATH.open("a", encoding="utf-8")
+    cmd = _default_train_command(args.extra_args)
+    proc = subprocess.Popen(
+        cmd,
+        cwd=str(ROOT),
+        stdout=log_handle,
+        stderr=subprocess.STDOUT,
+        stdin=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    log_handle.close()
+
+    payload = {
+        "pid": proc.pid,
+        "started_at": time.time(),
+        "cmd": cmd,
+        "cwd": str(ROOT),
+        "log_path": str(LOG_PATH),
+    }
+    _write_json(STATE_PATH, payload)
+
+    print(f"Started training pid={proc.pid}")
+    print(f"log={LOG_PATH}")
+    return 0
+
+
+def cmd_status(args: argparse.Namespace) -> int:
+    state = _read_json(STATE_PATH)
+    pid = int(state.get("pid", 0))
+    running = _is_pid_running(pid)
+
+    print("Training process:")
+    if state:
+        print(f"  pid: {pid}")
+        print(f"  running: {'yes' if running else 'no'}")
+        print(f"  started_at: {state.get('started_at', '')}")
+        print(f"  log: {state.get('log_path', str(LOG_PATH))}")
+    else:
+        print("  no saved training state")
+
+    latest_checkpoint = find_latest_checkpoint(str(ROOT / "data" / "checkpoints"))
+    print("\nLatest checkpoint:")
+    if latest_checkpoint:
+        book = load_checkpoint_book(latest_checkpoint)
+        print(f"  dir: {latest_checkpoint}")
+        print(f"  timesteps: {int(book.get('cumulative_timesteps', 0))}")
+        print(f"  avg_reward: {float(book.get('policy_average_reward', 0.0)):.3f}")
+    else:
+        print("  none")
+
+    metrics_path = ROOT / "data" / "training_metrics.csv"
+    print("\nLatest metrics:")
+    if metrics_path.exists():
+        lines = metrics_path.read_text(errors="replace").splitlines()
+        if len(lines) >= 2:
+            print(f"  {lines[-1]}")
+        else:
+            print("  metrics file exists but has no rows yet")
+    else:
+        print("  none")
+
+    print("\nRecent log tail:")
+    tail = _tail_lines(LOG_PATH, args.lines)
+    if tail:
+        for line in tail:
+            print(f"  {line}")
+    else:
+        print("  no log output yet")
+    return 0
+
+
+def cmd_logs(args: argparse.Namespace) -> int:
+    path = LOG_PATH
+    if not path.exists():
+        print(f"Missing log file: {path}")
+        return 1
+
+    if args.follow:
+        with path.open("r", encoding="utf-8", errors="replace") as handle:
+            handle.seek(0, os.SEEK_END)
+            try:
+                while True:
+                    line = handle.readline()
+                    if line:
+                        print(line, end="")
+                    else:
+                        time.sleep(0.5)
+            except KeyboardInterrupt:
+                return 0
+    else:
+        for line in _tail_lines(path, args.lines):
+            print(line)
+    return 0
+
+
+def cmd_stop(args: argparse.Namespace) -> int:
+    state = _read_json(STATE_PATH)
+    pid = int(state.get("pid", 0))
+    if not _is_pid_running(pid):
+        print("Training process is not running.")
+        return 1
+
+    os.kill(pid, signal.SIGTERM)
+    print(f"Sent SIGTERM to pid={pid}")
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Manage unattended training runs.")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    start = sub.add_parser("start", help="Start training in the background.")
+    start.add_argument("extra_args", nargs=argparse.REMAINDER, help="Extra args forwarded to train.py")
+    start.set_defaults(func=cmd_start)
+
+    status = sub.add_parser("status", help="Show process/checkpoint/metric status.")
+    status.add_argument("--lines", type=int, default=12)
+    status.set_defaults(func=cmd_status)
+
+    logs = sub.add_parser("logs", help="Show or follow the training log.")
+    logs.add_argument("--lines", type=int, default=40)
+    logs.add_argument("-f", "--follow", action="store_true")
+    logs.set_defaults(func=cmd_logs)
+
+    stop = sub.add_parser("stop", help="Stop the background training process.")
+    stop.set_defaults(func=cmd_stop)
+
+    return parser
+
+
+def main() -> int:
+    parser = build_parser()
+    args = parser.parse_args()
+    return int(args.func(args))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

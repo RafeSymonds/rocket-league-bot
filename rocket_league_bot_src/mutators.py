@@ -6,10 +6,15 @@ import numpy as np
 from rlgym.api import StateMutator
 from rlgym.rocket_league import common_values
 from rlgym.rocket_league.api import GameState
-from rlgym.rocket_league.state_mutators import FixedTeamSizeMutator
+from rlgym.rocket_league.state_mutators import FixedTeamSizeMutator, KickoffMutator
 from typing_extensions import override
 
 from .config import Stage
+
+try:
+    from rlgym_tools.rocket_league.state_mutators.game_mutator import GameMutator
+except Exception:  # pragma: no cover - optional dependency until installed
+    GameMutator = None
 
 
 class DynamicTeamSizeMutator(StateMutator):
@@ -224,3 +229,27 @@ class ScenarioResetMutator(StateMutator):
             self._neutral_self_play_reset(state, cfg)
         else:
             self._attack_self_play_reset(state, cfg)
+
+
+class DynamicMatchMutator(StateMutator):
+    def __init__(self, curriculum_manager):
+        self.curriculum_manager = curriculum_manager
+        self.team_size_mutator = DynamicTeamSizeMutator(curriculum_manager)
+        self.kickoff_mutator = KickoffMutator()
+        self.scenario_mutator = ScenarioResetMutator(curriculum_manager)
+        self.game_mutator = GameMutator() if GameMutator is not None else None
+
+    @override
+    def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
+        cfg = self.curriculum_manager.current_config()
+        self.team_size_mutator.apply(state, shared_info)
+        if cfg.full_match:
+            if self.game_mutator is None:
+                raise RuntimeError(
+                    "Full-match training requires rlgym-tools. Install it with: pip install -U rlgym-tools"
+                )
+            self.game_mutator.apply(state, shared_info)
+            return
+
+        self.kickoff_mutator.apply(state, shared_info)
+        self.scenario_mutator.apply(state, shared_info)
