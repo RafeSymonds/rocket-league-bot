@@ -9,99 +9,158 @@ from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league.state_mutators import FixedTeamSizeMutator
 from typing_extensions import override
 
-from .config import make_stage_config
-from .utils import CurriculumValue
+from .config import Stage
 
 
 class DynamicTeamSizeMutator(StateMutator):
-    """Apply stage-dependent team sizes at reset time."""
-
-    def __init__(self, stage_ref: "EnvBuilder"):
-        self.stage_ref = stage_ref
+    def __init__(self, curriculum_manager):
+        self.curriculum_manager = curriculum_manager
         self._cache: dict[tuple[int, int], FixedTeamSizeMutator] = {}
 
     @override
     def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
-        cfg = make_stage_config(self.stage_ref.stage)
+        cfg = self.curriculum_manager.current_config()
         key = (cfg.blue_players, cfg.orange_players)
         if key not in self._cache:
             self._cache[key] = FixedTeamSizeMutator(*key)
         self._cache[key].apply(state, shared_info)
 
 
-class BallNearCarMutator(StateMutator):
-    def __init__(
-        self,
-        min_dist: CurriculumValue,
-        max_dist: CurriculumValue,
-        max_angle_deg: CurriculumValue,
-        ball_velocity: CurriculumValue,
-    ):
-        self.min_dist = min_dist
-        self.max_dist = max_dist
-        self.max_angle = max_angle_deg
-        self.ball_velocity = ball_velocity
+class ScenarioResetMutator(StateMutator):
+    """
+    Replaces the old single "ball near car" reset with stage-aware scenario families.
+    Each family widens as curriculum difficulty rises.
+    """
 
-    @override
-    def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
-        car = next(iter(state.cars.values()))
-        phys = car.physics
+    def __init__(self, curriculum_manager):
+        self.curriculum_manager = curriculum_manager
 
-        forward = phys.forward
-        right = phys.right
+    @staticmethod
+    def _blue_car(state: GameState):
+        for car in state.cars.values():
+            if not car.is_orange:
+                return car
+        return next(iter(state.cars.values()))
 
-        min_d = float(self.min_dist.get())
-        max_d = float(self.max_dist.get())
-        if max_d < min_d:
-            max_d = min_d
-
-        dist = np.random.uniform(min_d, max_d)
-        max_angle = max(0.0, float(self.max_angle.get()))
-        angle = np.deg2rad(np.random.uniform(-max_angle, max_angle))
-
-        dir_vec = np.cos(angle) * forward + np.sin(angle) * right
-        n = float(np.linalg.norm(dir_vec))
-        if n < 1e-6:
-            dir_vec = np.array([1.0, 0.0, 0.0], dtype=np.float32)
-        else:
-            dir_vec = dir_vec / n
-
-        pos = phys.position + dir_vec * dist
-
+    @staticmethod
+    def _clip_ball(pos: np.ndarray) -> np.ndarray:
         pos[0] = np.clip(
-            pos[0], -common_values.SIDE_WALL_X + 200, common_values.SIDE_WALL_X - 200
+            pos[0], -common_values.SIDE_WALL_X + 250.0, common_values.SIDE_WALL_X - 250.0
         )
         pos[1] = np.clip(
-            pos[1], -common_values.BACK_NET_Y + 200, common_values.BACK_NET_Y - 200
+            pos[1], -common_values.BACK_NET_Y + 250.0, common_values.BACK_NET_Y - 250.0
         )
-        pos[2] = common_values.BALL_RADIUS
+        pos[2] = max(common_values.BALL_RADIUS, min(common_values.CEILING_Z - 50.0, pos[2]))
+        return pos
 
-        state.ball.position[:] = pos
+    @staticmethod
+    def _set_ball(state: GameState, position: np.ndarray, velocity: np.ndarray) -> None:
+        state.ball.position[:] = position
+        state.ball.linear_velocity[:] = velocity
         state.ball.angular_velocity[:] = 0.0
 
-        v = max(0.0, float(self.ball_velocity.get()))
-        if v > 0.0:
-            vel_dir = np.array(
-                [np.random.uniform(-1, 1), np.random.uniform(-1, 1), 0.0],
-                dtype=np.float32,
-            )
-            vel_norm = float(np.linalg.norm(vel_dir))
-            if vel_norm < 1e-6:
-                vel_dir = np.array([1.0, 0.0, 0.0], dtype=np.float32)
-            else:
-                vel_dir /= vel_norm
-            state.ball.linear_velocity[:] = vel_dir * v
+    def _front_ball_reset(self, state: GameState, cfg, toward_goal_bias: float) -> None:
+        car = self._blue_car(state)
+        phys = car.physics
+
+        min_dist = float(cfg.touch_min_dist)
+        max_dist = max(min_dist, float(cfg.touch_max_dist))
+        dist = np.random.uniform(min_dist, max_dist)
+        angle = np.deg2rad(np.random.uniform(-cfg.touch_max_angle_deg, cfg.touch_max_angle_deg))
+
+        forward = phys.forward.astype(np.float32)
+        right = phys.right.astype(np.float32)
+        direction = np.cos(angle) * forward + np.sin(angle) * right
+        direction_norm = float(np.linalg.norm(direction))
+        if direction_norm < 1e-6:
+            direction = np.array([0.0, 1.0, 0.0], dtype=np.float32)
         else:
-            state.ball.linear_velocity[:] = 0.0
+            direction = direction / direction_norm
 
+        ball_pos = phys.position + direction * dist
+        ball_pos[2] = common_values.BALL_RADIUS
 
-class ProgressiveResetMutator(StateMutator):
-    def __init__(self, easy_mutator: StateMutator, p_easy: CurriculumValue):
-        self.easy_mutator = easy_mutator
-        self.p_easy = p_easy
+        enemy_goal = np.array([0.0, common_values.BACK_NET_Y, 0.0], dtype=np.float32)
+        to_goal = enemy_goal - ball_pos
+        to_goal_norm = float(np.linalg.norm(to_goal))
+        if to_goal_norm > 1e-6:
+            to_goal = to_goal / to_goal_norm
+
+        random_dir = np.array(
+            [np.random.uniform(-1.0, 1.0), np.random.uniform(-1.0, 1.0), 0.0],
+            dtype=np.float32,
+        )
+        random_norm = float(np.linalg.norm(random_dir))
+        if random_norm < 1e-6:
+            random_dir = direction
+        else:
+            random_dir /= random_norm
+
+        speed = np.random.uniform(0.0, cfg.ball_speed_max)
+        vel_dir = toward_goal_bias * to_goal + (1.0 - toward_goal_bias) * random_dir
+        vel_norm = float(np.linalg.norm(vel_dir))
+        if vel_norm > 1e-6:
+            vel_dir /= vel_norm
+
+        self._set_ball(state, self._clip_ball(ball_pos), vel_dir * speed)
+
+    def _neutral_self_play_reset(self, state: GameState, cfg) -> None:
+        pos = np.array(
+            [
+                np.random.uniform(-1400.0, 1400.0),
+                np.random.uniform(-1200.0, 1200.0),
+                common_values.BALL_RADIUS,
+            ],
+            dtype=np.float32,
+        )
+        vel = np.array(
+            [
+                np.random.uniform(-cfg.ball_speed_max, cfg.ball_speed_max),
+                np.random.uniform(-cfg.ball_speed_max, cfg.ball_speed_max),
+                0.0,
+            ],
+            dtype=np.float32,
+        )
+        self._set_ball(state, self._clip_ball(pos), vel)
+
+    def _attack_self_play_reset(self, state: GameState, cfg) -> None:
+        sign = -1.0 if np.random.rand() < 0.5 else 1.0
+        pos = np.array(
+            [
+                np.random.uniform(-1800.0, 1800.0),
+                sign * np.random.uniform(500.0, 2600.0),
+                common_values.BALL_RADIUS,
+            ],
+            dtype=np.float32,
+        )
+        target_y = -common_values.BACK_NET_Y if sign < 0.0 else common_values.BACK_NET_Y
+        to_goal = np.array([0.0, target_y, 0.0], dtype=np.float32) - pos
+        norm = float(np.linalg.norm(to_goal))
+        if norm > 1e-6:
+            to_goal /= norm
+        speed = np.random.uniform(0.25 * cfg.ball_speed_max, cfg.ball_speed_max)
+        self._set_ball(state, self._clip_ball(pos), to_goal * speed)
 
     @override
     def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
-        if np.random.rand() < float(self.p_easy.get()):
-            self.easy_mutator.apply(state, shared_info)
-        # else: keep kickoff/default reset
+        cfg = self.curriculum_manager.current_config()
+        roll = np.random.rand()
+
+        if roll < cfg.kickoff_reset_prob:
+            return
+
+        if cfg.stage == Stage.CONTACT:
+            self._front_ball_reset(state, cfg, toward_goal_bias=0.1)
+            return
+
+        if cfg.stage == Stage.SHOOT:
+            if roll < cfg.kickoff_reset_prob + cfg.neutral_reset_prob:
+                self._front_ball_reset(state, cfg, toward_goal_bias=0.35)
+            else:
+                self._front_ball_reset(state, cfg, toward_goal_bias=0.85)
+            return
+
+        if roll < cfg.kickoff_reset_prob + cfg.neutral_reset_prob:
+            self._neutral_self_play_reset(state, cfg)
+        else:
+            self._attack_self_play_reset(state, cfg)

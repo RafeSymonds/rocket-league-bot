@@ -1,114 +1,96 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import numpy as np
 
-from .config import Stage
-from .utils import CurriculumValue
+from .config import Stage, StageConfig, build_stage_config
+
+
+@dataclass
+class CurriculumSnapshot:
+    stage_iters: float
+    ema_touch: float
+    ema_goal: float
+    difficulty: float
 
 
 class CurriculumManager:
     """
-    Simple, explicit curriculum controller.
+    Explicit stage controller:
 
-    TOUCH:
-      - Progressively increases reset difficulty from easy -> hard.
-      - Graduates to SCORE after sustained touch reliability.
-
-    SCORE:
-      - Graduates to SELFPLAY after sustained scoring reliability.
+    CONTACT -> learn to reach and touch the ball from varied placements.
+    SHOOT -> learn to convert open-net scenarios.
+    SELF_PLAY -> continue from mixed resets in 1v1.
     """
 
-    def __init__(
-        self,
-        min_dist: CurriculumValue,
-        max_dist: CurriculumValue,
-        max_angle: CurriculumValue,
-        ball_velocity: CurriculumValue,
-        p_easy_reset: CurriculumValue,
-        stage_ref: "EnvBuilder",
-    ):
-        self.min_dist = min_dist
-        self.max_dist = max_dist
-        self.max_angle = max_angle
-        self.ball_velocity = ball_velocity
-        self.p_easy_reset = p_easy_reset
-        self.stage_ref = stage_ref
+    def __init__(self):
+        self.stage = Stage.CONTACT
+        self.difficulty = 0.0
+        self.stage_iterations = 0
+        self.ema_touch_rate = 0.0
+        self.ema_goal_rate = 0.0
 
-        self._touch_pass_streak = 0
-        self._score_pass_streak = 0
-        self._stage_iters = 0
-        self._ema_touch_rate = 0.0
-        self._ema_goal_rate = 0.0
-
-    def _set_stage(self, stage: Stage) -> None:
-        if self.stage_ref.stage != stage:
-            self.stage_ref.stage = stage
-            self._stage_iters = 0
-            print(f"✅ Curriculum stage -> {stage.value}")
+    def current_config(self) -> StageConfig:
+        return build_stage_config(self.stage, self.difficulty)
 
     @staticmethod
-    def _smooth(current: float, target: float, alpha: float = 0.12) -> float:
+    def _smooth(current: float, target: float, alpha: float = 0.18) -> float:
         return (1.0 - alpha) * current + alpha * target
 
-    def _update_touch_difficulty(self, stats) -> None:
-        # 0 -> 1 skill estimate for touch stage.
-        touch_factor = np.clip((stats.touch_rate - 0.35) / 0.55, 0.0, 1.0)
-        speed_factor = np.clip((150.0 - stats.median_t_first) / 110.0, 0.0, 1.0)
-        skill = 0.75 * touch_factor + 0.25 * speed_factor
+    def _set_stage(self, stage: Stage) -> None:
+        if self.stage == stage:
+            return
+        self.stage = stage
+        self.difficulty = 0.0
+        self.stage_iterations = 0
+        print(f"Curriculum stage -> {stage.value}")
 
-        # Curriculum knobs (easy -> hard).
-        target_min_dist = 250.0 + 850.0 * skill
-        target_max_dist = 550.0 + 1050.0 * skill
-        target_angle = 15.0 + 45.0 * skill
-        target_ball_vel = 0.0 + 800.0 * skill
-        target_p_easy = 1.0 - 0.95 * skill
+    def _update_contact(self, stats) -> None:
+        touch_skill = np.clip((stats.touch_rate - 0.30) / 0.60, 0.0, 1.0)
+        speed_skill = np.clip((180.0 - stats.median_t_first) / 120.0, 0.0, 1.0)
+        target_difficulty = 0.75 * touch_skill + 0.25 * speed_skill
+        self.difficulty = self._smooth(self.difficulty, float(target_difficulty))
 
-        self.min_dist.set(self._smooth(self.min_dist.get(), target_min_dist))
-        self.max_dist.set(self._smooth(self.max_dist.get(), target_max_dist))
-        self.max_angle.set(self._smooth(self.max_angle.get(), target_angle))
-        self.ball_velocity.set(self._smooth(self.ball_velocity.get(), target_ball_vel))
-        self.p_easy_reset.set(self._smooth(self.p_easy_reset.get(), target_p_easy))
+        ready = self.ema_touch_rate >= 0.82 and stats.median_t_first <= 110.0
+        rescue = self.stage_iterations >= 22 and self.ema_touch_rate >= 0.70
+        if ready or rescue:
+            self._set_stage(Stage.SHOOT)
+
+    def _update_shoot(self, stats) -> None:
+        goal_skill = np.clip((stats.goal_rate - 0.05) / 0.30, 0.0, 1.0)
+        touch_skill = np.clip((stats.touch_rate - 0.55) / 0.35, 0.0, 1.0)
+        speed_skill = np.clip((280.0 - stats.median_t_goal) / 160.0, 0.0, 1.0)
+        target_difficulty = 0.6 * goal_skill + 0.25 * touch_skill + 0.15 * speed_skill
+        self.difficulty = self._smooth(self.difficulty, float(target_difficulty))
+
+        ready = self.ema_goal_rate >= 0.18 and stats.median_t_goal <= 220.0
+        rescue = self.stage_iterations >= 30 and self.ema_goal_rate >= 0.10
+        if ready or rescue:
+            self._set_stage(Stage.SELF_PLAY)
+
+    def _update_self_play(self, stats) -> None:
+        goal_skill = np.clip((stats.goal_rate - 0.02) / 0.16, 0.0, 1.0)
+        touch_skill = np.clip((stats.touch_rate - 0.45) / 0.40, 0.0, 1.0)
+        target_difficulty = 0.7 * goal_skill + 0.3 * touch_skill
+        self.difficulty = self._smooth(self.difficulty, float(target_difficulty), alpha=0.12)
 
     def maybe_advance(self, stats) -> None:
-        stage: Stage = self.stage_ref.stage
-        self._stage_iters += 1
-        self._ema_touch_rate = self._smooth(self._ema_touch_rate, float(stats.touch_rate), alpha=0.2)
-        self._ema_goal_rate = self._smooth(self._ema_goal_rate, float(stats.goal_rate), alpha=0.2)
+        self.stage_iterations += 1
+        self.ema_touch_rate = self._smooth(self.ema_touch_rate, float(stats.touch_rate), alpha=0.20)
+        self.ema_goal_rate = self._smooth(self.ema_goal_rate, float(stats.goal_rate), alpha=0.20)
 
-        if stage == Stage.TOUCH:
-            self._update_touch_difficulty(stats)
+        if self.stage == Stage.CONTACT:
+            self._update_contact(stats)
+        elif self.stage == Stage.SHOOT:
+            self._update_shoot(stats)
+        else:
+            self._update_self_play(stats)
 
-            touch_pass = self._ema_touch_rate >= 0.74 and stats.median_t_first <= 130.0
-            self._touch_pass_streak = self._touch_pass_streak + 1 if touch_pass else 0
-
-            rescue_pass = self._stage_iters >= 25 and self._ema_touch_rate >= 0.62
-
-            if self._touch_pass_streak >= 4 or rescue_pass:
-                self._set_stage(Stage.SCORE)
-                self._touch_pass_streak = 0
-                self._score_pass_streak = 0
-
-        elif stage == Stage.SCORE:
-            score_pass = self._ema_goal_rate >= 0.14 and stats.median_t_goal <= 250.0
-            self._score_pass_streak = self._score_pass_streak + 1 if score_pass else 0
-
-            rescue_pass = self._stage_iters >= 35 and self._ema_goal_rate >= 0.10
-
-            if self._score_pass_streak >= 6 or rescue_pass:
-                self._set_stage(Stage.SELFPLAY)
-                self._score_pass_streak = 0
-
-        elif stage == Stage.SELFPLAY:
-            pass
-
-    def snapshot(self) -> dict[str, float]:
-        return {
-            "stage_iters": float(self._stage_iters),
-            "ema_touch": float(self._ema_touch_rate),
-            "ema_goal": float(self._ema_goal_rate),
-            "min_dist": float(self.min_dist.get()),
-            "max_dist": float(self.max_dist.get()),
-            "max_angle": float(self.max_angle.get()),
-            "ball_velocity": float(self.ball_velocity.get()),
-            "p_easy": float(self.p_easy_reset.get()),
-        }
+    def snapshot(self) -> CurriculumSnapshot:
+        return CurriculumSnapshot(
+            stage_iters=float(self.stage_iterations),
+            ema_touch=float(self.ema_touch_rate),
+            ema_goal=float(self.ema_goal_rate),
+            difficulty=float(self.difficulty),
+        )

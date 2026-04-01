@@ -11,7 +11,7 @@ from rlgym.rocket_league.done_conditions import (
     TimeoutCondition,
 )
 
-from .config import Stage, make_stage_config
+from .config import Stage
 
 
 class TouchDoneCondition(DoneCondition[str, GameState]):
@@ -39,8 +39,8 @@ class TouchDoneCondition(DoneCondition[str, GameState]):
 
 
 class CurriculumDoneCondition(DoneCondition[str, GameState]):
-    def __init__(self, stage_ref: "EnvBuilder"):
-        self.stage_ref = stage_ref
+    def __init__(self, curriculum_manager):
+        self.curriculum_manager = curriculum_manager
         self.touch_done = TouchDoneCondition()
         self.goal_done = GoalCondition()
 
@@ -49,20 +49,22 @@ class CurriculumDoneCondition(DoneCondition[str, GameState]):
         self.goal_done.reset(agents, initial_state, shared_info)
 
     def is_done(self, agents, state, shared_info):
-        cfg = make_stage_config(self.stage_ref.stage)
+        cfg = self.curriculum_manager.current_config()
         if cfg.end_on_touch:
             return self.touch_done.is_done(agents, state, shared_info)
         return self.goal_done.is_done(agents, state, shared_info)
 
 
 class CurriculumTruncationCondition(DoneCondition[str, GameState]):
-    """Stage-aware truncation without rebuilding the env."""
-
-    def __init__(self, stage_ref: "EnvBuilder"):
-        self.stage_ref = stage_ref
+    def __init__(self, curriculum_manager):
+        self.curriculum_manager = curriculum_manager
         self._conditions: dict[Stage, DoneCondition[str, GameState]] = {}
         for stage in Stage:
-            cfg = make_stage_config(stage)
+            cfg = self.curriculum_manager.current_config() if stage == self.curriculum_manager.stage else None
+            if cfg is None or cfg.stage != stage:
+                from .config import build_stage_config
+
+                cfg = build_stage_config(stage, difficulty=1.0)
             self._conditions[stage] = AnyCondition(
                 NoTouchTimeoutCondition(cfg.no_touch_timeout_s),
                 TimeoutCondition(cfg.timeout_s),
@@ -73,5 +75,5 @@ class CurriculumTruncationCondition(DoneCondition[str, GameState]):
             cond.reset(agents, initial_state, shared_info)
 
     def is_done(self, agents, state, shared_info):
-        stage = self.stage_ref.stage
+        stage = self.curriculum_manager.stage
         return self._conditions[stage].is_done(agents, state, shared_info)

@@ -6,15 +6,22 @@ from pathlib import Path
 
 from rlgym_ppo import Learner
 
+from rocket_league_bot_src.config import (
+    CRITIC_LAYER_SIZES,
+    DEFAULT_CHECKPOINT_ROOT,
+    POLICY_LAYER_SIZES,
+)
 from rocket_league_bot_src.env import EnvBuilder
 
 
 _global_iteration_timesteps: int = 0
+_global_env_builder: EnvBuilder | None = None
 
 
 def _create_rlgym_env(process_id: int = 0):
-    global _global_iteration_timesteps
-    return EnvBuilder(iteration_timesteps=_global_iteration_timesteps)(process_id)
+    if _global_env_builder is None:
+        raise RuntimeError("Environment builder was not initialized")
+    return _global_env_builder(process_id)
 
 
 def parse_args() -> argparse.Namespace:
@@ -33,7 +40,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timestep-limit", type=int, default=1_000_000_000)
     parser.add_argument("--min-inference-size", type=int, default=1)
     parser.add_argument("--load-path", type=str, default="")
-    parser.add_argument("--checkpoint-root", type=str, default="data/checkpoints")
+    parser.add_argument("--checkpoint-root", type=str, default=DEFAULT_CHECKPOINT_ROOT)
     parser.add_argument("--resume-latest", dest="resume_latest", action="store_true")
     parser.add_argument("--no-resume-latest", dest="resume_latest", action="store_false")
     parser.set_defaults(resume_latest=True)
@@ -63,17 +70,18 @@ def find_latest_checkpoint(checkpoint_root: str) -> str:
 
 
 def main():
-    global _global_iteration_timesteps
+    global _global_iteration_timesteps, _global_env_builder
     args = parse_args()
 
     _global_iteration_timesteps = int(args.ts_per_iteration)
+    _global_env_builder = EnvBuilder(iteration_timesteps=_global_iteration_timesteps)
 
     learner = Learner(
         _create_rlgym_env,
         n_proc=int(args.n_proc),
         min_inference_size=int(args.min_inference_size),
-        policy_layer_sizes=(512, 512, 256),
-        critic_layer_sizes=(512, 512, 256),
+        policy_layer_sizes=POLICY_LAYER_SIZES,
+        critic_layer_sizes=CRITIC_LAYER_SIZES,
         ppo_batch_size=int(args.ppo_batch_size),
         ppo_minibatch_size=int(args.ppo_minibatch_size),
         ppo_epochs=int(args.ppo_epochs),
