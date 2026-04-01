@@ -18,9 +18,13 @@ The training pipeline is intentionally staged:
 
 1. `CONTACT`
    The bot learns to reach and touch the ball from controlled placements.
-2. `SHOOT`
+2. `DRIBBLE`
+   The bot learns to keep pressure on the ball and move it through space with control.
+3. `SHOOT`
    The bot learns to convert open-net and forward-ball scenarios into goals.
-3. `SELF_PLAY`
+4. `DEFEND`
+   The bot learns to clear dangerous balls and survive threat-heavy starts.
+5. `SELF_PLAY`
    The bot trains in 1v1 with mixed resets and much sparser shaping.
 
 The current design lives primarily in:
@@ -40,8 +44,10 @@ The current rewrite pushes the setup toward:
 - fewer, clearer reward terms
 - stage-specific reset scenarios
 - explicit curriculum progression
+- a progression that covers offense and defense before full self-play
 - centralized training constants
 - iteration metrics that show stage and difficulty
+- snapshot registration for future league-style training against older checkpoints
 
 ## Setup
 
@@ -90,6 +96,7 @@ bin/metrics_report data/training_metrics.csv
 - `watch.py` now discovers the latest checkpoint instead of using a hardcoded run path.
 - Training uses `RepeatAction(LookupTableAction(), repeats=8)` to match common RLGym practice more closely than the old `repeats=2`.
 - Observation compatibility still matters. If you change `rocket_league_bot_src/obs.py`, review `BotBoi_v1/src/bot.py` as well.
+- Snapshot metadata for future old-version self-play is stored under `data/league/snapshots.json`.
 
 ## Further Reading
 

@@ -123,6 +123,52 @@ class ScenarioResetMutator(StateMutator):
         )
         self._set_ball(state, self._clip_ball(pos), vel)
 
+    def _midfield_dribble_reset(self, state: GameState, cfg) -> None:
+        car = self._blue_car(state)
+        phys = car.physics
+        forward = phys.forward.astype(np.float32)
+
+        offset = np.array(
+            [
+                np.random.uniform(-400.0, 400.0),
+                np.random.uniform(450.0, 1200.0),
+                0.0,
+            ],
+            dtype=np.float32,
+        )
+        pos = phys.position + offset
+        pos[2] = common_values.BALL_RADIUS
+
+        base_speed = np.random.uniform(100.0, cfg.ball_speed_max)
+        vel_dir = 0.7 * forward + 0.3 * np.array(
+            [np.random.uniform(-1.0, 1.0), np.random.uniform(-0.2, 1.0), 0.0],
+            dtype=np.float32,
+        )
+        norm = float(np.linalg.norm(vel_dir))
+        if norm > 1e-6:
+            vel_dir /= norm
+        self._set_ball(state, self._clip_ball(pos), vel_dir * base_speed)
+
+    def _defense_reset(self, state: GameState, cfg) -> None:
+        defend_blue_side = np.random.rand() < 0.5
+        sign = -1.0 if defend_blue_side else 1.0
+
+        pos = np.array(
+            [
+                np.random.uniform(-1400.0, 1400.0),
+                sign * np.random.uniform(2400.0, 4200.0),
+                common_values.BALL_RADIUS,
+            ],
+            dtype=np.float32,
+        )
+        threatened_goal = np.array([0.0, sign * common_values.BACK_NET_Y, 0.0], dtype=np.float32)
+        to_goal = threatened_goal - pos
+        norm = float(np.linalg.norm(to_goal))
+        if norm > 1e-6:
+            to_goal /= norm
+        speed = np.random.uniform(0.35 * cfg.ball_speed_max, cfg.ball_speed_max)
+        self._set_ball(state, self._clip_ball(pos), to_goal * speed)
+
     def _attack_self_play_reset(self, state: GameState, cfg) -> None:
         sign = -1.0 if np.random.rand() < 0.5 else 1.0
         pos = np.array(
@@ -153,11 +199,25 @@ class ScenarioResetMutator(StateMutator):
             self._front_ball_reset(state, cfg, toward_goal_bias=0.1)
             return
 
+        if cfg.stage == Stage.DRIBBLE:
+            if roll < cfg.kickoff_reset_prob + cfg.neutral_reset_prob:
+                self._midfield_dribble_reset(state, cfg)
+            else:
+                self._front_ball_reset(state, cfg, toward_goal_bias=0.55)
+            return
+
         if cfg.stage == Stage.SHOOT:
             if roll < cfg.kickoff_reset_prob + cfg.neutral_reset_prob:
                 self._front_ball_reset(state, cfg, toward_goal_bias=0.35)
             else:
                 self._front_ball_reset(state, cfg, toward_goal_bias=0.85)
+            return
+
+        if cfg.stage == Stage.DEFEND:
+            if roll < cfg.kickoff_reset_prob + cfg.neutral_reset_prob:
+                self._neutral_self_play_reset(state, cfg)
+            else:
+                self._defense_reset(state, cfg)
             return
 
         if roll < cfg.kickoff_reset_prob + cfg.neutral_reset_prob:

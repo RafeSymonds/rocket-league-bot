@@ -20,7 +20,9 @@ class CurriculumManager:
     Explicit stage controller:
 
     CONTACT -> learn to reach and touch the ball from varied placements.
-    SHOOT -> learn to convert open-net scenarios.
+    DRIBBLE -> learn to keep pressure and advance the ball.
+    SHOOT -> learn to convert attacking scenarios.
+    DEFEND -> learn to clear/save from dangerous positions.
     SELF_PLAY -> continue from mixed resets in 1v1.
     """
 
@@ -55,6 +57,18 @@ class CurriculumManager:
         ready = self.ema_touch_rate >= 0.82 and stats.median_t_first <= 110.0
         rescue = self.stage_iterations >= 22 and self.ema_touch_rate >= 0.70
         if ready or rescue:
+            self._set_stage(Stage.DRIBBLE)
+
+    def _update_dribble(self, stats) -> None:
+        touch_skill = np.clip((stats.touch_rate - 0.55) / 0.30, 0.0, 1.0)
+        goal_skill = np.clip((stats.goal_rate - 0.03) / 0.18, 0.0, 1.0)
+        goal_time_skill = np.clip((260.0 - stats.median_t_goal) / 180.0, 0.0, 1.0)
+        target_difficulty = 0.5 * touch_skill + 0.3 * goal_skill + 0.2 * goal_time_skill
+        self.difficulty = self._smooth(self.difficulty, float(target_difficulty))
+
+        ready = self.ema_touch_rate >= 0.78 and self.ema_goal_rate >= 0.10
+        rescue = self.stage_iterations >= 26 and self.ema_goal_rate >= 0.06
+        if ready or rescue:
             self._set_stage(Stage.SHOOT)
 
     def _update_shoot(self, stats) -> None:
@@ -66,6 +80,17 @@ class CurriculumManager:
 
         ready = self.ema_goal_rate >= 0.18 and stats.median_t_goal <= 220.0
         rescue = self.stage_iterations >= 30 and self.ema_goal_rate >= 0.10
+        if ready or rescue:
+            self._set_stage(Stage.DEFEND)
+
+    def _update_defend(self, stats) -> None:
+        touch_skill = np.clip((stats.touch_rate - 0.50) / 0.35, 0.0, 1.0)
+        goal_skill = np.clip((stats.goal_rate - 0.04) / 0.18, 0.0, 1.0)
+        target_difficulty = 0.55 * touch_skill + 0.45 * goal_skill
+        self.difficulty = self._smooth(self.difficulty, float(target_difficulty), alpha=0.15)
+
+        ready = self.ema_touch_rate >= 0.68 and self.ema_goal_rate >= 0.08
+        rescue = self.stage_iterations >= 28 and self.ema_touch_rate >= 0.60
         if ready or rescue:
             self._set_stage(Stage.SELF_PLAY)
 
@@ -82,8 +107,12 @@ class CurriculumManager:
 
         if self.stage == Stage.CONTACT:
             self._update_contact(stats)
+        elif self.stage == Stage.DRIBBLE:
+            self._update_dribble(stats)
         elif self.stage == Stage.SHOOT:
             self._update_shoot(stats)
+        elif self.stage == Stage.DEFEND:
+            self._update_defend(stats)
         else:
             self._update_self_play(stats)
 

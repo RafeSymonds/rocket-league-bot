@@ -12,7 +12,9 @@ DEFAULT_CHECKPOINT_ROOT = "data/checkpoints"
 
 class Stage(Enum):
     CONTACT = "CONTACT"
+    DRIBBLE = "DRIBBLE"
     SHOOT = "SHOOT"
+    DEFEND = "DEFEND"
     SELF_PLAY = "SELF_PLAY"
 
 
@@ -80,6 +82,34 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
             attack_reset_prob=0.0,
         )
 
+    if stage == Stage.DRIBBLE:
+        return StageConfig(
+            stage=stage,
+            blue_players=1,
+            orange_players=0,
+            end_on_touch=False,
+            end_on_goal=True,
+            no_touch_timeout_s=10,
+            timeout_s=24,
+            reward_weights=RewardWeights(
+                goal=6.0,
+                touch=0.8,
+                speed_to_ball=0.10,
+                face_ball=0.04,
+                in_air=0.015,
+                ball_speed_to_goal=0.8,
+                ball_distance_to_goal=0.45,
+                step_penalty=1.0,
+            ),
+            touch_min_dist=_lerp(250.0, 900.0, d),
+            touch_max_dist=_lerp(800.0, 2200.0, d),
+            touch_max_angle_deg=_lerp(10.0, 55.0, d),
+            ball_speed_max=_lerp(100.0, 1100.0, d),
+            kickoff_reset_prob=0.02,
+            neutral_reset_prob=_lerp(0.90, 0.55, d),
+            attack_reset_prob=_lerp(0.08, 0.43, d),
+        )
+
     if stage == Stage.SHOOT:
         return StageConfig(
             stage=stage,
@@ -106,6 +136,34 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
             kickoff_reset_prob=0.05,
             neutral_reset_prob=_lerp(0.75, 0.45, d),
             attack_reset_prob=_lerp(0.20, 0.50, d),
+        )
+
+    if stage == Stage.DEFEND:
+        return StageConfig(
+            stage=stage,
+            blue_players=1,
+            orange_players=1,
+            end_on_touch=False,
+            end_on_goal=True,
+            no_touch_timeout_s=12,
+            timeout_s=30,
+            reward_weights=RewardWeights(
+                goal=10.0,
+                touch=0.35,
+                speed_to_ball=0.08,
+                face_ball=0.02,
+                in_air=0.01,
+                ball_speed_to_goal=0.9,
+                ball_distance_to_goal=0.35,
+                step_penalty=1.0,
+            ),
+            touch_min_dist=_lerp(500.0, 1200.0, d),
+            touch_max_dist=_lerp(1500.0, 3000.0, d),
+            touch_max_angle_deg=_lerp(20.0, 75.0, d),
+            ball_speed_max=_lerp(600.0, 1800.0, d),
+            kickoff_reset_prob=_lerp(0.15, 0.05, d),
+            neutral_reset_prob=_lerp(0.20, 0.15, d),
+            attack_reset_prob=_lerp(0.65, 0.80, d),
         )
 
     return StageConfig(

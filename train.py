@@ -74,7 +74,10 @@ def main():
     args = parse_args()
 
     _global_iteration_timesteps = int(args.ts_per_iteration)
-    _global_env_builder = EnvBuilder(iteration_timesteps=_global_iteration_timesteps)
+    _global_env_builder = EnvBuilder(
+        iteration_timesteps=_global_iteration_timesteps,
+        checkpoint_root=args.checkpoint_root,
+    )
 
     learner = Learner(
         _create_rlgym_env,

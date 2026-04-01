@@ -25,6 +25,7 @@ The current local training rewrite follows a few rules:
 - Use fewer reward terms, and make each term legible.
 - Use stage-specific scenarios instead of one reset pattern for everything.
 - Make curriculum state explicit and inspectable.
+- Teach offense and defense as separate subskills before relying on full self-play.
 - Avoid hiding training assumptions across many files.
 - Keep metrics tied to the curriculum so changes can be evaluated.
 
@@ -55,8 +56,10 @@ That means you can inspect stage behavior without reading the whole environment 
 The curriculum is now intentionally simple:
 
 1. `CONTACT`
-2. `SHOOT`
-3. `SELF_PLAY`
+2. `DRIBBLE`
+3. `SHOOT`
+4. `DEFEND`
+5. `SELF_PLAY`
 
 Each stage has its own difficulty progression. Difficulty affects reset geometry and ball speed rather than hiding complexity in many unrelated weights.
 
@@ -67,7 +70,9 @@ The old reset logic centered on one easy pattern: place the ball near the car.
 The new reset logic uses scenario families:
 
 - `CONTACT`: controlled front-ball placements
+- `DRIBBLE`: midfield carry and follow-up situations
 - `SHOOT`: front-ball placements with a stronger bias toward useful scoring situations
+- `DEFEND`: threat-heavy starts near goal that force touches, clears, and saves
 - `SELF_PLAY`: mixed neutral and attacking resets
 
 This matters because environment design is one of the main levers in Rocket League RL. If the bot almost never sees useful states, it cannot learn useful behaviors even with a good reward.
@@ -121,7 +126,9 @@ The most useful signals in `data/training_metrics.csv` are:
 Interpretation:
 
 - In `CONTACT`, the first sign of life is rising `touch_rate` and falling `median_t_first`.
-- In `SHOOT`, `goal_rate` should start moving before self-play is introduced.
+- In `DRIBBLE`, `touch_rate` should stay high while `goal_rate` begins to lift.
+- In `SHOOT`, `goal_rate` should start moving before defense and self-play are introduced.
+- In `DEFEND`, survival and clears matter more than pretty offense, so progress may look noisier.
 - In `SELF_PLAY`, progress is slower and noisier, so stage-aware resets and evaluation become more important.
 
 ## Known Limits
@@ -135,6 +142,7 @@ Missing or incomplete areas:
 - no scoreboard-aware full-match training
 - no automated comparison between curriculum versions
 - no documented hyperparameter sweep workflow
+- no live multi-policy opponent injection yet
 
 ## Recommended Next Steps
 
@@ -169,6 +177,22 @@ Right now the repo is better structured, but training and evaluation are still o
 - fixed evaluation seeds or scenario mixes
 - versioned curriculum configs
 
+### 5. Finish the old-version self-play path
+
+This repo now includes `rocket_league_bot_src/league.py`, which records promoted checkpoints into `data/league/snapshots.json`.
+
+What it does today:
+
+- registers milestone checkpoints as league snapshots
+- creates a stable manifest for future opponent sampling
+
+What it does not do yet:
+
+- load different policies for blue and orange inside the current learner loop
+- sample an old checkpoint as a live opponent during training
+
+That limitation comes from the current training architecture using one shared policy across all agents. A future pass needs a multi-policy action path or an opponent-serving wrapper around inference.
+
 ## Practical Guidance For Future Edits
 
 - If you change stage behavior, start in `rocket_league_bot_src/config.py`.
@@ -185,3 +209,4 @@ That is the immediate value of the external sources here:
 
 - RLGym Tools points toward replay- and match-aware infrastructure.
 - The RLGym-PPO guide reinforces that environment and reward design matter more than copying stock examples.
+- League-style improvement against older versions is the right long-term direction, but it needs explicit opponent-policy infrastructure, not just another reward tweak.

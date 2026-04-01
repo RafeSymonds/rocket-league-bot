@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import csv
+import json
 import os
 import time
+from pathlib import Path
 
 import numpy as np
 
@@ -15,6 +17,7 @@ from rlgym_ppo.util import RLGymV2GymWrapper
 from .conditions import CurriculumDoneCondition, CurriculumTruncationCondition
 from .config import ACTION_REPEAT
 from .curriculum import CurriculumManager
+from .league import SnapshotLeague
 from .mutators import DynamicTeamSizeMutator, ScenarioResetMutator
 from .obs import SharedObs
 from .rewards import CurriculumReward
@@ -22,11 +25,20 @@ from .utils import Stats
 
 
 class ProcessIterationLogger:
-    def __init__(self, env, process_id: int, iteration_timesteps: int, curriculum_manager: CurriculumManager):
+    def __init__(
+        self,
+        env,
+        process_id: int,
+        iteration_timesteps: int,
+        curriculum_manager: CurriculumManager,
+        checkpoint_root: str,
+    ):
         self.env = env
         self.pid = process_id
         self.iteration_ts = iteration_timesteps
         self.cm = curriculum_manager
+        self.checkpoint_root = checkpoint_root
+        self.league = SnapshotLeague()
         self.log_counter = 0
 
         self.observation_space = env.observation_space
@@ -218,12 +230,61 @@ class ProcessIterationLogger:
             median_t_goal=float(median_t_goal if median_t_goal != -1 else 9999.0),
         )
         self.cm.maybe_advance(stats)
+        self._maybe_register_league_snapshot()
         self._reset_iteration_stats()
+
+    def _maybe_register_league_snapshot(self) -> None:
+        if self.pid != 0:
+            return
+
+        latest = self._find_latest_checkpoint()
+        if latest is None:
+            return
+
+        book = latest / "BOOK_KEEPING_VARS.json"
+        if not book.exists():
+            return
+        try:
+            data = json.loads(book.read_text())
+        except Exception:
+            return
+
+        ts = int(data.get("cumulative_timesteps", 0))
+        if ts <= 0 or ts % 10_000_000 != 0:
+            return
+
+        cfg = self.cm.current_config()
+        self.league.register_snapshot(
+            checkpoint_dir=str(latest),
+            cumulative_timesteps=ts,
+            stage=cfg.stage.value,
+            difficulty=self.cm.snapshot().difficulty,
+        )
+
+    def _find_latest_checkpoint(self):
+        root = Path(self.checkpoint_root)
+        if not root.exists():
+            return None
+
+        candidates: list[tuple[int, float, Path]] = []
+        for book in root.rglob("BOOK_KEEPING_VARS.json"):
+            try:
+                data = json.loads(book.read_text())
+                ts = int(data.get("cumulative_timesteps", 0))
+            except Exception:
+                ts = 0
+            candidates.append((ts, book.stat().st_mtime, book.parent))
+
+        if not candidates:
+            return None
+        candidates.sort(key=lambda item: (item[0], item[1]))
+        return candidates[-1][2]
 
 
 class EnvBuilder:
-    def __init__(self, iteration_timesteps: int):
+    def __init__(self, iteration_timesteps: int, checkpoint_root: str = "data/checkpoints"):
         self.iteration_timesteps = iteration_timesteps
+        self.checkpoint_root = checkpoint_root
         self.curriculum_manager = CurriculumManager()
 
     def __call__(self, process_id: int):
@@ -249,5 +310,6 @@ class EnvBuilder:
             process_id=process_id,
             iteration_timesteps=self.iteration_timesteps,
             curriculum_manager=curriculum_manager,
+            checkpoint_root=self.checkpoint_root,
         )
         return wrapped
