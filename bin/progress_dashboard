@@ -11,7 +11,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from rocket_league_bot_src.checkpoints import find_latest_checkpoint, load_checkpoint_book
+from rocket_league_bot_src.checkpoints import (
+    find_latest_compatible_checkpoint,
+    load_checkpoint_book,
+)
 
 
 def parse_args():
@@ -35,13 +38,15 @@ def render() -> None:
     league_path = Path("data/league/snapshots.json")
     runtime_config_path = Path("BotBoi_v1/src/runtime_config.json")
 
-    latest_checkpoint = find_latest_checkpoint(str(checkpoint_root))
-    print("Latest checkpoint:")
+    latest_checkpoint = find_latest_compatible_checkpoint(str(checkpoint_root))
+    print("Latest compatible checkpoint:")
     if latest_checkpoint:
         book = load_checkpoint_book(latest_checkpoint)
         print(f"  dir: {latest_checkpoint}")
         print(f"  timesteps: {int(book.get('cumulative_timesteps', 0))}")
-        print(f"  avg_reward: {float(book.get('policy_average_reward', 0.0)):.3f}")
+        reward_raw = book.get("policy_average_reward", 0.0)
+        reward = 0.0 if reward_raw is None else float(reward_raw)
+        print(f"  avg_reward: {reward:.3f}")
     else:
         print("  none")
 
@@ -72,10 +77,13 @@ def render() -> None:
     print("\nRLBot package:")
     if runtime_config_path.exists():
         runtime = json.loads(runtime_config_path.read_text())
-        print(f"  checkpoint: {runtime.get('checkpoint_dir', '')}")
+        checkpoint_dir = runtime.get("checkpoint_dir", "")
+        checkpoint_exists = Path(checkpoint_dir).exists() if checkpoint_dir else False
+        print(f"  checkpoint: {checkpoint_dir}")
         print(f"  timesteps: {runtime.get('cumulative_timesteps', 0)}")
         print(f"  action_repeat: {runtime.get('action_repeat', '')}")
         print(f"  obs_dim: {runtime.get('obs_dim', '')}")
+        print(f"  stale: {'no' if checkpoint_exists else 'yes'}")
     else:
         print("  no exported runtime_config.json")
 

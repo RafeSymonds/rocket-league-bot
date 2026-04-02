@@ -9,6 +9,8 @@ This repository trains and packages a Rocket League bot built with `rlgym`, `rlg
 - `rocket_league_bot_src/`: training environment, curriculum, observations, rewards, and reset scenarios.
 - `BotBoi_v1/src/bot.py`: RLBot runtime bot.
 - `bin/train`: convenience wrapper around `train.py`.
+- `bin/train_tuned`: stronger multi-process training wrapper that resumes by default.
+- `bin/train_tuned_fresh`: same tuned wrapper, but always starts fresh.
 - `bin/progress_report`: summarizes checkpoint reward trends.
 - `bin/metrics_report`: summarizes `data/training_metrics.csv`.
 
@@ -67,6 +69,18 @@ Start training:
 bin/train
 ```
 
+Start tuned training with better GPU/CPU utilization and auto-resume:
+
+```bash
+bin/train_tuned
+```
+
+Start tuned training without resuming from an older checkpoint:
+
+```bash
+bin/train_tuned_fresh
+```
+
 Start unattended background training:
 
 ```bash
@@ -94,7 +108,22 @@ python3 bin/manage_training stop
 Train directly with custom flags:
 
 ```bash
-python3 train.py --n-proc 1 --resume-latest
+python3 train.py --n-proc 8 --min-inference-size 8 --resume-latest
+```
+
+The tuned wrappers default to:
+
+- `n_proc=8`
+- `min_inference_size=n_proc`
+- `ts_per_iteration=100000`
+- `ppo_batch_size=100000`
+- `ppo_minibatch_size=20000`
+- `exp_buffer_size=400000`
+
+Override them per run with environment variables, for example:
+
+```bash
+N_PROC=10 PPO_MINIBATCH_SIZE=25000 bin/train_tuned
 ```
 
 Watch the latest checkpoint:
@@ -119,6 +148,12 @@ Watch the full training/export dashboard live:
 
 ```bash
 python3 bin/progress_dashboard --watch 5
+```
+
+Serve the auto-refreshing HTML training graphs locally:
+
+```bash
+python3 bin/serve_training_report
 ```
 
 Generate the HTML graph report manually:

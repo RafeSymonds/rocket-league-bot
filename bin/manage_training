@@ -14,7 +14,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from rocket_league_bot_src.checkpoints import find_latest_checkpoint, load_checkpoint_book
+from rocket_league_bot_src.checkpoints import (
+    find_latest_checkpoint,
+    find_latest_compatible_checkpoint,
+    is_checkpoint_compatible,
+    load_checkpoint_book,
+)
 
 
 STATE_PATH = ROOT / "data" / "training_run.json"
@@ -57,16 +62,18 @@ def _default_train_command(extra_args: list[str]) -> list[str]:
     return [
         sys.executable,
         "train.py",
+        "--device",
+        "gpu",
         "--n-proc",
-        "1",
+        "8",
         "--min-inference-size",
-        "1",
+        "8",
         "--ts-per-iteration",
-        "50000",
+        "100000",
         "--ppo-batch-size",
-        "50000",
+        "100000",
         "--ppo-minibatch-size",
-        "10000",
+        "20000",
         "--ppo-epochs",
         "3",
         "--policy-lr",
@@ -76,7 +83,7 @@ def _default_train_command(extra_args: list[str]) -> list[str]:
         "--ent-coef",
         "0.003",
         "--exp-buffer-size",
-        "200000",
+        "400000",
         "--save-every-ts",
         "2000000",
         "--resume-latest",
@@ -133,15 +140,26 @@ def cmd_status(args: argparse.Namespace) -> int:
     else:
         print("  no saved training state")
 
-    latest_checkpoint = find_latest_checkpoint(str(ROOT / "data" / "checkpoints"))
-    print("\nLatest checkpoint:")
-    if latest_checkpoint:
-        book = load_checkpoint_book(latest_checkpoint)
-        print(f"  dir: {latest_checkpoint}")
+    checkpoint_root = str(ROOT / "data" / "checkpoints")
+    latest_checkpoint = find_latest_checkpoint(checkpoint_root)
+    latest_compatible = find_latest_compatible_checkpoint(checkpoint_root)
+
+    print("\nLatest compatible checkpoint:")
+    if latest_compatible:
+        book = load_checkpoint_book(latest_compatible)
+        print(f"  dir: {latest_compatible}")
         print(f"  timesteps: {int(book.get('cumulative_timesteps', 0))}")
         print(f"  avg_reward: {float(book.get('policy_average_reward', 0.0)):.3f}")
     else:
         print("  none")
+
+    if latest_checkpoint and latest_checkpoint != latest_compatible:
+        print("\nLatest incompatible checkpoint skipped by resume:")
+        book = load_checkpoint_book(latest_checkpoint)
+        obs_shape = book.get("obs_running_stats", {}).get("shape")
+        print(f"  dir: {latest_checkpoint}")
+        print(f"  obs_shape: {obs_shape}")
+        print(f"  compatible: {'yes' if is_checkpoint_compatible(latest_checkpoint) else 'no'}")
 
     metrics_path = ROOT / "data" / "training_metrics.csv"
     print("\nLatest metrics:")

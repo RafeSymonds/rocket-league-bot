@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import multiprocessing as mp
 import os
 import time
 from pathlib import Path
@@ -39,12 +40,14 @@ class ProcessIterationLogger:
         iteration_timesteps: int,
         curriculum_manager: CurriculumManager,
         checkpoint_root: str,
+        curriculum_state_path: str,
     ):
         self.env = env
         self.pid = process_id
         self.iteration_ts = iteration_timesteps
         self.cm = curriculum_manager
         self.checkpoint_root = checkpoint_root
+        self.curriculum_state_path = curriculum_state_path
         self.league = SnapshotLeague()
         self._last_exported_checkpoint = ""
         self.log_counter = 0
@@ -55,6 +58,7 @@ class ProcessIterationLogger:
         self._reset_iteration_stats()
         self._reset_episode_stats()
         self._init_metrics_file()
+        self._sync_curriculum_state()
 
     def _init_metrics_file(self):
         self._metrics_path = None
@@ -142,6 +146,7 @@ class ProcessIterationLogger:
         pass
 
     def reset(self, **kwargs):
+        self._sync_curriculum_state()
         self._reset_episode_stats()
         result = self.env.reset(**kwargs)
         if len(result) == 2:
@@ -241,10 +246,43 @@ class ProcessIterationLogger:
             median_t_first=float(median_t_first if median_t_first != -1 else 9999.0),
             median_t_goal=float(median_t_goal if median_t_goal != -1 else 9999.0),
         )
-        self.cm.maybe_advance(stats)
+        if self.pid == 0:
+            self.cm.maybe_advance(stats)
+            self._write_curriculum_state()
+        else:
+            self._sync_curriculum_state()
         self._maybe_register_league_snapshot()
         self._maybe_auto_export_latest_checkpoint()
         self._reset_iteration_stats()
+
+    def _sync_curriculum_state(self) -> None:
+        path = Path(self.curriculum_state_path)
+        if not path.exists():
+            return
+        try:
+            payload = json.loads(path.read_text())
+        except Exception:
+            return
+        if isinstance(payload, dict):
+            self.cm.load_dict(payload)
+
+    def _write_curriculum_state(self) -> None:
+        if self.pid != 0:
+            return
+        path = Path(self.curriculum_state_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(self.cm.to_dict(), indent=2, sort_keys=True))
+
+    def _persist_curriculum_state_to_checkpoint(self, checkpoint_dir: Path) -> None:
+        book = checkpoint_dir / "BOOK_KEEPING_VARS.json"
+        if not book.exists():
+            return
+        try:
+            data = json.loads(book.read_text())
+        except Exception:
+            return
+        data["curriculum_state"] = self.cm.to_dict()
+        book.write_text(json.dumps(data, indent=4))
 
     def _maybe_register_league_snapshot(self) -> None:
         if self.pid != 0:
@@ -280,6 +318,7 @@ class ProcessIterationLogger:
         latest = self._find_latest_checkpoint()
         if latest is None:
             return
+        self._persist_curriculum_state_to_checkpoint(latest)
         latest_str = str(latest)
         if latest_str == self._last_exported_checkpoint:
             return
@@ -313,12 +352,29 @@ class ProcessIterationLogger:
 
 
 class EnvBuilder:
-    def __init__(self, iteration_timesteps: int, checkpoint_root: str = "data/checkpoints"):
+    def __init__(
+        self,
+        iteration_timesteps: int,
+        checkpoint_root: str = "data/checkpoints",
+        n_proc: int = 1,
+        initial_curriculum_state: dict[str, object] | None = None,
+    ):
         self.iteration_timesteps = iteration_timesteps
         self.checkpoint_root = checkpoint_root
+        self.n_proc = max(1, int(n_proc))
         self.curriculum_manager = CurriculumManager()
+        self.curriculum_manager.load_dict(initial_curriculum_state)
+        self.curriculum_state_path = str(Path("data") / "curriculum_state.json")
+        Path(self.curriculum_state_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(self.curriculum_state_path).write_text(
+            json.dumps(self.curriculum_manager.to_dict(), indent=2, sort_keys=True)
+        )
 
-    def __call__(self, process_id: int):
+    def __call__(self, process_id: int | None = None):
+        if process_id is None:
+            process = mp.current_process()
+            process_id = int(process._identity[0] - 1) if process._identity else 0
+
         curriculum_manager = self.curriculum_manager
         action_parser = RepeatAction(LookupTableAction(), repeats=ACTION_REPEAT)
 
@@ -340,8 +396,9 @@ class EnvBuilder:
         wrapped = ProcessIterationLogger(
             RLGymV2GymWrapper(env),
             process_id=process_id,
-            iteration_timesteps=self.iteration_timesteps,
+            iteration_timesteps=max(1, self.iteration_timesteps // self.n_proc),
             curriculum_manager=curriculum_manager,
             checkpoint_root=self.checkpoint_root,
+            curriculum_state_path=self.curriculum_state_path,
         )
         return wrapped

@@ -22,20 +22,20 @@ def main() -> int:
 
     if not rows:
         print("Metrics file is empty")
-        return 1
+        return 0
 
     show = rows[-12:]
-    print("stage | avg_return | touch_rate | goal_rate | ema_touch | ema_goal | p_easy")
+    print("stage | difficulty | avg_return | touch_rate | goal_rate | ema_touch | ema_goal")
     print("-" * 80)
     for r in show:
         print(
             f"{r['stage']:<8} | "
+            f"{float(r['difficulty']):10.3f} | "
             f"{float(r['avg_return']):10.2f} | "
             f"{float(r['touch_rate']):10.3f} | "
             f"{float(r['goal_rate']):9.3f} | "
             f"{float(r['ema_touch']):9.3f} | "
-            f"{float(r['ema_goal']):8.3f} | "
-            f"{float(r['p_easy']):6.3f}"
+            f"{float(r['ema_goal']):8.3f}"
         )
 
     n = len(rows)
@@ -49,11 +49,14 @@ def main() -> int:
     prev_touch = _avg(prev, "touch_rate")
     recent_goal = _avg(recent, "goal_rate")
     prev_goal = _avg(prev, "goal_rate")
+    recent_difficulty = _avg(recent, "difficulty")
+    prev_difficulty = _avg(prev, "difficulty")
 
     print("\nTrend")
     print(f"avg_return: {prev_return:.2f} -> {recent_return:.2f} (delta {recent_return - prev_return:+.2f})")
     print(f"touch_rate: {prev_touch:.3f} -> {recent_touch:.3f} (delta {recent_touch - prev_touch:+.3f})")
     print(f"goal_rate : {prev_goal:.3f} -> {recent_goal:.3f} (delta {recent_goal - prev_goal:+.3f})")
+    print(f"difficulty: {prev_difficulty:.3f} -> {recent_difficulty:.3f} (delta {recent_difficulty - prev_difficulty:+.3f})")
 
     return 0
 

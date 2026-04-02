@@ -7,10 +7,10 @@ from typing import Any
 from .config import ACTION_REPEAT, CRITIC_LAYER_SIZES, OBS_DIM, POLICY_LAYER_SIZES
 
 
-def find_latest_checkpoint(checkpoint_root: str) -> str:
+def _list_checkpoint_candidates(checkpoint_root: str) -> list[tuple[int, float, str]]:
     root = Path(checkpoint_root)
     if not root.exists():
-        return ""
+        return []
 
     candidates: list[tuple[int, float, str]] = []
     for book in root.rglob("BOOK_KEEPING_VARS.json"):
@@ -21,10 +21,14 @@ def find_latest_checkpoint(checkpoint_root: str) -> str:
             ts = 0
         candidates.append((ts, book.stat().st_mtime, str(book.parent)))
 
+    candidates.sort(key=lambda x: (x[0], x[1]))
+    return candidates
+
+
+def find_latest_checkpoint(checkpoint_root: str) -> str:
+    candidates = _list_checkpoint_candidates(checkpoint_root)
     if not candidates:
         return ""
-
-    candidates.sort(key=lambda x: (x[0], x[1]))
     return candidates[-1][2]
 
 
@@ -36,6 +40,37 @@ def load_checkpoint_book(checkpoint_dir: str) -> dict[str, Any]:
         return json.loads(book_path.read_text())
     except Exception:
         return {}
+
+
+def load_curriculum_state_from_checkpoint(checkpoint_dir: str) -> dict[str, Any]:
+    book = load_checkpoint_book(checkpoint_dir)
+    state = book.get("curriculum_state")
+    return state if isinstance(state, dict) else {}
+
+
+def _checkpoint_obs_dim(checkpoint_dir: str) -> int | None:
+    book = load_checkpoint_book(checkpoint_dir)
+    shape = book.get("obs_running_stats", {}).get("shape")
+    if isinstance(shape, list) and len(shape) == 1:
+        try:
+            return int(shape[0])
+        except Exception:
+            return None
+    return None
+
+
+def find_latest_compatible_checkpoint(checkpoint_root: str, expected_obs_dim: int = OBS_DIM) -> str:
+    candidates = _list_checkpoint_candidates(checkpoint_root)
+    for _, _, checkpoint_dir in reversed(candidates):
+        obs_dim = _checkpoint_obs_dim(checkpoint_dir)
+        if obs_dim is None or obs_dim == int(expected_obs_dim):
+            return checkpoint_dir
+    return ""
+
+
+def is_checkpoint_compatible(checkpoint_dir: str, expected_obs_dim: int = OBS_DIM) -> bool:
+    obs_dim = _checkpoint_obs_dim(checkpoint_dir)
+    return obs_dim is None or obs_dim == int(expected_obs_dim)
 
 
 def build_runtime_config(checkpoint_dir: str) -> dict[str, Any]:

@@ -4,23 +4,19 @@ import argparse
 
 from rlgym_ppo import Learner
 
-from rocket_league_bot_src.checkpoints import find_latest_checkpoint
+from rocket_league_bot_src.checkpoints import (
+    find_latest_checkpoint,
+    find_latest_compatible_checkpoint,
+    load_curriculum_state_from_checkpoint,
+    load_checkpoint_book,
+)
 from rocket_league_bot_src.config import (
     CRITIC_LAYER_SIZES,
     DEFAULT_CHECKPOINT_ROOT,
+    OBS_DIM,
     POLICY_LAYER_SIZES,
 )
 from rocket_league_bot_src.env import EnvBuilder
-
-
-_global_iteration_timesteps: int = 0
-_global_env_builder: EnvBuilder | None = None
-
-
-def _create_rlgym_env(process_id: int = 0):
-    if _global_env_builder is None:
-        raise RuntimeError("Environment builder was not initialized")
-    return _global_env_builder(process_id)
 
 
 def parse_args() -> argparse.Namespace:
@@ -38,6 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save-every-ts", type=int, default=2_000_000)
     parser.add_argument("--timestep-limit", type=int, default=1_000_000_000)
     parser.add_argument("--min-inference-size", type=int, default=1)
+    parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--load-path", type=str, default="")
     parser.add_argument("--checkpoint-root", type=str, default=DEFAULT_CHECKPOINT_ROOT)
     parser.add_argument("--resume-latest", dest="resume_latest", action="store_true")
@@ -47,17 +44,37 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 def main():
-    global _global_iteration_timesteps, _global_env_builder
     args = parse_args()
 
-    _global_iteration_timesteps = int(args.ts_per_iteration)
-    _global_env_builder = EnvBuilder(
-        iteration_timesteps=_global_iteration_timesteps,
+    load_path = args.load_path
+    if not load_path and args.resume_latest:
+        load_path = find_latest_compatible_checkpoint(args.checkpoint_root, expected_obs_dim=OBS_DIM)
+        latest_checkpoint = find_latest_checkpoint(args.checkpoint_root)
+        if latest_checkpoint and load_path and latest_checkpoint != load_path:
+            latest_book = load_checkpoint_book(latest_checkpoint)
+            latest_obs_shape = latest_book.get("obs_running_stats", {}).get("shape")
+            print(
+                "Skipping latest checkpoint due to observation mismatch: "
+                f"{latest_checkpoint} has obs shape {latest_obs_shape}, expected {[OBS_DIM]}."
+            )
+        elif latest_checkpoint and not load_path:
+            latest_book = load_checkpoint_book(latest_checkpoint)
+            latest_obs_shape = latest_book.get("obs_running_stats", {}).get("shape")
+            print(
+                "No compatible checkpoint found to resume. "
+                f"Latest checkpoint {latest_checkpoint} has obs shape {latest_obs_shape}, expected {[OBS_DIM]}."
+            )
+
+    initial_curriculum_state = load_curriculum_state_from_checkpoint(load_path) if load_path else {}
+    env_builder = EnvBuilder(
+        iteration_timesteps=int(args.ts_per_iteration),
         checkpoint_root=args.checkpoint_root,
+        n_proc=int(args.n_proc),
+        initial_curriculum_state=initial_curriculum_state,
     )
 
     learner = Learner(
-        _create_rlgym_env,
+        env_builder,
         n_proc=int(args.n_proc),
         min_inference_size=int(args.min_inference_size),
         policy_layer_sizes=POLICY_LAYER_SIZES,
@@ -73,11 +90,9 @@ def main():
         timestep_limit=int(args.timestep_limit),
         log_to_wandb=False,
         save_every_ts=int(args.save_every_ts),
+        checkpoint_load_folder=None,
+        device=str(args.device),
     )
-
-    load_path = args.load_path
-    if not load_path and args.resume_latest:
-        load_path = find_latest_checkpoint(args.checkpoint_root)
 
     if load_path:
         print(f"Resuming from checkpoint: {load_path}")

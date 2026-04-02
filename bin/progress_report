@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -24,7 +25,8 @@ def main() -> int:
         except Exception:
             continue
 
-        reward = float(data.get("policy_average_reward", 0.0))
+        reward_raw = data.get("policy_average_reward", 0.0)
+        reward = 0.0 if reward_raw is None else float(reward_raw)
         timesteps = int(data.get("cumulative_timesteps", 0))
         rows.append((timesteps, reward, p))
 

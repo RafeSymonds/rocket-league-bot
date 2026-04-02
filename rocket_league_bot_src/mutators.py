@@ -13,8 +13,12 @@ from .config import Stage
 
 try:
     from rlgym_tools.rocket_league.state_mutators.game_mutator import GameMutator
+    from rlgym_tools.rocket_league.shared_info_providers.scoreboard_provider import (
+        ScoreboardInfo,
+    )
 except Exception:  # pragma: no cover - optional dependency until installed
     GameMutator = None
+    ScoreboardInfo = None
 
 
 class DynamicTeamSizeMutator(StateMutator):
@@ -239,10 +243,43 @@ class DynamicMatchMutator(StateMutator):
         self.scenario_mutator = ScenarioResetMutator(curriculum_manager)
         self.game_mutator = GameMutator() if GameMutator is not None else None
 
+    def _ensure_scoreboard(self, shared_info: dict[str, Any], *, full_match: bool) -> None:
+        if ScoreboardInfo is None:
+            return
+
+        scoreboard = shared_info.get("scoreboard")
+        if not isinstance(scoreboard, ScoreboardInfo):
+            scoreboard = ScoreboardInfo(
+                game_timer_seconds=float("inf"),
+                kickoff_timer_seconds=0.0,
+                blue_score=0,
+                orange_score=0,
+                go_to_kickoff=False,
+                is_over=False,
+            )
+            shared_info["scoreboard"] = scoreboard
+
+        if full_match:
+            scoreboard.game_timer_seconds = 300.0
+            scoreboard.kickoff_timer_seconds = 5.0
+            scoreboard.blue_score = 0
+            scoreboard.orange_score = 0
+            scoreboard.go_to_kickoff = True
+            scoreboard.is_over = False
+            return
+
+        scoreboard.game_timer_seconds = float("inf")
+        scoreboard.kickoff_timer_seconds = 0.0
+        scoreboard.blue_score = 0
+        scoreboard.orange_score = 0
+        scoreboard.go_to_kickoff = False
+        scoreboard.is_over = False
+
     @override
     def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
         cfg = self.curriculum_manager.current_config()
         self.team_size_mutator.apply(state, shared_info)
+        self._ensure_scoreboard(shared_info, full_match=cfg.full_match)
         if cfg.full_match:
             if self.game_mutator is None:
                 raise RuntimeError(

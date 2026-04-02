@@ -12,16 +12,17 @@ except Exception as exc:  # pragma: no cover
 PY
 
 python3 train.py \
-  --n-proc 1 \
-  --min-inference-size 1 \
-  --ts-per-iteration 50000 \
-  --ppo-batch-size 50000 \
-  --ppo-minibatch-size 10000 \
+  --device gpu \
+  --n-proc 16 \
+  --min-inference-size 16 \
+  --ts-per-iteration 100000 \
+  --ppo-batch-size 100000 \
+  --ppo-minibatch-size 20000 \
   --ppo-epochs 3 \
   --policy-lr 2.5e-4 \
   --critic-lr 2.5e-4 \
   --ent-coef 0.003 \
-  --exp-buffer-size 200000 \
+  --exp-buffer-size 400000 \
   --save-every-ts 2000000 \
   --resume-latest \
   "$@"

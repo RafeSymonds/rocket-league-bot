@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import functools
+import http.server
+import os
+import socketserver
+import sys
+import threading
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from rocket_league_bot_src.reporting import write_training_report
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Serve the live training HTML report.")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--refresh-seconds", type=float, default=5.0)
+    return parser.parse_args()
+
+
+def _render_loop(interval: float, stop_event: threading.Event) -> None:
+    while not stop_event.is_set():
+        try:
+            write_training_report()
+        except Exception as exc:
+            print(f"[report] failed to render training report: {exc}", flush=True)
+        stop_event.wait(max(0.5, interval))
+
+
+class ReusableTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
+
+
+def main() -> int:
+    args = parse_args()
+    stop_event = threading.Event()
+    thread = threading.Thread(
+        target=_render_loop,
+        args=(float(args.refresh_seconds), stop_event),
+        daemon=True,
+    )
+    thread.start()
+
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(ROOT))
+    try:
+        with ReusableTCPServer((args.host, int(args.port)), handler) as server:
+            print(f"Serving training report at http://{args.host}:{args.port}/data/training_report.html")
+            try:
+                server.serve_forever()
+            except KeyboardInterrupt:
+                pass
+            finally:
+                stop_event.set()
+    except OSError as exc:
+        stop_event.set()
+        if exc.errno == 98:
+            print(
+                f"Port {args.port} is already in use. "
+                f"Stop the existing report server or run with --port {int(args.port) + 1}.",
+                file=sys.stderr,
+            )
+            return 1
+        raise
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -49,9 +49,10 @@ class CurriculumManager:
         print(f"Curriculum stage -> {stage.value}")
 
     def _update_contact(self, stats) -> None:
-        touch_skill = np.clip((stats.touch_rate - 0.30) / 0.60, 0.0, 1.0)
+        ema_gate = np.clip((self.ema_touch_rate - 0.55) / 0.25, 0.0, 1.0)
+        touch_skill = np.clip((stats.touch_rate - 0.35) / 0.55, 0.0, 1.0)
         speed_skill = np.clip((180.0 - stats.median_t_first) / 120.0, 0.0, 1.0)
-        target_difficulty = 0.75 * touch_skill + 0.25 * speed_skill
+        target_difficulty = ema_gate * (0.75 * touch_skill + 0.25 * speed_skill)
         self.difficulty = self._smooth(self.difficulty, float(target_difficulty))
 
         ready = self.ema_touch_rate >= 0.82 and stats.median_t_first <= 110.0
@@ -123,3 +124,25 @@ class CurriculumManager:
             ema_goal=float(self.ema_goal_rate),
             difficulty=float(self.difficulty),
         )
+
+    def to_dict(self) -> dict[str, float | str]:
+        return {
+            "stage": self.stage.value,
+            "difficulty": float(self.difficulty),
+            "stage_iterations": int(self.stage_iterations),
+            "ema_touch_rate": float(self.ema_touch_rate),
+            "ema_goal_rate": float(self.ema_goal_rate),
+        }
+
+    def load_dict(self, payload: dict[str, float | str] | None) -> None:
+        if not payload:
+            return
+        stage_name = str(payload.get("stage", self.stage.value))
+        try:
+            self.stage = Stage(stage_name)
+        except Exception:
+            self.stage = Stage.CONTACT
+        self.difficulty = float(payload.get("difficulty", 0.0))
+        self.stage_iterations = int(payload.get("stage_iterations", 0))
+        self.ema_touch_rate = float(payload.get("ema_touch_rate", 0.0))
+        self.ema_goal_rate = float(payload.get("ema_goal_rate", 0.0))

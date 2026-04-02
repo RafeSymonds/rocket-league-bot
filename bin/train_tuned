@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+python3 - <<'PY'
+try:
+    import numpy  # noqa: F401
+except Exception as exc:  # pragma: no cover
+    raise SystemExit(
+        "Missing Python dependencies. Install them first with: pip3 install -r requirements.txt\n"
+        f"Details: {exc}"
+    )
+PY
+
+N_PROC="${N_PROC:-8}"
+MIN_INFERENCE_SIZE="${MIN_INFERENCE_SIZE:-$N_PROC}"
+TS_PER_ITERATION="${TS_PER_ITERATION:-100000}"
+PPO_BATCH_SIZE="${PPO_BATCH_SIZE:-100000}"
+PPO_MINIBATCH_SIZE="${PPO_MINIBATCH_SIZE:-20000}"
+PPO_EPOCHS="${PPO_EPOCHS:-3}"
+POLICY_LR="${POLICY_LR:-2.5e-4}"
+CRITIC_LR="${CRITIC_LR:-2.5e-4}"
+ENT_COEF="${ENT_COEF:-0.003}"
+EXP_BUFFER_SIZE="${EXP_BUFFER_SIZE:-400000}"
+SAVE_EVERY_TS="${SAVE_EVERY_TS:-2000000}"
+
+python3 train.py \
+  --device gpu \
+  --n-proc "${N_PROC}" \
+  --min-inference-size "${MIN_INFERENCE_SIZE}" \
+  --ts-per-iteration "${TS_PER_ITERATION}" \
+  --ppo-batch-size "${PPO_BATCH_SIZE}" \
+  --ppo-minibatch-size "${PPO_MINIBATCH_SIZE}" \
+  --ppo-epochs "${PPO_EPOCHS}" \
+  --policy-lr "${POLICY_LR}" \
+  --critic-lr "${CRITIC_LR}" \
+  --ent-coef "${ENT_COEF}" \
+  --exp-buffer-size "${EXP_BUFFER_SIZE}" \
+  --save-every-ts "${SAVE_EVERY_TS}" \
+  --resume-latest \
+  "$@"

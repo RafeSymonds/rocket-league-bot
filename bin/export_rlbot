@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from rocket_league_bot_src.checkpoints import find_latest_checkpoint
+from rocket_league_bot_src.checkpoints import find_latest_compatible_checkpoint
 from rocket_league_bot_src.export import export_checkpoint_to_rlbot_package
 
 
@@ -25,7 +25,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    checkpoint_dir = args.checkpoint_dir or find_latest_checkpoint(args.checkpoint_root)
+    checkpoint_dir = args.checkpoint_dir or find_latest_compatible_checkpoint(args.checkpoint_root)
     if not checkpoint_dir:
         raise SystemExit("No checkpoint found to export")
 

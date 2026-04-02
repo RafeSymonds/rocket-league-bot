@@ -19,32 +19,56 @@ def _to_float(row: dict[str, str], key: str) -> float:
         return 0.0
 
 
-def _polyline_points(values: list[float], width: int, height: int, pad: int) -> str:
-    if not values:
+def _time_values(rows: list[dict[str, str]]) -> list[float]:
+    if not rows:
+        return []
+    values = [_to_float(row, "unix_time") for row in rows]
+    if any(value > 0 for value in values):
+        return values
+    return [float(i) for i in range(len(rows))]
+
+
+def _polyline_points(
+    x_values: list[float],
+    y_values: list[float],
+    width: int,
+    height: int,
+    pad: int,
+) -> str:
+    if not y_values:
         return ""
-    if len(values) == 1:
+    if len(y_values) == 1:
         x = width // 2
         y = height // 2
         return f"{x},{y}"
 
-    lo = min(values)
-    hi = max(values)
-    if abs(hi - lo) < 1e-9:
-        lo -= 1.0
-        hi += 1.0
+    x_lo = min(x_values)
+    x_hi = max(x_values)
+    if abs(x_hi - x_lo) < 1e-9:
+        x_lo -= 1.0
+        x_hi += 1.0
+
+    y_lo = min(y_values)
+    y_hi = max(y_values)
+    if abs(y_hi - y_lo) < 1e-9:
+        y_lo -= 1.0
+        y_hi += 1.0
 
     points: list[str] = []
     usable_w = max(1, width - 2 * pad)
     usable_h = max(1, height - 2 * pad)
-    for idx, value in enumerate(values):
-        x = pad + usable_w * idx / (len(values) - 1)
-        norm = (value - lo) / (hi - lo)
-        y = height - pad - norm * usable_h
+    for x_value, y_value in zip(x_values, y_values):
+        x_norm = (x_value - x_lo) / (x_hi - x_lo)
+        y_norm = (y_value - y_lo) / (y_hi - y_lo)
+        x = pad + x_norm * usable_w
+        y = height - pad - y_norm * usable_h
         points.append(f"{x:.1f},{y:.1f}")
     return " ".join(points)
 
 
-def _stage_spans(rows: list[dict[str, str]], width: int, pad: int) -> str:
+def _stage_spans(rows: list[dict[str, str]], x_values: list[float], width: int, pad: int) -> str:
+    if not x_values:
+        return ""
     if len(rows) < 2:
         return ""
 
@@ -57,14 +81,23 @@ def _stage_spans(rows: list[dict[str, str]], width: int, pad: int) -> str:
     }
 
     usable_w = max(1, width - 2 * pad)
+    x_lo = min(x_values)
+    x_hi = max(x_values)
+    if abs(x_hi - x_lo) < 1e-9:
+        x_lo -= 1.0
+        x_hi += 1.0
+
+    def map_x(value: float) -> float:
+        return pad + ((value - x_lo) / (x_hi - x_lo)) * usable_w
+
     spans: list[str] = []
     start = 0
     current = rows[0].get("stage", "")
     for idx, row in enumerate(rows[1:], start=1):
         stage = row.get("stage", "")
         if stage != current:
-            x0 = pad + usable_w * start / (len(rows) - 1)
-            x1 = pad + usable_w * (idx - 1) / (len(rows) - 1)
+            x0 = map_x(x_values[start])
+            x1 = map_x(x_values[idx - 1])
             spans.append(
                 f'<rect x="{x0:.1f}" y="0" width="{max(1.0, x1 - x0):.1f}" height="220" '
                 f'fill="{stage_colors.get(current, "#f1f3f5")}" opacity="0.55" />'
@@ -72,8 +105,8 @@ def _stage_spans(rows: list[dict[str, str]], width: int, pad: int) -> str:
             start = idx
             current = stage
 
-    x0 = pad + usable_w * start / (len(rows) - 1)
-    x1 = pad + usable_w
+    x0 = map_x(x_values[start])
+    x1 = map_x(x_values[-1])
     spans.append(
         f'<rect x="{x0:.1f}" y="0" width="{max(1.0, x1 - x0):.1f}" height="220" '
         f'fill="{stage_colors.get(current, "#f1f3f5")}" opacity="0.55" />'
@@ -86,11 +119,12 @@ def _chart_svg(title: str, rows: list[dict[str, str]], key: str, color: str) -> 
     height = 220
     pad = 28
     values = [_to_float(row, key) for row in rows]
-    points = _polyline_points(values, width, height, pad)
+    x_values = _time_values(rows)
+    points = _polyline_points(x_values, values, width, height, pad)
     latest = values[-1] if values else 0.0
     lo = min(values) if values else 0.0
     hi = max(values) if values else 0.0
-    spans = _stage_spans(rows, width, pad)
+    spans = _stage_spans(rows, x_values, width, pad)
 
     return f"""
     <section class="chart-card">
@@ -146,7 +180,7 @@ def write_training_report(
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="refresh" content="5" />
+  <meta name="color-scheme" content="light dark" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Rocket League Bot Training Report</title>
   <style>
@@ -156,12 +190,31 @@ def write_training_report(
       --ink: #1f2937;
       --muted: #6b7280;
       --border: #e5e7eb;
+      --page-top: #f3f4f6;
+      --page-bottom: #f7f7f2;
+      --chart-bg: #fcfcfb;
+      --axis: #9ca3af;
+      --shadow: rgba(15, 23, 42, 0.05);
+    }}
+    @media (prefers-color-scheme: dark) {{
+      :root {{
+        --bg: #0b1220;
+        --panel: #111827;
+        --ink: #e5eefb;
+        --muted: #94a3b8;
+        --border: #243041;
+        --page-top: #09111d;
+        --page-bottom: #0b1220;
+        --chart-bg: #0f172a;
+        --axis: #475569;
+        --shadow: rgba(2, 6, 23, 0.35);
+      }}
     }}
     * {{ box-sizing: border-box; }}
     body {{
       margin: 0;
       font-family: ui-sans-serif, system-ui, sans-serif;
-      background: linear-gradient(180deg, #f3f4f6 0%, #f7f7f2 100%);
+      background: linear-gradient(180deg, var(--page-top) 0%, var(--page-bottom) 100%);
       color: var(--ink);
     }}
     main {{
@@ -187,7 +240,7 @@ def write_training_report(
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 14px;
-      box-shadow: 0 8px 30px rgba(15, 23, 42, 0.05);
+      box-shadow: 0 8px 30px var(--shadow);
     }}
     .summary-card {{
       padding: 14px;
@@ -226,10 +279,10 @@ def write_training_report(
       height: auto;
       display: block;
       border-radius: 10px;
-      background: #fcfcfb;
+      background: var(--chart-bg);
     }}
     .axis {{
-      stroke: #9ca3af;
+      stroke: var(--axis);
       stroke-width: 1;
     }}
     .empty {{
@@ -241,12 +294,44 @@ def write_training_report(
   </style>
 </head>
 <body>
-  <main>
+  <main id="report-root">
     <h1>Training Report</h1>
     <div class="sub">Auto-refreshes every 5 seconds. Stage backgrounds show curriculum transitions.</div>
     {summary}
     {charts}
   </main>
+  <script>
+    (() => {{
+      const root = document.getElementById("report-root");
+      if (!root) return;
+
+      let lastHtml = root.innerHTML;
+
+      async function refreshReport() {{
+        try {{
+          const url = new URL(window.location.href);
+          url.searchParams.set("_ts", String(Date.now()));
+          const response = await fetch(url, {{ cache: "no-store" }});
+          if (!response.ok) return;
+
+          const text = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(text, "text/html");
+          const nextRoot = doc.getElementById("report-root");
+          if (!nextRoot) return;
+
+          const nextHtml = nextRoot.innerHTML;
+          if (nextHtml !== lastHtml) {{
+            root.innerHTML = nextHtml;
+            lastHtml = nextHtml;
+          }}
+        }} catch (_err) {{
+        }}
+      }}
+
+      window.setInterval(refreshReport, 5000);
+    }})();
+  </script>
 </body>
 </html>
 """,

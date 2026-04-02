@@ -51,6 +51,18 @@ Run training with the repo defaults:
 bin/train
 ```
 
+Run training with stronger multi-process defaults and resume the latest compatible checkpoint:
+
+```bash
+bin/train_tuned
+```
+
+Run the same tuned setup without resuming:
+
+```bash
+bin/train_tuned_fresh
+```
+
 Run unattended background training:
 
 ```bash
