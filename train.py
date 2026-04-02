@@ -15,6 +15,7 @@ from rocket_league_bot_src.config import (
     DEFAULT_CHECKPOINT_ROOT,
     OBS_DIM,
     POLICY_LAYER_SIZES,
+    Stage,
 )
 from rocket_league_bot_src.env import EnvBuilder
 
@@ -37,6 +38,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--load-path", type=str, default="")
     parser.add_argument("--checkpoint-root", type=str, default=DEFAULT_CHECKPOINT_ROOT)
+    parser.add_argument("--force-stage", type=str, default="")
+    parser.add_argument("--force-difficulty", type=float, default=None)
     parser.add_argument("--resume-latest", dest="resume_latest", action="store_true")
     parser.add_argument("--no-resume-latest", dest="resume_latest", action="store_false")
     parser.set_defaults(resume_latest=True)
@@ -66,6 +69,19 @@ def main():
             )
 
     initial_curriculum_state = load_curriculum_state_from_checkpoint(load_path) if load_path else {}
+    if args.force_stage:
+        stage = Stage[str(args.force_stage).upper()]
+        initial_curriculum_state = {
+            "stage": stage.value,
+            "difficulty": float(args.force_difficulty or 0.0),
+            "stage_iterations": 0,
+            "ema_touch_rate": 0.0,
+            "ema_goal_rate": 0.0,
+        }
+        print(
+            f"Forcing curriculum stage to {stage.value} "
+            f"at difficulty {float(args.force_difficulty or 0.0):.3f}."
+        )
     env_builder = EnvBuilder(
         iteration_timesteps=int(args.ts_per_iteration),
         checkpoint_root=args.checkpoint_root,

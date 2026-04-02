@@ -149,7 +149,7 @@ class ProcessIterationLogger:
         self._sync_curriculum_state()
         self._reset_episode_stats()
         result = self.env.reset(**kwargs)
-        if len(result) == 2:
+        if isinstance(result, tuple) and len(result) == 2:
             obs, info = result
         else:
             obs, info = result, {}

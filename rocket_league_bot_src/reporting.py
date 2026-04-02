@@ -168,6 +168,8 @@ def write_training_report(
                 _chart_svg("Average Return", rows, "avg_return", "#0f766e"),
                 _chart_svg("Touch Rate", rows, "touch_rate", "#2563eb"),
                 _chart_svg("Goal Rate", rows, "goal_rate", "#dc2626"),
+                _chart_svg("Median T First", rows, "median_t_first", "#ca8a04"),
+                _chart_svg("Median T Goal", rows, "median_t_goal", "#c2410c"),
                 _chart_svg("Difficulty", rows, "difficulty", "#7c3aed"),
             ]
         )
