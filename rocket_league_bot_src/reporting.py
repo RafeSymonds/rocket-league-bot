@@ -159,6 +159,7 @@ def write_training_report(
           <div class="summary-card"><span>Difficulty</span><strong>{html.escape(last.get("difficulty", ""))}</strong></div>
           <div class="summary-card"><span>Touch Rate</span><strong>{html.escape(last.get("touch_rate", ""))}</strong></div>
           <div class="summary-card"><span>Goal Rate</span><strong>{html.escape(last.get("goal_rate", ""))}</strong></div>
+          <div class="summary-card"><span>Blue Goal Rate</span><strong>{html.escape(last.get("blue_goal_rate", ""))}</strong></div>
           <div class="summary-card"><span>Median T First</span><strong>{html.escape(last.get("median_t_first", ""))}</strong></div>
           <div class="summary-card"><span>Median T Goal</span><strong>{html.escape(last.get("median_t_goal", ""))}</strong></div>
         </div>
@@ -168,6 +169,7 @@ def write_training_report(
                 _chart_svg("Average Return", rows, "avg_return", "#0f766e"),
                 _chart_svg("Touch Rate", rows, "touch_rate", "#2563eb"),
                 _chart_svg("Goal Rate", rows, "goal_rate", "#dc2626"),
+                _chart_svg("Blue Goal Rate", rows, "blue_goal_rate", "#0891b2"),
                 _chart_svg("Median T First", rows, "median_t_first", "#ca8a04"),
                 _chart_svg("Median T Goal", rows, "median_t_goal", "#c2410c"),
                 _chart_svg("Difficulty", rows, "difficulty", "#7c3aed"),

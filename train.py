@@ -7,6 +7,7 @@ from rlgym_ppo import Learner
 from rocket_league_bot_src.checkpoints import (
     find_latest_checkpoint,
     find_latest_compatible_checkpoint,
+    find_opponent_checkpoint,
     load_curriculum_state_from_checkpoint,
     load_checkpoint_book,
 )
@@ -36,10 +37,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timestep-limit", type=int, default=1_000_000_000)
     parser.add_argument("--min-inference-size", type=int, default=1)
     parser.add_argument("--device", type=str, default="auto")
+    parser.add_argument("--opponent-device", type=str, default="gpu")
     parser.add_argument("--load-path", type=str, default="")
     parser.add_argument("--checkpoint-root", type=str, default=DEFAULT_CHECKPOINT_ROOT)
     parser.add_argument("--force-stage", type=str, default="")
     parser.add_argument("--force-difficulty", type=float, default=None)
+    parser.add_argument("--opponent-checkpoint", type=str, default="")
+    parser.add_argument("--opponent-gap-ts", type=int, default=4_000_000)
     parser.add_argument("--resume-latest", dest="resume_latest", action="store_true")
     parser.add_argument("--no-resume-latest", dest="resume_latest", action="store_false")
     parser.set_defaults(resume_latest=True)
@@ -69,6 +73,24 @@ def main():
             )
 
     initial_curriculum_state = load_curriculum_state_from_checkpoint(load_path) if load_path else {}
+    opponent_checkpoint = args.opponent_checkpoint
+    if not opponent_checkpoint and load_path:
+        current_book = load_checkpoint_book(load_path)
+        current_ts = int(current_book.get("cumulative_timesteps", 0))
+        opponent_checkpoint = find_opponent_checkpoint(
+            args.checkpoint_root,
+            current_ts=current_ts,
+            gap_ts=int(args.opponent_gap_ts),
+            exclude_checkpoint_dir=load_path,
+        )
+        if opponent_checkpoint:
+            print(
+                f"Using opponent checkpoint: {opponent_checkpoint} "
+                f"(target gap {int(args.opponent_gap_ts)})"
+            )
+    elif opponent_checkpoint:
+        print(f"Using fixed opponent checkpoint: {opponent_checkpoint}")
+
     if args.force_stage:
         stage = Stage[str(args.force_stage).upper()]
         initial_curriculum_state = {
@@ -87,6 +109,10 @@ def main():
         checkpoint_root=args.checkpoint_root,
         n_proc=int(args.n_proc),
         initial_curriculum_state=initial_curriculum_state,
+        current_checkpoint_dir=load_path,
+        fixed_opponent_checkpoint=opponent_checkpoint,
+        opponent_gap_ts=int(args.opponent_gap_ts),
+        opponent_device=str(args.opponent_device),
     )
 
     learner = Learner(

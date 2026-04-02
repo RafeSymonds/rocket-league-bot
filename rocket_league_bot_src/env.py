@@ -12,7 +12,6 @@ import numpy as np
 from rlgym.api import RLGym
 from rlgym.rocket_league.action_parsers import LookupTableAction, RepeatAction
 from rlgym.rocket_league.sim import RocketSimEngine
-from rlgym_ppo.util import RLGymV2GymWrapper
 
 from .conditions import CurriculumDoneCondition, CurriculumTruncationCondition
 from .config import ACTION_REPEAT
@@ -20,9 +19,11 @@ from .curriculum import CurriculumManager
 from .league import SnapshotLeague
 from .mutators import DynamicMatchMutator
 from .obs import SharedObs
+from .opponent import SelfPlayOpponentGymWrapper
 from .reporting import write_training_report
 from .rewards import CurriculumReward
 from .utils import Stats
+from .checkpoints import find_opponent_checkpoint, load_checkpoint_book
 
 try:
     from rlgym_tools.rocket_league.shared_info_providers.scoreboard_provider import (
@@ -33,6 +34,22 @@ except Exception:  # pragma: no cover - optional dependency until installed
 
 
 class ProcessIterationLogger:
+    _METRICS_COLUMNS = [
+        "unix_time",
+        "stage",
+        "difficulty",
+        "sps",
+        "episodes",
+        "avg_return",
+        "touch_rate",
+        "goal_rate",
+        "blue_goal_rate",
+        "median_t_first",
+        "median_t_goal",
+        "ema_touch",
+        "ema_goal",
+    ]
+
     def __init__(
         self,
         env,
@@ -41,6 +58,10 @@ class ProcessIterationLogger:
         curriculum_manager: CurriculumManager,
         checkpoint_root: str,
         curriculum_state_path: str,
+        opponent_state_path: str,
+        opponent_gap_ts: int,
+        current_checkpoint_dir: str,
+        fixed_opponent_checkpoint: str,
     ):
         self.env = env
         self.pid = process_id
@@ -48,6 +69,10 @@ class ProcessIterationLogger:
         self.cm = curriculum_manager
         self.checkpoint_root = checkpoint_root
         self.curriculum_state_path = curriculum_state_path
+        self.opponent_state_path = opponent_state_path
+        self.opponent_gap_ts = int(opponent_gap_ts)
+        self.current_checkpoint_dir = current_checkpoint_dir
+        self.fixed_opponent_checkpoint = fixed_opponent_checkpoint
         self.league = SnapshotLeague()
         self._last_exported_checkpoint = ""
         self.log_counter = 0
@@ -59,6 +84,7 @@ class ProcessIterationLogger:
         self._reset_episode_stats()
         self._init_metrics_file()
         self._sync_curriculum_state()
+        self._write_opponent_state()
 
     def _init_metrics_file(self):
         self._metrics_path = None
@@ -67,25 +93,42 @@ class ProcessIterationLogger:
         os.makedirs("data", exist_ok=True)
         self._metrics_path = os.path.join("data", "training_metrics.csv")
         if os.path.exists(self._metrics_path):
+            self._migrate_metrics_file_if_needed()
             return
         with open(self._metrics_path, "w", newline="", encoding="utf-8") as handle:
             writer = csv.writer(handle)
-            writer.writerow(
-                [
-                    "unix_time",
-                    "stage",
-                    "difficulty",
-                    "sps",
-                    "episodes",
-                    "avg_return",
-                    "touch_rate",
-                    "goal_rate",
-                    "median_t_first",
-                    "median_t_goal",
-                    "ema_touch",
-                    "ema_goal",
-                ]
-            )
+            writer.writerow(self._METRICS_COLUMNS)
+
+    def _migrate_metrics_file_if_needed(self) -> None:
+        if self._metrics_path is None:
+            return
+        try:
+            with open(self._metrics_path, "r", newline="", encoding="utf-8") as handle:
+                rows = list(csv.reader(handle))
+        except Exception:
+            return
+        if not rows:
+            return
+
+        header = rows[0]
+        if header == self._METRICS_COLUMNS:
+            return
+
+        migrated_rows: list[list[str]] = [self._METRICS_COLUMNS]
+        if header == [c for c in self._METRICS_COLUMNS if c != "blue_goal_rate"]:
+            for row in rows[1:]:
+                if not row:
+                    continue
+                padded = row[:8] + [""] + row[8:]
+                if len(padded) < len(self._METRICS_COLUMNS):
+                    padded.extend([""] * (len(self._METRICS_COLUMNS) - len(padded)))
+                migrated_rows.append(padded[: len(self._METRICS_COLUMNS)])
+        else:
+            return
+
+        with open(self._metrics_path, "w", newline="", encoding="utf-8") as handle:
+            writer = csv.writer(handle)
+            writer.writerows(migrated_rows)
 
     def _reset_iteration_stats(self):
         self.iteration_start_time = time.time()
@@ -93,6 +136,7 @@ class ProcessIterationLogger:
         self.iteration_episodes = 0
         self.iteration_return = 0.0
         self.iteration_goals = 0
+        self.iteration_blue_goals = 0
         self.iteration_success_eps = 0
         self.iteration_median_t_first = []
         self.iteration_median_t_goal = []
@@ -113,6 +157,7 @@ class ProcessIterationLogger:
         avg_return: float,
         touch_rate: float,
         goal_rate: float,
+        blue_goal_rate: float,
         median_t_first: float,
         median_t_goal: float,
     ) -> None:
@@ -131,6 +176,7 @@ class ProcessIterationLogger:
                     f"{avg_return:.6f}",
                     f"{touch_rate:.6f}",
                     f"{goal_rate:.6f}",
+                    f"{blue_goal_rate:.6f}",
                     f"{median_t_first:.3f}",
                     f"{median_t_goal:.3f}",
                     f"{snap.ema_touch:.6f}",
@@ -197,6 +243,8 @@ class ProcessIterationLogger:
             if self.ep_goal_step != -1:
                 self.iteration_goals += 1
                 self.iteration_median_t_goal.append(self.ep_goal_step)
+                if state is not None and int(state.scoring_team) == 0:
+                    self.iteration_blue_goals += 1
 
             self._reset_episode_stats()
 
@@ -209,6 +257,7 @@ class ProcessIterationLogger:
         avg_return = self.iteration_return / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
         touch_rate = self.iteration_success_eps / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
         goal_rate = self.iteration_goals / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
+        blue_goal_rate = self.iteration_blue_goals / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
         median_t_first = np.median(self.iteration_median_t_first) if self.iteration_median_t_first else -1.0
         median_t_goal = np.median(self.iteration_median_t_goal) if self.iteration_median_t_goal else -1.0
 
@@ -224,6 +273,7 @@ class ProcessIterationLogger:
             avg_return=avg_return,
             touch_rate=touch_rate,
             goal_rate=goal_rate,
+            blue_goal_rate=blue_goal_rate,
             median_t_first=float(median_t_first),
             median_t_goal=float(median_t_goal),
         )
@@ -236,7 +286,8 @@ class ProcessIterationLogger:
                 f"Eps={self.iteration_episodes:4d} | "
                 f"AvgRet={avg_return:7.3f} | "
                 f"Touch={touch_rate:0.2f} | "
-                f"Goal={goal_rate:0.2f}"
+                f"Goal={goal_rate:0.2f} | "
+                f"BlueGoal={blue_goal_rate:0.2f}"
             )
         self.log_counter += 1
 
@@ -249,6 +300,10 @@ class ProcessIterationLogger:
         if self.pid == 0:
             self.cm.maybe_advance(stats)
             self._write_curriculum_state()
+            self._write_opponent_state(
+                blue_goal_rate=blue_goal_rate,
+                goal_rate=goal_rate,
+            )
         else:
             self._sync_curriculum_state()
         self._maybe_register_league_snapshot()
@@ -318,6 +373,8 @@ class ProcessIterationLogger:
         latest = self._find_latest_checkpoint()
         if latest is None:
             return
+        self.current_checkpoint_dir = str(latest)
+        self._write_opponent_state()
         self._persist_curriculum_state_to_checkpoint(latest)
         latest_str = str(latest)
         if latest_str == self._last_exported_checkpoint:
@@ -350,6 +407,45 @@ class ProcessIterationLogger:
         candidates.sort(key=lambda item: (item[0], item[1]))
         return candidates[-1][2]
 
+    def _write_opponent_state(
+        self,
+        blue_goal_rate: float | None = None,
+        goal_rate: float | None = None,
+    ) -> None:
+        if self.pid != 0:
+            return
+        path = Path(self.opponent_state_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        checkpoint_dir = ""
+        effective_gap_ts = int(self.opponent_gap_ts)
+        if blue_goal_rate is not None and goal_rate is not None and self.cm.current_config().full_match:
+            if blue_goal_rate >= 0.90 and goal_rate >= 0.90:
+                effective_gap_ts = max(500_000, self.opponent_gap_ts // 4)
+            elif blue_goal_rate >= 0.75 and goal_rate >= 0.80:
+                effective_gap_ts = max(1_000_000, self.opponent_gap_ts // 2)
+
+        if self.fixed_opponent_checkpoint:
+            checkpoint_dir = self.fixed_opponent_checkpoint
+        elif self.current_checkpoint_dir:
+            book = load_checkpoint_book(self.current_checkpoint_dir)
+            current_ts = int(book.get("cumulative_timesteps", 0))
+            checkpoint_dir = find_opponent_checkpoint(
+                self.checkpoint_root,
+                current_ts=current_ts,
+                gap_ts=effective_gap_ts,
+                exclude_checkpoint_dir=self.current_checkpoint_dir,
+            )
+
+        payload = {
+            "enabled": bool(checkpoint_dir),
+            "checkpoint_dir": str(checkpoint_dir),
+            "gap_ts": int(effective_gap_ts),
+            "base_gap_ts": int(self.opponent_gap_ts),
+            "blue_goal_rate": None if blue_goal_rate is None else float(blue_goal_rate),
+        }
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True))
+
 
 class EnvBuilder:
     def __init__(
@@ -358,6 +454,10 @@ class EnvBuilder:
         checkpoint_root: str = "data/checkpoints",
         n_proc: int = 1,
         initial_curriculum_state: dict[str, object] | None = None,
+        current_checkpoint_dir: str = "",
+        fixed_opponent_checkpoint: str = "",
+        opponent_gap_ts: int = 4_000_000,
+        opponent_device: str = "gpu",
     ):
         self.iteration_timesteps = iteration_timesteps
         self.checkpoint_root = checkpoint_root
@@ -365,6 +465,11 @@ class EnvBuilder:
         self.curriculum_manager = CurriculumManager()
         self.curriculum_manager.load_dict(initial_curriculum_state)
         self.curriculum_state_path = str(Path("data") / "curriculum_state.json")
+        self.opponent_state_path = str(Path("data") / "opponent_state.json")
+        self.current_checkpoint_dir = current_checkpoint_dir
+        self.fixed_opponent_checkpoint = fixed_opponent_checkpoint
+        self.opponent_gap_ts = int(opponent_gap_ts)
+        self.opponent_device = opponent_device
         Path(self.curriculum_state_path).parent.mkdir(parents=True, exist_ok=True)
         Path(self.curriculum_state_path).write_text(
             json.dumps(self.curriculum_manager.to_dict(), indent=2, sort_keys=True)
@@ -393,12 +498,23 @@ class EnvBuilder:
             ),
         )
 
+        gym_env = SelfPlayOpponentGymWrapper(
+            env,
+            opponent_state_path=self.opponent_state_path,
+            deterministic_opponent=False,
+            device=self.opponent_device,
+        )
+
         wrapped = ProcessIterationLogger(
-            RLGymV2GymWrapper(env),
+            gym_env,
             process_id=process_id,
             iteration_timesteps=max(1, self.iteration_timesteps // self.n_proc),
             curriculum_manager=curriculum_manager,
             checkpoint_root=self.checkpoint_root,
             curriculum_state_path=self.curriculum_state_path,
+            opponent_state_path=self.opponent_state_path,
+            opponent_gap_ts=self.opponent_gap_ts,
+            current_checkpoint_dir=self.current_checkpoint_dir,
+            fixed_opponent_checkpoint=self.fixed_opponent_checkpoint,
         )
         return wrapped

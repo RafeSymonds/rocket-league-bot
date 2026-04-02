@@ -111,6 +111,18 @@ Train directly with custom flags:
 python3 train.py --n-proc 8 --min-inference-size 8 --resume-latest
 ```
 
+Resume with an automatically selected frozen opponent checkpoint behind the current run:
+
+```bash
+python3 train.py --resume-latest --opponent-gap-ts 4000000
+```
+
+Resume with a fixed opponent checkpoint:
+
+```bash
+python3 train.py --resume-latest --opponent-checkpoint data/checkpoints/<run>/<ts>
+```
+
 The tuned wrappers default to:
 
 - `n_proc=8`

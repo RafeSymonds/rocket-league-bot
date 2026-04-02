@@ -78,6 +78,9 @@ Run training directly with custom args:
 python3 train.py --n-proc 1 --resume-latest
 ```
 
+Self-play and defend stages can now run blue against a frozen opponent checkpoint instead of the current policy on both sides.
+Use `--opponent-checkpoint <dir>` to force a specific opponent, or `--opponent-gap-ts 4000000` to keep the opponent a few million timesteps behind the current resumed checkpoint.
+
 Watch a saved checkpoint locally:
 
 ```bash

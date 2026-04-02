@@ -36,6 +36,7 @@ def render() -> None:
     checkpoint_root = Path("data/checkpoints")
     metrics_path = Path("data/training_metrics.csv")
     league_path = Path("data/league/snapshots.json")
+    opponent_state_path = Path("data/opponent_state.json")
     runtime_config_path = Path("BotBoi_v1/src/runtime_config.json")
 
     latest_checkpoint = find_latest_compatible_checkpoint(str(checkpoint_root))
@@ -58,6 +59,7 @@ def render() -> None:
         print(f"  difficulty: {last.get('difficulty', '')}")
         print(f"  touch_rate: {last.get('touch_rate', '')}")
         print(f"  goal_rate: {last.get('goal_rate', '')}")
+        print(f"  blue_goal_rate: {last.get('blue_goal_rate', '')}")
         print(f"  median_t_first: {last.get('median_t_first', '')}")
         print(f"  median_t_goal: {last.get('median_t_goal', '')}")
     else:
@@ -71,6 +73,16 @@ def render() -> None:
             latest = snapshots[-1]
             print(f"  latest ts: {latest.get('cumulative_timesteps', 0)}")
             print(f"  latest stage: {latest.get('stage', '')}")
+    else:
+        print("  none")
+
+    print("\nOpponent state:")
+    if opponent_state_path.exists():
+        opponent = json.loads(opponent_state_path.read_text())
+        print(f"  enabled: {'yes' if opponent.get('enabled') else 'no'}")
+        print(f"  checkpoint: {opponent.get('checkpoint_dir', '')}")
+        print(f"  gap_ts: {opponent.get('gap_ts', '')}")
+        print(f"  blue_goal_rate: {opponent.get('blue_goal_rate', '')}")
     else:
         print("  none")
 
