@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+from pathlib import Path
 
 from rlgym_ppo import Learner
 
@@ -21,6 +23,25 @@ from rocket_league_bot_src.config import (
 from rocket_league_bot_src.env import EnvBuilder
 
 
+def _attach_curriculum_checkpoint_hook(learner: Learner, env_builder: EnvBuilder) -> None:
+    original_save = learner.save
+
+    def save_with_curriculum(cumulative_timesteps):
+        original_save(cumulative_timesteps)
+        checkpoint_dir = Path(learner.checkpoints_save_folder) / str(cumulative_timesteps)
+        book_path = checkpoint_dir / "BOOK_KEEPING_VARS.json"
+        if not book_path.exists():
+            return
+        try:
+            book = json.loads(book_path.read_text())
+        except Exception:
+            return
+        book["curriculum_state"] = env_builder.curriculum_manager.to_dict()
+        book_path.write_text(json.dumps(book, indent=4))
+
+    learner.save = save_with_curriculum
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Train Rocket League bot with curriculum.")
 
@@ -38,6 +59,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--min-inference-size", type=int, default=1)
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--opponent-device", type=str, default="gpu")
+    parser.add_argument("--self-play-mode", choices=("current", "frozen"), default="current")
     parser.add_argument("--load-path", type=str, default="")
     parser.add_argument("--checkpoint-root", type=str, default=DEFAULT_CHECKPOINT_ROOT)
     parser.add_argument("--force-stage", type=str, default="")
@@ -60,10 +82,21 @@ def main():
         if latest_checkpoint and load_path and latest_checkpoint != load_path:
             latest_book = load_checkpoint_book(latest_checkpoint)
             latest_obs_shape = latest_book.get("obs_running_stats", {}).get("shape")
-            print(
-                "Skipping latest checkpoint due to observation mismatch: "
-                f"{latest_checkpoint} has obs shape {latest_obs_shape}, expected {[OBS_DIM]}."
-            )
+            selected_book = load_checkpoint_book(load_path)
+            selected_obs_shape = selected_book.get("obs_running_stats", {}).get("shape")
+            if latest_obs_shape != [OBS_DIM]:
+                print(
+                    "Skipping latest checkpoint due to observation mismatch: "
+                    f"{latest_checkpoint} has obs shape {latest_obs_shape}, expected {[OBS_DIM]}."
+                )
+            else:
+                latest_stage = latest_book.get("curriculum_state", {}).get("stage")
+                selected_stage = selected_book.get("curriculum_state", {}).get("stage")
+                print(
+                    "Skipping raw-latest checkpoint in favor of a better resume candidate: "
+                    f"selected {load_path} (stage={selected_stage}, obs={selected_obs_shape}) "
+                    f"over {latest_checkpoint} (stage={latest_stage}, obs={latest_obs_shape})."
+                )
         elif latest_checkpoint and not load_path:
             latest_book = load_checkpoint_book(latest_checkpoint)
             latest_obs_shape = latest_book.get("obs_running_stats", {}).get("shape")
@@ -74,7 +107,7 @@ def main():
 
     initial_curriculum_state = load_curriculum_state_from_checkpoint(load_path) if load_path else {}
     opponent_checkpoint = args.opponent_checkpoint
-    if not opponent_checkpoint and load_path:
+    if args.self_play_mode == "frozen" and not opponent_checkpoint and load_path:
         current_book = load_checkpoint_book(load_path)
         current_ts = int(current_book.get("cumulative_timesteps", 0))
         opponent_checkpoint = find_opponent_checkpoint(
@@ -88,8 +121,10 @@ def main():
                 f"Using opponent checkpoint: {opponent_checkpoint} "
                 f"(target gap {int(args.opponent_gap_ts)})"
             )
-    elif opponent_checkpoint:
+    elif args.self_play_mode == "frozen" and opponent_checkpoint:
         print(f"Using fixed opponent checkpoint: {opponent_checkpoint}")
+    elif args.self_play_mode == "current" and opponent_checkpoint:
+        print("Ignoring --opponent-checkpoint because --self-play-mode current was selected.")
 
     if args.force_stage:
         stage = Stage[str(args.force_stage).upper()]
@@ -110,6 +145,7 @@ def main():
         n_proc=int(args.n_proc),
         initial_curriculum_state=initial_curriculum_state,
         current_checkpoint_dir=load_path,
+        self_play_mode=str(args.self_play_mode),
         fixed_opponent_checkpoint=opponent_checkpoint,
         opponent_gap_ts=int(args.opponent_gap_ts),
         opponent_device=str(args.opponent_device),
@@ -135,6 +171,7 @@ def main():
         checkpoint_load_folder=None,
         device=str(args.device),
     )
+    _attach_curriculum_checkpoint_hook(learner, env_builder)
 
     if load_path:
         print(f"Resuming from checkpoint: {load_path}")

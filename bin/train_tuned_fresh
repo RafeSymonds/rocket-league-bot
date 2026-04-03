@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-python3 - <<'PY'
+ROOT_DIR="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
+PYTHON_BIN="${ROOT_DIR}/env/bin/python"
+if [[ ! -x "${PYTHON_BIN}" ]]; then
+  PYTHON_BIN="python3"
+fi
+
+"${PYTHON_BIN}" - <<'PY'
 try:
     import numpy  # noqa: F401
 except Exception as exc:  # pragma: no cover
@@ -23,7 +29,7 @@ ENT_COEF="${ENT_COEF:-0.003}"
 EXP_BUFFER_SIZE="${EXP_BUFFER_SIZE:-400000}"
 SAVE_EVERY_TS="${SAVE_EVERY_TS:-2000000}"
 
-python3 train.py \
+"${PYTHON_BIN}" train.py \
   --device gpu \
   --n-proc "${N_PROC}" \
   --min-inference-size "${MIN_INFERENCE_SIZE}" \

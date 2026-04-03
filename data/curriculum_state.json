@@ -1,0 +1,7 @@
+{
+  "difficulty": 0.9993974473723235,
+  "ema_goal_rate": 0.9999722524637131,
+  "ema_touch_rate": 0.9999976054757176,
+  "stage": "SELF_PLAY",
+  "stage_iterations": 58
+}

@@ -50,7 +50,11 @@ class FrozenOpponentPolicy:
             )
 
         policy = DiscreteFF(OBS_DIM, self._n_actions, POLICY_LAYER_SIZES, self.device)
-        state = torch.load(Path(checkpoint_dir) / "PPO_POLICY.pt", map_location=self.device)
+        policy_path = Path(checkpoint_dir) / "PPO_POLICY.pt"
+        try:
+            state = torch.load(policy_path, map_location=self.device, weights_only=True)
+        except TypeError:
+            state = torch.load(policy_path, map_location=self.device)
         policy.load_state_dict(state)
         policy.eval()
 
@@ -85,7 +89,8 @@ class FrozenOpponentPolicy:
             raise RuntimeError("Frozen opponent policy was not loaded")
         obs = np.asarray(obs, dtype=np.float32)
         obs = (obs - self._obs_mean) / self._obs_std
-        action, _ = self._policy.get_action(obs.reshape(1, -1), deterministic=self.deterministic)
+        with torch.no_grad():
+            action, _ = self._policy.get_action(obs.reshape(1, -1), deterministic=self.deterministic)
         return int(np.asarray(action).reshape(-1)[0])
 
 

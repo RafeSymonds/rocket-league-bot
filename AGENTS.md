@@ -66,10 +66,10 @@ bin/train_tuned_fresh
 Run unattended background training:
 
 ```bash
-python3 bin/manage_training start
-python3 bin/manage_training status
-python3 bin/manage_training logs -f
-python3 bin/manage_training stop
+bin/manage_training start
+bin/manage_training status
+bin/manage_training logs -f
+bin/manage_training stop
 ```
 
 Run training directly with custom args:
@@ -78,8 +78,8 @@ Run training directly with custom args:
 python3 train.py --n-proc 1 --resume-latest
 ```
 
-Self-play and defend stages can now run blue against a frozen opponent checkpoint instead of the current policy on both sides.
-Use `--opponent-checkpoint <dir>` to force a specific opponent, or `--opponent-gap-ts 4000000` to keep the opponent a few million timesteps behind the current resumed checkpoint.
+Self-play defaults to current-policy vs current-policy for throughput.
+Use `--self-play-mode frozen` with `--opponent-checkpoint <dir>` to force a specific frozen opponent, or `--self-play-mode frozen --opponent-gap-ts 4000000` to keep the opponent a few million timesteps behind the current resumed checkpoint.
 
 Watch a saved checkpoint locally:
 
@@ -90,18 +90,21 @@ python3 watch.py
 Inspect training progress:
 
 ```bash
-python3 bin/progress_report data/checkpoints
-python3 bin/metrics_report data/training_metrics.csv
-python3 bin/progress_dashboard --watch 5
-python3 bin/render_training_report
+bin/progress_report data/checkpoints
+bin/metrics_report data/training_metrics.csv
+bin/progress_dashboard --watch 5
+bin/render_training_report
+bin/evaluate_ladder
 ```
 
 Export and validate the RLBot package:
 
 ```bash
-python3 bin/export_rlbot
-python3 bin/validate_rlbot_package
+bin/export_rlbot
+bin/validate_rlbot_package
 ```
+
+The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall back to `python3` when that local env is missing.
 
 ## Repo Map
 
@@ -140,6 +143,12 @@ python3 bin/validate_rlbot_package
 `rocket_league_bot_src/checkpoints.py`
 
 - Shared checkpoint discovery and runtime metadata helpers.
+
+`rocket_league_bot_src/eval.py`
+
+- Checkpoint-vs-checkpoint evaluation ladder logic.
+- Keeps a stable set of older anchor checkpoints for a configurable timestep window, then refreshes them forward.
+- `bin/progress_dashboard` auto-refreshes this ladder for the latest compatible checkpoint unless disabled.
 
 `rocket_league_bot_src/export.py`
 

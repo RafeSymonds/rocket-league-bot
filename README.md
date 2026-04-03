@@ -13,6 +13,7 @@ This repository trains and packages a Rocket League bot built with `rlgym`, `rlg
 - `bin/train_tuned_fresh`: same tuned wrapper, but always starts fresh.
 - `bin/progress_report`: summarizes checkpoint reward trends.
 - `bin/metrics_report`: summarizes `data/training_metrics.csv`.
+- `bin/evaluate_ladder`: evaluates the current checkpoint against a stable ladder of older checkpoints.
 
 ## Current Training Design
 
@@ -84,25 +85,25 @@ bin/train_tuned_fresh
 Start unattended background training:
 
 ```bash
-python3 bin/manage_training start
+bin/manage_training start
 ```
 
 Check whether it is still running, what checkpoint it last saved, and the recent log tail:
 
 ```bash
-python3 bin/manage_training status
+bin/manage_training status
 ```
 
 Follow the live training log:
 
 ```bash
-python3 bin/manage_training logs -f
+bin/manage_training logs -f
 ```
 
 Stop the background training process cleanly:
 
 ```bash
-python3 bin/manage_training stop
+bin/manage_training stop
 ```
 
 Train directly with custom flags:
@@ -111,16 +112,16 @@ Train directly with custom flags:
 python3 train.py --n-proc 8 --min-inference-size 8 --resume-latest
 ```
 
-Resume with an automatically selected frozen opponent checkpoint behind the current run:
+Resume with a frozen opponent checkpoint behind the current run:
 
 ```bash
-python3 train.py --resume-latest --opponent-gap-ts 4000000
+python3 train.py --resume-latest --self-play-mode frozen --opponent-gap-ts 4000000
 ```
 
 Resume with a fixed opponent checkpoint:
 
 ```bash
-python3 train.py --resume-latest --opponent-checkpoint data/checkpoints/<run>/<ts>
+python3 train.py --resume-latest --self-play-mode frozen --opponent-checkpoint data/checkpoints/<run>/<ts>
 ```
 
 The tuned wrappers default to:
@@ -141,7 +142,7 @@ N_PROC=10 PPO_MINIBATCH_SIZE=25000 bin/train_tuned
 Watch the latest checkpoint:
 
 ```bash
-python3 watch.py
+./env/bin/python watch.py
 ```
 
 Inspect saved checkpoints:
@@ -153,38 +154,52 @@ bin/progress_report data/checkpoints
 Inspect live training metrics:
 
 ```bash
-python3 bin/metrics_report data/training_metrics.csv
+bin/metrics_report data/training_metrics.csv
 ```
 
 Watch the full training/export dashboard live:
 
 ```bash
-python3 bin/progress_dashboard --watch 5
+bin/progress_dashboard --watch 5
 ```
+
+`bin/progress_dashboard` now auto-runs the evaluation ladder when the latest compatible checkpoint changes, so the dashboard keeps a checkpoint-vs-checkpoint progress signal without needing a separate eval command.
+
+Run a checkpoint-vs-checkpoint evaluation ladder:
+
+```bash
+bin/evaluate_ladder
+```
+
+The evaluation ladder keeps the same anchor checkpoints for 10 million timesteps by default, then refreshes them forward as training advances.
+That makes it easier to tell whether the current bot is actually improving instead of only tying itself in live self-play.
+By default it evaluates at the current checkpoint's saved curriculum stage and difficulty.
 
 Serve the auto-refreshing HTML training graphs locally:
 
 ```bash
-python3 bin/serve_training_report
+bin/serve_training_report
 ```
 
 Generate the HTML graph report manually:
 
 ```bash
-python3 bin/render_training_report
+bin/render_training_report
 ```
 
 Export the latest checkpoint into the RLBot package:
 
 ```bash
-python3 bin/export_rlbot
+bin/export_rlbot
 ```
 
 Validate the RLBot package before opening RLBot:
 
 ```bash
-python3 bin/validate_rlbot_package
+bin/validate_rlbot_package
 ```
+
+The `bin/` entrypoints now prefer the repo-local `./env/bin/python` automatically and fall back to `python3` only if that env does not exist.
 
 ## Notes
 
@@ -197,6 +212,7 @@ python3 bin/validate_rlbot_package
 - During unattended training, PID 0 now auto-exports the newest checkpoint into the RLBot package when it detects a fresh save.
 - Background run state is stored in `data/training_run.json` and logs go to `data/logs/train_latest.log`.
 - The graph report is written to `data/training_report.html` whenever a new metrics row is logged.
+- Default self-play is current-policy vs current-policy for speed. Frozen checkpoint opponents are now opt-in because they cost extra inference per worker.
 
 ## Further Reading
 

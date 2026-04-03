@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#!/bin/sh
+""":"
+ROOT_DIR=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+if [ -x "$ROOT_DIR/env/bin/python" ]; then
+  exec "$ROOT_DIR/env/bin/python" "$0" "$@"
+fi
+exec python3 "$0" "$@"
+":"""
 from __future__ import annotations
 
 import argparse
@@ -15,6 +22,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from rocket_league_bot_src.reporting import write_training_report
+from rocket_league_bot_src.checkpoints import find_latest_compatible_checkpoint
+from rocket_league_bot_src.eval import maybe_refresh_eval_summary
 
 
 def parse_args() -> argparse.Namespace:
@@ -22,16 +31,66 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--refresh-seconds", type=float, default=5.0)
+    parser.add_argument("--x-axis", choices=("iteration", "time"), default="iteration")
+    parser.add_argument("--max-rows", type=int, default=160)
+    parser.add_argument("--max-age-hours", type=float, default=12.0)
+    parser.add_argument("--no-auto-eval", action="store_true")
+    parser.add_argument("--eval-episodes", type=int, default=6)
+    parser.add_argument("--eval-device", default="gpu")
     return parser.parse_args()
 
 
-def _render_loop(interval: float, stop_event: threading.Event) -> None:
+def _render_loop(
+    interval: float,
+    stop_event: threading.Event,
+    x_axis: str,
+    max_rows: int | None,
+    max_age_hours: float | None,
+    auto_eval_disabled: bool,
+    eval_episodes: int,
+    eval_device: str,
+) -> None:
     while not stop_event.is_set():
         try:
-            write_training_report()
+            latest_checkpoint = find_latest_compatible_checkpoint("data/checkpoints")
+            _, eval_error, _ = maybe_refresh_eval_summary(
+                latest_checkpoint=latest_checkpoint,
+                episodes=eval_episodes,
+                device=eval_device,
+                disabled=auto_eval_disabled,
+            )
+            write_training_report(
+                x_axis=x_axis,
+                max_rows=max_rows,
+                max_age_hours=max_age_hours,
+                eval_error=eval_error,
+            )
         except Exception as exc:
             print(f"[report] failed to render training report: {exc}", flush=True)
         stop_event.wait(max(0.5, interval))
+
+
+def _render_once(
+    x_axis: str,
+    max_rows: int | None,
+    max_age_hours: float | None,
+    auto_eval_disabled: bool,
+    eval_episodes: int,
+    eval_device: str,
+) -> None:
+    latest_checkpoint = find_latest_compatible_checkpoint("data/checkpoints")
+    _, eval_error, _ = maybe_refresh_eval_summary(
+        latest_checkpoint=latest_checkpoint,
+        episodes=eval_episodes,
+        device=eval_device,
+        disabled=auto_eval_disabled,
+    )
+    write_training_report(
+        x_axis=x_axis,
+        max_rows=max_rows,
+        max_age_hours=max_age_hours,
+        eval_error=eval_error,
+    )
 
 
 class ReusableTCPServer(socketserver.TCPServer):
@@ -40,10 +99,27 @@ class ReusableTCPServer(socketserver.TCPServer):
 
 def main() -> int:
     args = parse_args()
+    _render_once(
+        x_axis=args.x_axis,
+        max_rows=args.max_rows,
+        max_age_hours=args.max_age_hours,
+        auto_eval_disabled=bool(args.no_auto_eval),
+        eval_episodes=int(args.eval_episodes),
+        eval_device=str(args.eval_device),
+    )
     stop_event = threading.Event()
     thread = threading.Thread(
         target=_render_loop,
-        args=(float(args.refresh_seconds), stop_event),
+        args=(
+            float(args.refresh_seconds),
+            stop_event,
+            args.x_axis,
+            args.max_rows,
+            args.max_age_hours,
+            bool(args.no_auto_eval),
+            int(args.eval_episodes),
+            str(args.eval_device),
+        ),
         daemon=True,
     )
     thread.start()

@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import csv
 import html
+import json
 from pathlib import Path
+
+from .checkpoints import find_latest_compatible_checkpoint
 
 
 def _read_rows(metrics_path: Path) -> list[dict[str, str]]:
@@ -19,13 +22,39 @@ def _to_float(row: dict[str, str], key: str) -> float:
         return 0.0
 
 
-def _time_values(rows: list[dict[str, str]]) -> list[float]:
+def _with_iteration(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    indexed_rows: list[dict[str, str]] = []
+    for idx, row in enumerate(rows, start=1):
+        next_row = dict(row)
+        next_row["_iteration"] = str(idx)
+        indexed_rows.append(next_row)
+    return indexed_rows
+
+
+def _filter_rows(
+    rows: list[dict[str, str]],
+    max_rows: int | None = 160,
+    max_age_hours: float | None = 12.0,
+) -> list[dict[str, str]]:
+    filtered = rows
+    if max_age_hours is not None and filtered:
+        latest_time = max(_to_float(row, "unix_time") for row in filtered)
+        if latest_time > 0:
+            min_time = latest_time - (max_age_hours * 3600.0)
+            filtered = [row for row in filtered if _to_float(row, "unix_time") >= min_time]
+    if max_rows is not None and max_rows > 0 and len(filtered) > max_rows:
+        filtered = filtered[-max_rows:]
+    return filtered
+
+
+def _x_values(rows: list[dict[str, str]], x_axis: str) -> list[float]:
     if not rows:
         return []
-    values = [_to_float(row, "unix_time") for row in rows]
-    if any(value > 0 for value in values):
-        return values
-    return [float(i) for i in range(len(rows))]
+    if x_axis == "time":
+        values = [_to_float(row, "unix_time") for row in rows]
+        if any(value > 0 for value in values):
+            return values
+    return [_to_float(row, "_iteration") for row in rows]
 
 
 def _polyline_points(
@@ -114,12 +143,18 @@ def _stage_spans(rows: list[dict[str, str]], x_values: list[float], width: int, 
     return "\n".join(spans)
 
 
-def _chart_svg(title: str, rows: list[dict[str, str]], key: str, color: str) -> str:
+def _chart_svg(
+    title: str,
+    rows: list[dict[str, str]],
+    key: str,
+    color: str,
+    x_axis: str,
+) -> str:
     width = 900
     height = 220
     pad = 28
     values = [_to_float(row, key) for row in rows]
-    x_values = _time_values(rows)
+    x_values = _x_values(rows, x_axis)
     points = _polyline_points(x_values, values, width, height, pad)
     latest = values[-1] if values else 0.0
     lo = min(values) if values else 0.0
@@ -142,17 +177,136 @@ def _chart_svg(title: str, rows: list[dict[str, str]], key: str, color: str) -> 
     """
 
 
+def _read_eval_summary(path: Path) -> dict[str, object]:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text())
+    except Exception:
+        return {}
+
+
+def _eval_section(
+    summary: dict[str, object],
+    latest_checkpoint: str,
+    eval_error: str,
+) -> str:
+    if summary:
+        summary_checkpoint = str(summary.get("current_checkpoint_dir", ""))
+        stale = bool(latest_checkpoint and summary_checkpoint != latest_checkpoint)
+        rows = summary.get("rows", [])
+        row_html = ""
+        if isinstance(rows, list) and rows:
+            rendered_rows: list[str] = []
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                rendered_rows.append(
+                    "<tr>"
+                    f"<td>{int(row.get('anchor_slot', 0))}</td>"
+                    f"<td>{int(row.get('opponent_timesteps', 0))}</td>"
+                    f"<td>{float(row.get('blue_win_rate', 0.0)):.3f}</td>"
+                    f"<td>{float(row.get('goal_diff_per_episode', 0.0)):.3f}</td>"
+                    f"<td>{int(row.get('blue_goals', 0))}</td>"
+                    f"<td>{int(row.get('orange_goals', 0))}</td>"
+                    f"<td>{int(row.get('draws', 0))}</td>"
+                    "</tr>"
+                )
+            row_html = "\n".join(rendered_rows)
+        if not row_html:
+            row_html = (
+                '<tr><td colspan="7" class="eval-empty">'
+                "No ladder results yet for the current checkpoint."
+                "</td></tr>"
+            )
+
+        error_line = (
+            f'<div class="eval-note error">Refresh error: {html.escape(eval_error)}</div>'
+            if eval_error
+            else ""
+        )
+        stale_line = f"stale {'yes' if stale else 'no'}"
+        return f"""
+        <section class="eval-card">
+          <div class="chart-head">
+            <h2>Evaluation Ladder</h2>
+            <div class="chart-meta">
+              avg blue win rate {float(summary.get("avg_blue_win_rate", 0.0)):.3f} |
+              avg goal diff {float(summary.get("avg_goal_diff_per_episode", 0.0)):.3f} |
+              {stale_line}
+            </div>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-card"><span>Eval Stage</span><strong>{html.escape(str(summary.get("stage", "")))}</strong></div>
+            <div class="summary-card"><span>Eval Difficulty</span><strong>{float(summary.get("difficulty", 0.0)):.3f}</strong></div>
+            <div class="summary-card"><span>Current TS</span><strong>{int(summary.get("current_timesteps", 0))}</strong></div>
+            <div class="summary-card"><span>Refresh After</span><strong>{int(summary.get("refresh_after_timesteps", 0))}</strong></div>
+          </div>
+          {error_line}
+          <div class="table-wrap">
+            <table class="eval-table">
+              <thead>
+                <tr>
+                  <th>Slot</th>
+                  <th>Opponent TS</th>
+                  <th>Blue Win</th>
+                  <th>Goal Diff</th>
+                  <th>Blue Goals</th>
+                  <th>Orange Goals</th>
+                  <th>Draws</th>
+                </tr>
+              </thead>
+              <tbody>
+                {row_html}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        """
+
+    pending_note = "Waiting for the first evaluation refresh."
+    if eval_error:
+        pending_note = f"Refresh error: {html.escape(eval_error)}"
+    return f"""
+    <section class="eval-card">
+      <div class="chart-head">
+        <h2>Evaluation Ladder</h2>
+        <div class="chart-meta">not available yet</div>
+      </div>
+      <div class="eval-note{' error' if eval_error else ''}">{pending_note}</div>
+    </section>
+    """
+
+
 def write_training_report(
     metrics_path: str = "data/training_metrics.csv",
     output_path: str = "data/training_report.html",
+    x_axis: str = "iteration",
+    max_rows: int | None = 160,
+    max_age_hours: float | None = 12.0,
+    eval_summary_path: str = "data/eval/latest_summary.json",
+    eval_error: str = "",
+    checkpoint_root: str = "data/checkpoints",
 ) -> None:
     metrics = Path(metrics_path)
-    rows = _read_rows(metrics)
+    all_rows = _with_iteration(_read_rows(metrics))
+    rows = _filter_rows(all_rows, max_rows=max_rows, max_age_hours=max_age_hours)
+    eval_summary = _read_eval_summary(Path(eval_summary_path))
+    latest_checkpoint = find_latest_compatible_checkpoint(checkpoint_root)
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
 
     if rows:
         last = rows[-1]
+        first_iter = int(_to_float(rows[0], "_iteration"))
+        last_iter = int(_to_float(rows[-1], "_iteration"))
+        if x_axis == "time":
+            x_axis_label = "Wall clock time"
+        else:
+            x_axis_label = f"Training iteration {first_iter} to {last_iter}"
+        window_label = f"Showing {len(rows)} of {len(all_rows)} rows"
+        if max_age_hours is not None:
+            window_label += f" from the last {max_age_hours:g} hours"
         summary = f"""
         <div class="summary-grid">
           <div class="summary-card"><span>Stage</span><strong>{html.escape(last.get("stage", ""))}</strong></div>
@@ -163,24 +317,25 @@ def write_training_report(
           <div class="summary-card"><span>Median T First</span><strong>{html.escape(last.get("median_t_first", ""))}</strong></div>
           <div class="summary-card"><span>Median T Goal</span><strong>{html.escape(last.get("median_t_goal", ""))}</strong></div>
         </div>
+        <div class="report-meta">{html.escape(x_axis_label)} | {html.escape(window_label)}</div>
         """
         charts = "\n".join(
             [
-                _chart_svg("Average Return", rows, "avg_return", "#0f766e"),
-                _chart_svg("Touch Rate", rows, "touch_rate", "#2563eb"),
-                _chart_svg("Goal Rate", rows, "goal_rate", "#dc2626"),
-                _chart_svg("Blue Goal Rate", rows, "blue_goal_rate", "#0891b2"),
-                _chart_svg("Median T First", rows, "median_t_first", "#ca8a04"),
-                _chart_svg("Median T Goal", rows, "median_t_goal", "#c2410c"),
-                _chart_svg("Difficulty", rows, "difficulty", "#7c3aed"),
+                _chart_svg("Average Return", rows, "avg_return", "#0f766e", x_axis),
+                _chart_svg("Touch Rate", rows, "touch_rate", "#2563eb", x_axis),
+                _chart_svg("Goal Rate", rows, "goal_rate", "#dc2626", x_axis),
+                _chart_svg("Blue Goal Rate", rows, "blue_goal_rate", "#0891b2", x_axis),
+                _chart_svg("Median T First", rows, "median_t_first", "#ca8a04", x_axis),
+                _chart_svg("Median T Goal", rows, "median_t_goal", "#c2410c", x_axis),
+                _chart_svg("Difficulty", rows, "difficulty", "#7c3aed", x_axis),
             ]
         )
     else:
         summary = '<p class="empty">No metrics yet. Start training and refresh this page.</p>'
         charts = ""
+    eval_html = _eval_section(eval_summary, latest_checkpoint, eval_error)
 
-    output.write_text(
-        f"""<!doctype html>
+    html_text = f"""<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -240,6 +395,11 @@ def write_training_report(
       gap: 12px;
       margin-bottom: 18px;
     }}
+    .report-meta {{
+      color: var(--muted);
+      margin: 0 0 18px 0;
+      font-size: 14px;
+    }}
     .summary-card, .chart-card {{
       background: var(--panel);
       border: 1px solid var(--border);
@@ -295,6 +455,39 @@ def write_training_report(
       border: 1px solid var(--border);
       border-radius: 14px;
     }}
+    .eval-card {{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 8px 30px var(--shadow);
+      padding: 14px;
+      margin-bottom: 16px;
+    }}
+    .table-wrap {{
+      overflow-x: auto;
+    }}
+    .eval-table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }}
+    .eval-table th, .eval-table td {{
+      text-align: left;
+      padding: 10px 8px;
+      border-top: 1px solid var(--border);
+    }}
+    .eval-empty {{
+      color: var(--muted);
+      font-style: italic;
+    }}
+    .eval-note {{
+      margin: 0 0 12px 0;
+      color: var(--muted);
+      font-size: 14px;
+    }}
+    .eval-note.error {{
+      color: #dc2626;
+    }}
   </style>
 </head>
 <body>
@@ -302,6 +495,7 @@ def write_training_report(
     <h1>Training Report</h1>
     <div class="sub">Auto-refreshes every 5 seconds. Stage backgrounds show curriculum transitions.</div>
     {summary}
+    {eval_html}
     {charts}
   </main>
   <script>
@@ -338,6 +532,7 @@ def write_training_report(
   </script>
 </body>
 </html>
-""",
-        encoding="utf-8",
-    )
+"""
+    temp_output = output.with_suffix(output.suffix + ".tmp")
+    temp_output.write_text(html_text, encoding="utf-8")
+    temp_output.replace(output)

@@ -1,0 +1,92 @@
+#!/bin/sh
+""":"
+ROOT_DIR=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+if [ -x "$ROOT_DIR/env/bin/python" ]; then
+  exec "$ROOT_DIR/env/bin/python" "$0" "$@"
+fi
+exec python3 "$0" "$@"
+":"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from rocket_league_bot_src.eval import run_eval_ladder
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Evaluate the latest checkpoint against a stable ladder.")
+    parser.add_argument("--checkpoint-root", default="data/checkpoints")
+    parser.add_argument("--current-checkpoint", default="")
+    parser.add_argument("--episodes", type=int, default=6)
+    parser.add_argument("--stage", default="auto")
+    parser.add_argument("--difficulty", type=float, default=-1.0)
+    parser.add_argument("--device", default="gpu")
+    parser.add_argument("--anchor-count", type=int, default=5)
+    parser.add_argument("--anchor-span-ts", type=int, default=10_000_000)
+    parser.add_argument("--force-refresh", action="store_true")
+    parser.add_argument("--watch", type=float, default=0.0, help="Repeat every N seconds.")
+    return parser.parse_args()
+
+
+def _print_summary(summary: dict) -> None:
+    print(f"Current checkpoint: {summary.get('current_checkpoint_dir', '')}")
+    print(f"Current timesteps: {summary.get('current_timesteps', 0)}")
+    print(f"Eval stage: {summary.get('stage', '')} @ difficulty {summary.get('difficulty', 0.0):.3f}")
+    print(
+        "Ladder summary: "
+        f"avg_blue_win_rate={summary.get('avg_blue_win_rate', 0.0):.3f} | "
+        f"avg_goal_diff_per_episode={summary.get('avg_goal_diff_per_episode', 0.0):.3f}"
+    )
+    rows = summary.get("rows", [])
+    if not rows:
+        print("No evaluation rows were produced.")
+        return
+    print("\nOpponents:")
+    for row in rows:
+        print(
+            f"  slot {int(row.get('anchor_slot', 0))}: "
+            f"{int(row.get('opponent_timesteps', 0))} ts | "
+            f"blue_win_rate={float(row.get('blue_win_rate', 0.0)):.3f} | "
+            f"goal_diff={float(row.get('goal_diff_per_episode', 0.0)):.3f} | "
+            f"blue_goals={int(row.get('blue_goals', 0))} | "
+            f"orange_goals={int(row.get('orange_goals', 0))} | "
+            f"draws={int(row.get('draws', 0))}"
+        )
+
+
+def _run_once(args: argparse.Namespace) -> int:
+    summary = run_eval_ladder(
+        checkpoint_root=args.checkpoint_root,
+        current_checkpoint_dir=args.current_checkpoint,
+        episodes=args.episodes,
+        stage=args.stage,
+        difficulty=args.difficulty,
+        device=args.device,
+        anchor_count=args.anchor_count,
+        anchor_span_ts=args.anchor_span_ts,
+        force_refresh=bool(args.force_refresh),
+    )
+    _print_summary(summary)
+    return 0
+
+
+def main() -> int:
+    args = parse_args()
+    if args.watch and args.watch > 0:
+        while True:
+            print("\033[2J\033[H", end="")
+            _run_once(args)
+            time.sleep(args.watch)
+    return _run_once(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

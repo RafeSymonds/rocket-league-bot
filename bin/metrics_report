@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#!/bin/sh
+""":"
+ROOT_DIR=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+if [ -x "$ROOT_DIR/env/bin/python" ]; then
+  exec "$ROOT_DIR/env/bin/python" "$0" "$@"
+fi
+exec python3 "$0" "$@"
+":"""
 from __future__ import annotations
 
 import csv

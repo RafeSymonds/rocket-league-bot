@@ -12,6 +12,7 @@ import numpy as np
 from rlgym.api import RLGym
 from rlgym.rocket_league.action_parsers import LookupTableAction, RepeatAction
 from rlgym.rocket_league.sim import RocketSimEngine
+from rlgym_ppo.util.rlgym_v2_gym_wrapper import RLGymV2GymWrapper
 
 from .conditions import CurriculumDoneCondition, CurriculumTruncationCondition
 from .config import ACTION_REPEAT
@@ -59,6 +60,7 @@ class ProcessIterationLogger:
         checkpoint_root: str,
         curriculum_state_path: str,
         opponent_state_path: str,
+        self_play_mode: str,
         opponent_gap_ts: int,
         current_checkpoint_dir: str,
         fixed_opponent_checkpoint: str,
@@ -70,6 +72,7 @@ class ProcessIterationLogger:
         self.checkpoint_root = checkpoint_root
         self.curriculum_state_path = curriculum_state_path
         self.opponent_state_path = opponent_state_path
+        self.self_play_mode = str(self_play_mode)
         self.opponent_gap_ts = int(opponent_gap_ts)
         self.current_checkpoint_dir = current_checkpoint_dir
         self.fixed_opponent_checkpoint = fixed_opponent_checkpoint
@@ -417,6 +420,18 @@ class ProcessIterationLogger:
         path = Path(self.opponent_state_path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
+        if self.self_play_mode != "frozen":
+            payload = {
+                "enabled": False,
+                "mode": self.self_play_mode,
+                "checkpoint_dir": "",
+                "gap_ts": 0,
+                "base_gap_ts": int(self.opponent_gap_ts),
+                "blue_goal_rate": None if blue_goal_rate is None else float(blue_goal_rate),
+            }
+            path.write_text(json.dumps(payload, indent=2, sort_keys=True))
+            return
+
         checkpoint_dir = ""
         effective_gap_ts = int(self.opponent_gap_ts)
         if blue_goal_rate is not None and goal_rate is not None and self.cm.current_config().full_match:
@@ -439,6 +454,7 @@ class ProcessIterationLogger:
 
         payload = {
             "enabled": bool(checkpoint_dir),
+            "mode": self.self_play_mode,
             "checkpoint_dir": str(checkpoint_dir),
             "gap_ts": int(effective_gap_ts),
             "base_gap_ts": int(self.opponent_gap_ts),
@@ -455,6 +471,7 @@ class EnvBuilder:
         n_proc: int = 1,
         initial_curriculum_state: dict[str, object] | None = None,
         current_checkpoint_dir: str = "",
+        self_play_mode: str = "current",
         fixed_opponent_checkpoint: str = "",
         opponent_gap_ts: int = 4_000_000,
         opponent_device: str = "gpu",
@@ -467,6 +484,7 @@ class EnvBuilder:
         self.curriculum_state_path = str(Path("data") / "curriculum_state.json")
         self.opponent_state_path = str(Path("data") / "opponent_state.json")
         self.current_checkpoint_dir = current_checkpoint_dir
+        self.self_play_mode = str(self_play_mode)
         self.fixed_opponent_checkpoint = fixed_opponent_checkpoint
         self.opponent_gap_ts = int(opponent_gap_ts)
         self.opponent_device = opponent_device
@@ -498,12 +516,15 @@ class EnvBuilder:
             ),
         )
 
-        gym_env = SelfPlayOpponentGymWrapper(
-            env,
-            opponent_state_path=self.opponent_state_path,
-            deterministic_opponent=False,
-            device=self.opponent_device,
-        )
+        if self.self_play_mode == "frozen":
+            gym_env = SelfPlayOpponentGymWrapper(
+                env,
+                opponent_state_path=self.opponent_state_path,
+                deterministic_opponent=False,
+                device=self.opponent_device,
+            )
+        else:
+            gym_env = RLGymV2GymWrapper(env)
 
         wrapped = ProcessIterationLogger(
             gym_env,
@@ -513,6 +534,7 @@ class EnvBuilder:
             checkpoint_root=self.checkpoint_root,
             curriculum_state_path=self.curriculum_state_path,
             opponent_state_path=self.opponent_state_path,
+            self_play_mode=self.self_play_mode,
             opponent_gap_ts=self.opponent_gap_ts,
             current_checkpoint_dir=self.current_checkpoint_dir,
             fixed_opponent_checkpoint=self.fixed_opponent_checkpoint,

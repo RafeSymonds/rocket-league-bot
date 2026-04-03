@@ -139,6 +139,66 @@ def find_opponent_checkpoint(
     return ""
 
 
+def select_eval_anchor_checkpoints(
+    checkpoint_root: str,
+    current_checkpoint_dir: str,
+    count: int = 5,
+    span_ts: int = 10_000_000,
+    expected_obs_dim: int = OBS_DIM,
+) -> list[dict[str, Any]]:
+    current_book = load_checkpoint_book(current_checkpoint_dir)
+    current_ts = int(current_book.get("cumulative_timesteps", 0))
+    if current_ts <= 0 or count <= 0:
+        return []
+
+    compatible = list_compatible_checkpoints(checkpoint_root, expected_obs_dim)
+    compatible = [
+        (ts, mtime, checkpoint_dir)
+        for ts, mtime, checkpoint_dir in compatible
+        if checkpoint_dir != str(Path(current_checkpoint_dir)) and ts < current_ts
+    ]
+    if not compatible:
+        return []
+
+    compatible.sort(key=lambda item: (item[0], item[1]))
+    step = max(1, int(span_ts) // int(count))
+    anchors: list[dict[str, Any]] = []
+    used_dirs: set[str] = set()
+
+    for slot in range(1, int(count) + 1):
+        target_ts = max(0, current_ts - (slot * step))
+        chosen_idx = -1
+        for idx in range(len(compatible) - 1, -1, -1):
+            ts, _, checkpoint_dir = compatible[idx]
+            if checkpoint_dir in used_dirs:
+                continue
+            if ts <= target_ts:
+                chosen_idx = idx
+                break
+        if chosen_idx == -1:
+            for idx in range(len(compatible) - 1, -1, -1):
+                _, _, checkpoint_dir = compatible[idx]
+                if checkpoint_dir not in used_dirs:
+                    chosen_idx = idx
+                    break
+        if chosen_idx == -1:
+            break
+
+        ts, _, checkpoint_dir = compatible[chosen_idx]
+        used_dirs.add(checkpoint_dir)
+        anchors.append(
+            {
+                "slot": slot,
+                "target_timesteps": int(target_ts),
+                "checkpoint_dir": checkpoint_dir,
+                "cumulative_timesteps": int(ts),
+            }
+        )
+
+    anchors.sort(key=lambda item: item["slot"])
+    return anchors
+
+
 def build_runtime_config(checkpoint_dir: str) -> dict[str, Any]:
     book = load_checkpoint_book(checkpoint_dir)
     return {
