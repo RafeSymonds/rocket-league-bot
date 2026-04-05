@@ -22,8 +22,9 @@ The current strategy is:
 
 1. Train subskills with scenario-based stages.
 2. Use denser but legible game-relevant reward terms.
-3. Add a short-form `DUEL` stage before full-match `SELF_PLAY`.
+3. Add harder contested pre-duel stages before full-match `SELF_PLAY`.
 4. Use eval against older checkpoints as the real signal of progress.
+5. Keep `SELF_PLAY` sparse and zero-sum enough that both sides cannot farm the same shaping signal at once.
 
 ## Research Basis
 
@@ -105,7 +106,7 @@ It should come after the policy can already:
 - clear threats
 - survive short contested 1v1 situations
 
-That is why `DUEL` now exists between `DEFEND` and `SELF_PLAY`.
+That is why the curriculum now inserts harder contested subskill stages before `DUEL` and `SELF_PLAY`.
 
 ### 6. Throughput tradeoffs are real
 
@@ -143,18 +144,26 @@ The current intended stage order is:
 1. `CONTACT`
 2. `DRIBBLE`
 3. `SHOOT`
-4. `DEFEND`
-5. `DUEL`
-6. `SELF_PLAY`
+4. `SHOOT_CONTESTED`
+5. `DEFEND`
+6. `DEFEND_CLEAR`
+7. `DUEL`
+8. `SELF_PLAY`
 
 Stage intent:
 
 - `CONTACT`: learn to approach and touch quickly
 - `DRIBBLE`: learn control and follow-up touches
-- `SHOOT`: learn forward pressure and finishing
-- `DEFEND`: learn clears and saves from dangerous starts
+- `SHOOT`: learn forward pressure and finishing in relatively open scenarios
+- `SHOOT_CONTESTED`: learn to finish with a real defender present
+- `DEFEND`: learn first-contact saves from dangerous starts
+- `DEFEND_CLEAR`: learn to turn those saves into clear exits and counterpressure
 - `DUEL`: learn short contested 1v1 attack/defense conversions from realistic setups
 - `SELF_PLAY`: learn full-match adaptation only after the core mechanics already exist
+
+Important implementation note:
+
+- Stage transitions now reset stage EMAs instead of carrying them forward. This avoids later stages instantly promoting on inherited momentum from easier stages.
 
 ## Current Reward Philosophy
 
@@ -188,6 +197,7 @@ Working rule:
 
 - Do not add many new reward terms casually.
 - If a reward is added, it should correspond to a real game behavior we want and should be inspectable in training outcomes.
+- In `SELF_PLAY`, shaped rewards should be sparse and competitive. If both sides can farm them simultaneously, they are likely hurting match-strength learning.
 
 ## Current Observation Philosophy
 
@@ -233,6 +243,12 @@ Examples:
 Working rule:
 
 - if a stage underperforms, inspect the reset geometry before assuming PPO or reward weights are the main issue
+
+For `DEFEND` specifically:
+
+- the stage should be threat-heavy, not mostly neutral
+- the defender should start between ball and goal often enough to practice saves and clears
+- reward shaping should emphasize stopping danger more than immediate offensive conversion
 
 ## Self-Play Policy
 

@@ -123,12 +123,14 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 `rocket_league_bot_src/curriculum.py`
 
 - Manages stage progression and curriculum state.
-- The curriculum now inserts a short-form `DUEL` stage between `DEFEND` and full-match `SELF_PLAY` so the bot learns 1v1 conversions from replay-like scenario starts before full matches.
+- The curriculum now inserts harder contested pre-duel stages so the bot must prove it can score under pressure and save-clear under pressure before `DUEL` and full-match `SELF_PLAY`.
+- Stage transitions now reset stage EMAs so later stages do not auto-promote off inherited stats from earlier ones.
 
 `rocket_league_bot_src/rewards.py`
 
 - Central reward shaping logic.
 - Includes the game-relevant shaping terms we currently believe matter most: hard hits, flip touches, saves/clears, boost gain, and boost retention.
+- `SELF_PLAY` shaping should remain sparse and competitive; avoid dense symmetric shaping that can reward both teams for scoreless stalemates.
 
 `rocket_league_bot_src/obs.py`
 
@@ -139,6 +141,7 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 
 - State reset and match setup behavior.
 - The 1v1 scenario stages now reposition both cars and the ball into more replay-like attack/defense situations instead of only moving the ball while leaving kickoff car positions intact.
+- `DEFEND` is intentionally threat-heavy and should bias toward genuine save/clear situations rather than mostly neutral 1v1 starts.
 - The final stage uses full-match `1v1` behavior via `rlgym-tools` when available.
 
 `rocket_league_bot_src/reporting.py`

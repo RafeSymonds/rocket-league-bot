@@ -1,8 +1,0 @@
-{
-  "base_gap_ts": 4000000,
-  "blue_goal_rate": null,
-  "checkpoint_dir": "",
-  "enabled": false,
-  "gap_ts": 0,
-  "mode": "current"
-}

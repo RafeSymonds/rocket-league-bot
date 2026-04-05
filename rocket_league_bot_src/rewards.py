@@ -9,6 +9,8 @@ from rlgym.rocket_league import common_values
 from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league.reward_functions import TouchReward
 
+from .config import Stage
+
 
 def _opponent_goal_y(is_orange: bool) -> float:
     return -common_values.BACK_NET_Y if is_orange else common_values.BACK_NET_Y
@@ -315,17 +317,23 @@ class CurriculumReward(RewardFunction):
             source.reset(agents, initial_state, shared_info)
 
     def get_rewards(self, agents, state, is_terminated, is_truncated, shared_info):
-        weights = self.curriculum_manager.current_config().reward_weights
+        cfg = self.curriculum_manager.current_config()
+        weights = cfg.reward_weights
         rewards = {agent: 0.0 for agent in agents}
+        shaping_rewards = {agent: 0.0 for agent in agents}
 
-        def add(source: RewardFunction, weight: float) -> None:
+        def add(source: RewardFunction, weight: float, *, is_goal: bool = False) -> None:
             if weight == 0.0:
                 return
             values = source.get_rewards(agents, state, is_terminated, is_truncated, shared_info)
             for agent in agents:
-                rewards[agent] += float(weight) * float(values[agent])
+                weighted = float(weight) * float(values[agent])
+                if is_goal:
+                    rewards[agent] += weighted
+                else:
+                    shaping_rewards[agent] += weighted
 
-        add(self.goal, weights.goal)
+        add(self.goal, weights.goal, is_goal=True)
         add(self.touch, weights.touch)
         add(self.speed_to_ball, weights.speed_to_ball)
         add(self.face_ball, weights.face_ball)
@@ -338,6 +346,29 @@ class CurriculumReward(RewardFunction):
         add(self.boost_gain, weights.boost_gain)
         add(self.boost_keep, weights.boost_keep)
         add(self.step_penalty, weights.step_penalty)
+
+        if cfg.stage == Stage.SELF_PLAY:
+            team_agents = {
+                False: [agent for agent in agents if not state.cars[agent].is_orange],
+                True: [agent for agent in agents if state.cars[agent].is_orange],
+            }
+            team_means = {}
+            for is_orange, members in team_agents.items():
+                if members:
+                    team_means[is_orange] = float(
+                        np.mean([shaping_rewards[agent] for agent in members])
+                    )
+                else:
+                    team_means[is_orange] = 0.0
+
+            for agent in agents:
+                is_orange = bool(state.cars[agent].is_orange)
+                own = shaping_rewards[agent]
+                opp = team_means[not is_orange]
+                rewards[agent] += own - opp
+        else:
+            for agent in agents:
+                rewards[agent] += shaping_rewards[agent]
 
         for agent in agents:
             rewards[agent] = float(np.clip(rewards[agent], -5.0, 5.0))

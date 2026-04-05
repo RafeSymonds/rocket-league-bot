@@ -25,11 +25,15 @@ The training pipeline is intentionally staged:
    The bot learns to keep pressure on the ball and move it through space with control.
 3. `SHOOT`
    The bot learns to convert open-net and forward-ball scenarios into goals.
-4. `DEFEND`
-   The bot learns to clear dangerous balls and survive threat-heavy starts.
-5. `DUEL`
+4. `SHOOT_CONTESTED`
+   The bot learns to finish chances with a live defender between ball and goal.
+5. `DEFEND`
+   The bot learns first saves from dangerous goal-side starts.
+6. `DEFEND_CLEAR`
+   The bot learns to turn those saves into real clears and exits under pressure.
+7. `DUEL`
    The bot learns short-form 1v1 conversions from replay-like attack and defense starts.
-6. `SELF_PLAY`
+8. `SELF_PLAY`
    The bot trains in full-match 1v1 after the structured duel stage.
 
 The current design lives primarily in:

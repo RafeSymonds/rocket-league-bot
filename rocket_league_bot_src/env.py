@@ -42,11 +42,20 @@ class ProcessIterationLogger:
         "sps",
         "episodes",
         "avg_return",
+        "orange_avg_return",
+        "total_avg_return",
         "touch_rate",
+        "blue_touch_rate",
+        "orange_touch_rate",
         "goal_rate",
         "blue_goal_rate",
+        "orange_goal_rate",
         "median_t_first",
+        "blue_median_t_first",
+        "orange_median_t_first",
         "median_t_goal",
+        "blue_median_t_goal",
+        "orange_median_t_goal",
         "ema_touch",
         "ema_goal",
     ]
@@ -118,16 +127,16 @@ class ProcessIterationLogger:
             return
 
         migrated_rows: list[list[str]] = [self._METRICS_COLUMNS]
-        if header == [c for c in self._METRICS_COLUMNS if c != "blue_goal_rate"]:
-            for row in rows[1:]:
-                if not row:
-                    continue
-                padded = row[:8] + [""] + row[8:]
-                if len(padded) < len(self._METRICS_COLUMNS):
-                    padded.extend([""] * (len(self._METRICS_COLUMNS) - len(padded)))
-                migrated_rows.append(padded[: len(self._METRICS_COLUMNS)])
-        else:
-            return
+        header_index = {name: idx for idx, name in enumerate(header)}
+        for row in rows[1:]:
+            if not row:
+                continue
+            migrated_rows.append(
+                [
+                    row[header_index[name]] if name in header_index and header_index[name] < len(row) else ""
+                    for name in self._METRICS_COLUMNS
+                ]
+            )
 
         with open(self._metrics_path, "w", newline="", encoding="utf-8") as handle:
             writer = csv.writer(handle)
@@ -138,18 +147,34 @@ class ProcessIterationLogger:
         self.iteration_steps = 0
         self.iteration_episodes = 0
         self.iteration_return = 0.0
+        self.iteration_orange_return = 0.0
+        self.iteration_total_return = 0.0
         self.iteration_goals = 0
+        self.iteration_blue_touch_eps = 0
+        self.iteration_orange_touch_eps = 0
         self.iteration_blue_goals = 0
+        self.iteration_orange_goals = 0
         self.iteration_success_eps = 0
         self.iteration_median_t_first = []
+        self.iteration_blue_median_t_first = []
+        self.iteration_orange_median_t_first = []
         self.iteration_median_t_goal = []
+        self.iteration_blue_median_t_goal = []
+        self.iteration_orange_median_t_goal = []
 
     def _reset_episode_stats(self):
         self.ep_return = 0.0
+        self.ep_orange_return = 0.0
         self.ep_steps = 0
         self.ep_ball_touches = 0
+        self.ep_blue_touches = 0
+        self.ep_orange_touches = 0
         self.ep_first_touch_step = -1
+        self.ep_blue_first_touch_step = -1
+        self.ep_orange_first_touch_step = -1
         self.ep_goal_step = -1
+        self.ep_blue_goal_step = -1
+        self.ep_orange_goal_step = -1
         self._prev_touches = {}
 
     def _append_metrics_row(
@@ -158,11 +183,20 @@ class ProcessIterationLogger:
         difficulty: float,
         sps: float,
         avg_return: float,
+        orange_avg_return: float,
+        total_avg_return: float,
         touch_rate: float,
+        blue_touch_rate: float,
+        orange_touch_rate: float,
         goal_rate: float,
         blue_goal_rate: float,
+        orange_goal_rate: float,
         median_t_first: float,
+        blue_median_t_first: float,
+        orange_median_t_first: float,
         median_t_goal: float,
+        blue_median_t_goal: float,
+        orange_median_t_goal: float,
     ) -> None:
         if self._metrics_path is None:
             return
@@ -177,11 +211,20 @@ class ProcessIterationLogger:
                     f"{sps:.3f}",
                     int(self.iteration_episodes),
                     f"{avg_return:.6f}",
+                    f"{orange_avg_return:.6f}",
+                    f"{total_avg_return:.6f}",
                     f"{touch_rate:.6f}",
+                    f"{blue_touch_rate:.6f}",
+                    f"{orange_touch_rate:.6f}",
                     f"{goal_rate:.6f}",
                     f"{blue_goal_rate:.6f}",
+                    f"{orange_goal_rate:.6f}",
                     f"{median_t_first:.3f}",
+                    f"{blue_median_t_first:.3f}",
+                    f"{orange_median_t_first:.3f}",
                     f"{median_t_goal:.3f}",
+                    f"{blue_median_t_goal:.3f}",
+                    f"{orange_median_t_goal:.3f}",
                     f"{snap.ema_touch:.6f}",
                     f"{snap.ema_goal:.6f}",
                 ]
@@ -220,9 +263,29 @@ class ProcessIterationLogger:
 
         self.iteration_steps += 1
         self.ep_steps += 1
-        self.ep_return += float(np.mean(reward))
-
         state = info.get("state")
+        blue_rewards: list[float] = []
+        orange_rewards: list[float] = []
+        if isinstance(reward, (list, tuple, np.ndarray)) and hasattr(self.env, "agent_map"):
+            for idx, rew in enumerate(reward):
+                agent_id = self.env.agent_map.get(idx)
+                if state is None:
+                    continue
+                car = state.cars.get(agent_id)
+                if car is None:
+                    continue
+                if car.is_orange:
+                    orange_rewards.append(float(rew))
+                else:
+                    blue_rewards.append(float(rew))
+        else:
+            blue_rewards.append(float(np.mean(reward)))
+
+        if blue_rewards:
+            self.ep_return += float(np.mean(blue_rewards))
+        if orange_rewards:
+            self.ep_orange_return += float(np.mean(orange_rewards))
+
         if state is not None:
             for agent, car in state.cars.items():
                 prev = self._prev_touches.get(agent, int(car.ball_touches))
@@ -232,22 +295,46 @@ class ProcessIterationLogger:
                     self.ep_ball_touches += 1
                     if self.ep_first_touch_step == -1:
                         self.ep_first_touch_step = self.ep_steps
+                    if car.is_orange:
+                        self.ep_orange_touches += 1
+                        if self.ep_orange_first_touch_step == -1:
+                            self.ep_orange_first_touch_step = self.ep_steps
+                    else:
+                        self.ep_blue_touches += 1
+                        if self.ep_blue_first_touch_step == -1:
+                            self.ep_blue_first_touch_step = self.ep_steps
             if state.goal_scored and self.ep_goal_step == -1:
                 self.ep_goal_step = self.ep_steps
+                if int(state.scoring_team) == 0:
+                    self.ep_blue_goal_step = self.ep_steps
+                elif int(state.scoring_team) == 1:
+                    self.ep_orange_goal_step = self.ep_steps
 
         if terminated or truncated:
             self.iteration_episodes += 1
             self.iteration_return += self.ep_return
+            self.iteration_orange_return += self.ep_orange_return
+            self.iteration_total_return += self.ep_return + self.ep_orange_return
 
             if self.ep_ball_touches > 0:
                 self.iteration_success_eps += 1
                 self.iteration_median_t_first.append(self.ep_first_touch_step)
+            if self.ep_blue_touches > 0:
+                self.iteration_blue_touch_eps += 1
+                self.iteration_blue_median_t_first.append(self.ep_blue_first_touch_step)
+            if self.ep_orange_touches > 0:
+                self.iteration_orange_touch_eps += 1
+                self.iteration_orange_median_t_first.append(self.ep_orange_first_touch_step)
 
             if self.ep_goal_step != -1:
                 self.iteration_goals += 1
                 self.iteration_median_t_goal.append(self.ep_goal_step)
                 if state is not None and int(state.scoring_team) == 0:
                     self.iteration_blue_goals += 1
+                    self.iteration_blue_median_t_goal.append(self.ep_blue_goal_step)
+                elif state is not None and int(state.scoring_team) == 1:
+                    self.iteration_orange_goals += 1
+                    self.iteration_orange_median_t_goal.append(self.ep_orange_goal_step)
 
             self._reset_episode_stats()
 
@@ -258,11 +345,28 @@ class ProcessIterationLogger:
 
     def _report_and_reset_iteration(self):
         avg_return = self.iteration_return / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
+        orange_avg_return = self.iteration_orange_return / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
+        total_avg_return = self.iteration_total_return / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
         touch_rate = self.iteration_success_eps / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
+        blue_touch_rate = self.iteration_blue_touch_eps / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
+        orange_touch_rate = self.iteration_orange_touch_eps / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
         goal_rate = self.iteration_goals / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
         blue_goal_rate = self.iteration_blue_goals / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
+        orange_goal_rate = self.iteration_orange_goals / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
         median_t_first = np.median(self.iteration_median_t_first) if self.iteration_median_t_first else -1.0
+        blue_median_t_first = (
+            np.median(self.iteration_blue_median_t_first) if self.iteration_blue_median_t_first else -1.0
+        )
+        orange_median_t_first = (
+            np.median(self.iteration_orange_median_t_first) if self.iteration_orange_median_t_first else -1.0
+        )
         median_t_goal = np.median(self.iteration_median_t_goal) if self.iteration_median_t_goal else -1.0
+        blue_median_t_goal = (
+            np.median(self.iteration_blue_median_t_goal) if self.iteration_blue_median_t_goal else -1.0
+        )
+        orange_median_t_goal = (
+            np.median(self.iteration_orange_median_t_goal) if self.iteration_orange_median_t_goal else -1.0
+        )
 
         duration = max(time.time() - self.iteration_start_time, 1e-6)
         sps = self.iteration_steps / duration
@@ -274,11 +378,20 @@ class ProcessIterationLogger:
             difficulty=snap.difficulty,
             sps=sps,
             avg_return=avg_return,
+            orange_avg_return=orange_avg_return,
+            total_avg_return=total_avg_return,
             touch_rate=touch_rate,
+            blue_touch_rate=blue_touch_rate,
+            orange_touch_rate=orange_touch_rate,
             goal_rate=goal_rate,
             blue_goal_rate=blue_goal_rate,
+            orange_goal_rate=orange_goal_rate,
             median_t_first=float(median_t_first),
+            blue_median_t_first=float(blue_median_t_first),
+            orange_median_t_first=float(orange_median_t_first),
             median_t_goal=float(median_t_goal),
+            blue_median_t_goal=float(blue_median_t_goal),
+            orange_median_t_goal=float(orange_median_t_goal),
         )
 
         if self.pid == 0 and self.log_counter % 3 == 0:
@@ -288,15 +401,19 @@ class ProcessIterationLogger:
                 f"SPS={sps:7.1f} | "
                 f"Eps={self.iteration_episodes:4d} | "
                 f"AvgRet={avg_return:7.3f} | "
+                f"OrangeRet={orange_avg_return:7.3f} | "
                 f"Touch={touch_rate:0.2f} | "
                 f"Goal={goal_rate:0.2f} | "
-                f"BlueGoal={blue_goal_rate:0.2f}"
+                f"BlueGoal={blue_goal_rate:0.2f} | "
+                f"OrangeGoal={orange_goal_rate:0.2f}"
             )
         self.log_counter += 1
 
         stats = Stats(
             touch_rate=touch_rate,
             goal_rate=goal_rate,
+            blue_goal_rate=blue_goal_rate,
+            orange_goal_rate=orange_goal_rate,
             median_t_first=float(median_t_first if median_t_first != -1 else 9999.0),
             median_t_goal=float(median_t_goal if median_t_goal != -1 else 9999.0),
         )

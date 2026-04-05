@@ -158,6 +158,117 @@ class ScenarioResetMutator(StateMutator):
 
         self._set_ball(state, self._clip_ball(ball_pos), vel_dir * speed)
 
+    def _contact_reset(self, state: GameState, cfg) -> None:
+        car = self._blue_car(state)
+        car_pos = np.array(
+            [
+                np.random.uniform(-600.0, 600.0),
+                np.random.uniform(-2200.0, -1200.0),
+                17.0,
+            ],
+            dtype=np.float32,
+        )
+        ball_pos = np.array(
+            [
+                car_pos[0] + np.random.uniform(-120.0, 120.0),
+                car_pos[1] + np.random.uniform(cfg.touch_min_dist, cfg.touch_max_dist),
+                common_values.BALL_RADIUS,
+            ],
+            dtype=np.float32,
+        )
+        self._set_car(
+            car,
+            car_pos,
+            self._yaw_toward(car_pos, ball_pos),
+            boost=np.random.uniform(20.0, 45.0),
+        )
+        self._set_ball(
+            state,
+            self._clip_ball(ball_pos),
+            np.array(
+                [
+                    np.random.uniform(-40.0, 40.0),
+                    np.random.uniform(-40.0, 120.0),
+                    0.0,
+                ],
+                dtype=np.float32,
+            ),
+        )
+
+    def _dribble_reset(self, state: GameState, cfg) -> None:
+        car = self._blue_car(state)
+        car_pos = np.array(
+            [
+                np.random.uniform(-900.0, 900.0),
+                np.random.uniform(-1800.0, -600.0),
+                17.0,
+            ],
+            dtype=np.float32,
+        )
+        ball_pos = np.array(
+            [
+                car_pos[0] + np.random.uniform(-140.0, 140.0),
+                car_pos[1] + np.random.uniform(700.0, 1200.0),
+                common_values.BALL_RADIUS,
+            ],
+            dtype=np.float32,
+        )
+        self._set_car(
+            car,
+            car_pos,
+            self._yaw_toward(car_pos, ball_pos),
+            velocity=np.array([0.0, np.random.uniform(150.0, 450.0), 0.0], dtype=np.float32),
+            boost=np.random.uniform(25.0, 55.0),
+        )
+        self._set_ball(
+            state,
+            self._clip_ball(ball_pos),
+            np.array(
+                [
+                    np.random.uniform(-80.0, 80.0),
+                    np.random.uniform(150.0, cfg.ball_speed_max),
+                    0.0,
+                ],
+                dtype=np.float32,
+            ),
+        )
+
+    def _shoot_open_reset(self, state: GameState, cfg) -> None:
+        car = self._blue_car(state)
+        ball_pos = np.array(
+            [
+                np.random.uniform(-900.0, 900.0),
+                np.random.uniform(1200.0, 2600.0),
+                common_values.BALL_RADIUS,
+            ],
+            dtype=np.float32,
+        )
+        car_pos = np.array(
+            [
+                ball_pos[0] + np.random.uniform(-300.0, 300.0),
+                ball_pos[1] - np.random.uniform(900.0, 1500.0),
+                17.0,
+            ],
+            dtype=np.float32,
+        )
+        goal = np.array([0.0, common_values.BACK_NET_Y, 0.0], dtype=np.float32)
+        to_goal = goal - ball_pos
+        norm = float(np.linalg.norm(to_goal))
+        if norm > 1e-6:
+            to_goal /= norm
+        self._set_car(
+            car,
+            car_pos,
+            self._yaw_toward(car_pos, ball_pos),
+            velocity=to_goal * np.random.uniform(250.0, 550.0),
+            boost=np.random.uniform(25.0, 65.0),
+        )
+        self._set_ball(
+            state,
+            self._clip_ball(ball_pos),
+            to_goal * np.random.uniform(0.20 * cfg.ball_speed_max, 0.55 * cfg.ball_speed_max),
+        )
+
     def _neutral_self_play_reset(self, state: GameState, cfg) -> None:
         pos = np.array(
             [
@@ -238,51 +349,57 @@ class ScenarioResetMutator(StateMutator):
         defend_blue_side = np.random.rand() < 0.5
         sign = -1.0 if defend_blue_side else 1.0
 
+        goal_y = sign * common_values.BACK_NET_Y
         pos = np.array(
             [
-                np.random.uniform(-1400.0, 1400.0),
-                sign * np.random.uniform(2400.0, 4200.0),
+                np.random.uniform(-700.0, 700.0),
+                sign * np.random.uniform(3500.0, 4450.0),
                 common_values.BALL_RADIUS,
             ],
             dtype=np.float32,
         )
-        threatened_goal = np.array([0.0, sign * common_values.BACK_NET_Y, 0.0], dtype=np.float32)
+        threatened_goal = np.array([0.0, goal_y, 0.0], dtype=np.float32)
         to_goal = threatened_goal - pos
         norm = float(np.linalg.norm(to_goal))
         if norm > 1e-6:
             to_goal /= norm
-        speed = np.random.uniform(0.35 * cfg.ball_speed_max, cfg.ball_speed_max)
+        speed = np.random.uniform(0.80 * cfg.ball_speed_max, cfg.ball_speed_max)
         self._set_ball(state, self._clip_ball(pos), to_goal * speed)
         blue, orange = self._cars(state)
-        if blue:
-            blue_pos = np.array(
+        defenders = blue if defend_blue_side else orange
+        attackers = orange if defend_blue_side else blue
+        if defenders:
+            defender_goal = np.array([0.0, goal_y, 0.0], dtype=np.float32)
+            defender_pos = np.array(
                 [
-                    np.clip(pos[0] + np.random.uniform(-500.0, 500.0), -2500.0, 2500.0),
-                    sign * np.random.uniform(3600.0, 4700.0),
+                    np.clip(pos[0] + np.random.uniform(-200.0, 200.0), -1800.0, 1800.0),
+                    pos[1] - sign * np.random.uniform(320.0, 620.0),
                     17.0,
                 ],
                 dtype=np.float32,
             )
             self._set_car(
-                blue[0],
-                blue_pos,
-                self._yaw_toward(blue_pos, pos),
-                boost=np.random.uniform(20.0, 80.0),
+                defenders[0],
+                defender_pos,
+                self._yaw_toward(defender_pos, pos),
+                velocity=to_goal * np.random.uniform(260.0, 600.0),
+                boost=np.random.uniform(12.0, 35.0),
             )
-        if orange:
-            orange_pos = np.array(
+        if attackers:
+            attacker_pos = np.array(
                 [
-                    np.clip(pos[0] + np.random.uniform(-400.0, 400.0), -2800.0, 2800.0),
-                    sign * np.random.uniform(1200.0, 2600.0),
+                    np.clip(pos[0] + np.random.uniform(-220.0, 220.0), -2000.0, 2000.0),
+                    pos[1] + sign * np.random.uniform(420.0, 860.0),
                     17.0,
                 ],
                 dtype=np.float32,
             )
             self._set_car(
-                orange[0],
-                orange_pos,
-                self._yaw_toward(orange_pos, pos + to_goal * 600.0),
-                boost=np.random.uniform(15.0, 55.0),
+                attackers[0],
+                attacker_pos,
+                self._yaw_toward(attacker_pos, defender_goal),
+                velocity=to_goal * np.random.uniform(420.0, 980.0),
+                boost=np.random.uniform(35.0, 80.0),
             )
 
     def _attack_self_play_reset(self, state: GameState, cfg) -> None:
@@ -337,6 +454,141 @@ class ScenarioResetMutator(StateMutator):
                 boost=np.random.uniform(20.0, 75.0),
             )
 
+    def _contested_shoot_reset(self, state: GameState, cfg) -> None:
+        self._attack_self_play_reset(state, cfg)
+        blue, orange = self._cars(state)
+        if not blue or not orange:
+            return
+        ball_pos = np.asarray(state.ball.position, dtype=np.float32)
+        attack_blue = ball_pos[1] >= 0.0
+        attacker = blue[0] if attack_blue else orange[0]
+        defender = orange[0] if attack_blue else blue[0]
+        goal_y = common_values.BACK_NET_Y if attack_blue else -common_values.BACK_NET_Y
+        defender_pos = np.array(
+            [
+                np.clip(ball_pos[0] + np.random.uniform(-250.0, 250.0), -2200.0, 2200.0),
+                ball_pos[1] + (-1.0 if attack_blue else 1.0) * np.random.uniform(450.0, 900.0),
+                17.0,
+            ],
+            dtype=np.float32,
+        )
+        self._set_car(
+            defender,
+            defender_pos,
+            self._yaw_toward(defender_pos, ball_pos),
+            boost=np.random.uniform(20.0, 55.0),
+        )
+        attacker_pos = np.array(
+            [
+                np.clip(ball_pos[0] + np.random.uniform(-350.0, 350.0), -2600.0, 2600.0),
+                ball_pos[1] + (1.0 if attack_blue else -1.0) * np.random.uniform(700.0, 1300.0),
+                17.0,
+            ],
+            dtype=np.float32,
+        )
+        self._set_car(
+            attacker,
+            attacker_pos,
+            self._yaw_toward(attacker_pos, np.array([0.0, goal_y, 0.0], dtype=np.float32)),
+            boost=np.random.uniform(25.0, 70.0),
+        )
+
+    def _defend_clear_reset(self, state: GameState, cfg) -> None:
+        self._defense_reset(state, cfg)
+        blue, orange = self._cars(state)
+        ball_pos = np.asarray(state.ball.position, dtype=np.float32)
+        defend_blue_side = ball_pos[1] < 0.0
+        defenders = blue if defend_blue_side else orange
+        attackers = orange if defend_blue_side else blue
+        sign = -1.0 if defend_blue_side else 1.0
+        if defenders:
+            defender = defenders[0]
+            defender_pos = np.array(
+                [
+                    np.clip(ball_pos[0] + np.random.uniform(-120.0, 120.0), -1600.0, 1600.0),
+                    ball_pos[1] - sign * np.random.uniform(220.0, 420.0),
+                    17.0,
+                ],
+                dtype=np.float32,
+            )
+            self._set_car(
+                defender,
+                defender_pos,
+                self._yaw_toward(defender_pos, ball_pos),
+                boost=np.random.uniform(10.0, 30.0),
+            )
+        if attackers:
+            attacker = attackers[0]
+            attacker_pos = np.array(
+                [
+                    np.clip(ball_pos[0] + np.random.uniform(-180.0, 180.0), -1800.0, 1800.0),
+                    ball_pos[1] + sign * np.random.uniform(380.0, 760.0),
+                    17.0,
+                ],
+                dtype=np.float32,
+            )
+            self._set_car(
+                attacker,
+                attacker_pos,
+                self._yaw_toward(attacker_pos, ball_pos),
+                boost=np.random.uniform(35.0, 78.0),
+            )
+
+    def _duel_reset(self, state: GameState, cfg) -> None:
+        attack_blue = np.random.rand() < 0.5
+        sign = 1.0 if attack_blue else -1.0
+        ball_pos = np.array(
+            [
+                np.random.uniform(-1200.0, 1200.0),
+                sign * np.random.uniform(1200.0, 2400.0),
+                common_values.BALL_RADIUS,
+            ],
+            dtype=np.float32,
+        )
+        target_goal_y = common_values.BACK_NET_Y if attack_blue else -common_values.BACK_NET_Y
+        to_goal = np.array([0.0, target_goal_y, 0.0], dtype=np.float32) - ball_pos
+        norm = float(np.linalg.norm(to_goal))
+        if norm > 1e-6:
+            to_goal /= norm
+        self._set_ball(
+            state,
+            self._clip_ball(ball_pos),
+            to_goal * np.random.uniform(0.18 * cfg.ball_speed_max, 0.45 * cfg.ball_speed_max),
+        )
+        blue, orange = self._cars(state)
+        attacker = blue[0] if attack_blue and blue else orange[0] if orange else None
+        defender = orange[0] if attack_blue and orange else blue[0] if blue else None
+        if attacker is not None:
+            attacker_pos = np.array(
+                [
+                    np.clip(ball_pos[0] + np.random.uniform(-220.0, 220.0), -2200.0, 2200.0),
+                    ball_pos[1] - sign * np.random.uniform(520.0, 980.0),
+                    17.0,
+                ],
+                dtype=np.float32,
+            )
+            self._set_car(
+                attacker,
+                attacker_pos,
+                self._yaw_toward(attacker_pos, ball_pos),
+                boost=np.random.uniform(18.0, 50.0),
+            )
+        if defender is not None:
+            defender_pos = np.array(
+                [
+                    np.clip(ball_pos[0] + np.random.uniform(-180.0, 180.0), -1800.0, 1800.0),
+                    ball_pos[1] + sign * np.random.uniform(360.0, 760.0),
+                    17.0,
+                ],
+                dtype=np.float32,
+            )
+            self._set_car(
+                defender,
+                defender_pos,
+                self._yaw_toward(defender_pos, ball_pos),
+                boost=np.random.uniform(15.0, 40.0),
+            )
+
     @override
     def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
         cfg = self.curriculum_manager.current_config()
@@ -346,21 +598,19 @@ class ScenarioResetMutator(StateMutator):
             return
 
         if cfg.stage == Stage.CONTACT:
-            self._front_ball_reset(state, cfg, toward_goal_bias=0.1)
+            self._contact_reset(state, cfg)
             return
 
         if cfg.stage == Stage.DRIBBLE:
-            if roll < cfg.kickoff_reset_prob + cfg.neutral_reset_prob:
-                self._midfield_dribble_reset(state, cfg)
-            else:
-                self._front_ball_reset(state, cfg, toward_goal_bias=0.55)
+            self._dribble_reset(state, cfg)
             return
 
         if cfg.stage == Stage.SHOOT:
-            if roll < cfg.kickoff_reset_prob + cfg.neutral_reset_prob:
-                self._front_ball_reset(state, cfg, toward_goal_bias=0.35)
-            else:
-                self._front_ball_reset(state, cfg, toward_goal_bias=0.85)
+            self._shoot_open_reset(state, cfg)
+            return
+
+        if cfg.stage == Stage.SHOOT_CONTESTED:
+            self._contested_shoot_reset(state, cfg)
             return
 
         if cfg.stage == Stage.DEFEND:
@@ -370,11 +620,12 @@ class ScenarioResetMutator(StateMutator):
                 self._defense_reset(state, cfg)
             return
 
+        if cfg.stage == Stage.DEFEND_CLEAR:
+            self._defend_clear_reset(state, cfg)
+            return
+
         if cfg.stage == Stage.DUEL:
-            if roll < cfg.kickoff_reset_prob + cfg.neutral_reset_prob:
-                self._neutral_self_play_reset(state, cfg)
-            else:
-                self._attack_self_play_reset(state, cfg)
+            self._duel_reset(state, cfg)
             return
 
         if roll < cfg.kickoff_reset_prob + cfg.neutral_reset_prob:
