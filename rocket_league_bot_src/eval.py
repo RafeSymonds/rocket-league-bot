@@ -153,10 +153,11 @@ def evaluate_checkpoint_matchup(
     stage: str = Stage.SELF_PLAY.value,
     difficulty: float = 0.5,
     device: str = "gpu",
+    deterministic: bool = False,
 ) -> dict[str, Any]:
     env = _make_eval_env(stage=stage, difficulty=float(difficulty))
-    current_policy = FrozenOpponentPolicy(device=device, deterministic=True)
-    opponent_policy = FrozenOpponentPolicy(device=device, deterministic=True)
+    current_policy = FrozenOpponentPolicy(device=device, deterministic=deterministic)
+    opponent_policy = FrozenOpponentPolicy(device=device, deterministic=deterministic)
     current_policy.load(current_checkpoint_dir)
     opponent_policy.load(opponent_checkpoint_dir)
 
@@ -299,6 +300,7 @@ def run_eval_ladder(
     anchor_count: int = 5,
     anchor_span_ts: int = 10_000_000,
     force_refresh: bool = False,
+    deterministic: bool = False,
     state_path: str = "data/eval/ladder_state.json",
     csv_path: str = "data/eval/results.csv",
     latest_summary_path: str = "data/eval/latest_summary.json",
@@ -335,6 +337,7 @@ def run_eval_ladder(
             stage=stage,
             difficulty=float(difficulty),
             device=device,
+            deterministic=deterministic,
         )
         row = {
             "unix_time": f"{now:.3f}",
@@ -358,6 +361,7 @@ def run_eval_ladder(
         "difficulty": float(difficulty),
         "anchor_count": int(len(results)),
         "anchor_span_ts": int(anchor_span_ts),
+        "deterministic": bool(deterministic),
         "reference_timesteps": int(ladder.get("reference_timesteps", current_ts)),
         "refresh_after_timesteps": int(ladder.get("refresh_after_timesteps", current_ts + anchor_span_ts)),
         "avg_blue_win_rate": float(np.mean([row["blue_win_rate"] for row in results]) if results else 0.0),
@@ -376,6 +380,7 @@ def maybe_refresh_eval_summary(
     device: str = "gpu",
     disabled: bool = False,
     latest_summary_path: str = "data/eval/latest_summary.json",
+    deterministic: bool = False,
 ) -> tuple[dict[str, Any] | None, str, bool]:
     if disabled or not latest_checkpoint:
         return None, "", False
@@ -400,6 +405,7 @@ def maybe_refresh_eval_summary(
             episodes=max(1, int(episodes)),
             device=str(device),
             latest_summary_path=latest_summary_path,
+            deterministic=deterministic,
         )
         return summary, "", True
     except Exception as exc:
