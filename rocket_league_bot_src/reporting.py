@@ -289,22 +289,49 @@ def _multi_chart_svg(
     latest_parts: list[str] = []
     mins: list[float] = []
     maxes: list[float] = []
+    overlap_notes: list[str] = []
+    seen_series: list[tuple[str, list[float]]] = []
 
     for values, label, color in series_values:
         points = _polyline_points_with_bounds(x_values, values, width, height, pad, y_lo, y_hi)
-        polylines.append(f'<polyline fill="none" stroke="{color}" stroke-width="3" points="{points}" />')
+        overlap_with = ""
+        for prev_label, prev_values in seen_series:
+            if len(prev_values) == len(values) and all(abs(a - b) < 1e-9 for a, b in zip(prev_values, values)):
+                overlap_with = prev_label
+                break
+
+        if overlap_with:
+            polylines.append(
+                f'<polyline fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="7" '
+                f'stroke-dasharray="7 5" stroke-linecap="round" points="{points}" />'
+            )
+            polylines.append(
+                f'<polyline fill="none" stroke="{color}" stroke-width="3" '
+                f'stroke-dasharray="7 5" stroke-linecap="round" points="{points}" />'
+            )
+            overlap_notes.append(f"{label} matches {overlap_with}")
+            legend_suffix = f' <span class="legend-note">same as {html.escape(overlap_with)}</span>'
+        else:
+            polylines.append(
+                f'<polyline fill="none" stroke="{color}" stroke-width="3" stroke-linecap="round" points="{points}" />'
+            )
+            legend_suffix = ""
+
         legend_items.append(
-            f'<span class="legend-item"><span class="legend-swatch" style="background:{color}"></span>{html.escape(label)}</span>'
+            f'<span class="legend-item"><span class="legend-swatch" style="background:{color}"></span>{html.escape(label)}{legend_suffix}</span>'
         )
         latest = values[-1] if values else 0.0
         latest_parts.append(f"{label.lower()} {latest:.3f}")
         if values:
             mins.append(min(values))
             maxes.append(max(values))
+        seen_series.append((label, values))
 
     lo = min(mins) if mins else 0.0
     hi = max(maxes) if maxes else 0.0
     latest_text = " | ".join(latest_parts)
+    if overlap_notes:
+        latest_text += " | overlap: " + ", ".join(overlap_notes)
 
     return f"""
     <section class="chart-card">
@@ -1144,6 +1171,11 @@ def write_training_report(
       gap: 8px;
       color: var(--muted);
       font-size: 13px;
+    }}
+    .legend-note {{
+      font-size: 12px;
+      color: var(--ink);
+      opacity: 0.85;
     }}
     .legend-swatch {{
       width: 12px;
