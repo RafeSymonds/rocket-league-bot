@@ -49,15 +49,18 @@ class CurriculumManager:
         print(f"Curriculum stage -> {stage.value}")
 
     def _update_contact(self, stats) -> None:
-        ema_gate = np.clip((self.ema_touch_rate - 0.55) / 0.25, 0.0, 1.0)
-        touch_skill = np.clip((stats.touch_rate - 0.35) / 0.55, 0.0, 1.0)
-        speed_skill = np.clip((180.0 - stats.median_t_first) / 120.0, 0.0, 1.0)
+        ema_gate = np.clip((self.ema_touch_rate - 0.10) / 0.30, 0.0, 1.0)
+        touch_skill = np.clip((stats.touch_rate - 0.08) / 0.42, 0.0, 1.0)
+        speed_skill = np.clip((140.0 - stats.median_t_first) / 90.0, 0.0, 1.0)
         target_difficulty = ema_gate * (0.75 * touch_skill + 0.25 * speed_skill)
         self.difficulty = self._smooth(self.difficulty, float(target_difficulty))
 
-        ready = self.ema_touch_rate >= 0.82 and stats.median_t_first <= 110.0
-        rescue = self.stage_iterations >= 22 and self.ema_touch_rate >= 0.70
+        ready = self.ema_touch_rate >= 0.32 and stats.median_t_first <= 95.0
+        rescue = self.stage_iterations >= 14 and self.ema_touch_rate >= 0.16
+        stalled = self.stage_iterations >= 30 and self.ema_touch_rate < 0.10
         if ready or rescue:
+            self._set_stage(Stage.DRIBBLE)
+        elif stalled:
             self._set_stage(Stage.DRIBBLE)
 
     def _update_dribble(self, stats) -> None:

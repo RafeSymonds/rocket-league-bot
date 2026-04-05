@@ -212,7 +212,7 @@ The `bin/` entrypoints now prefer the repo-local `./env/bin/python` automaticall
 - During unattended training, PID 0 now auto-exports the newest checkpoint into the RLBot package when it detects a fresh save.
 - Background run state is stored in `data/training_run.json` and logs go to `data/logs/train_latest.log`.
 - The graph report is written to `data/training_report.html` whenever a new metrics row is logged.
-- Default self-play is current-policy vs current-policy for speed. Frozen checkpoint opponents are now opt-in because they cost extra inference per worker.
+- Default training uses frozen-opponent self-play with a 4 million timestep gap so the learner is measured against a stable older policy instead of only co-adapting against itself.
 
 ## Further Reading
 

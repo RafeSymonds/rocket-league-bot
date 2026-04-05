@@ -42,5 +42,7 @@ SAVE_EVERY_TS="${SAVE_EVERY_TS:-2000000}"
   --ent-coef "${ENT_COEF}" \
   --exp-buffer-size "${EXP_BUFFER_SIZE}" \
   --save-every-ts "${SAVE_EVERY_TS}" \
+  --self-play-mode frozen \
+  --opponent-gap-ts 4000000 \
   --resume-latest \
   "$@"

@@ -30,5 +30,7 @@ PY
   --ent-coef 0.003 \
   --exp-buffer-size 400000 \
   --save-every-ts 2000000 \
+  --self-play-mode frozen \
+  --opponent-gap-ts 4000000 \
   --resume-latest \
   "$@"

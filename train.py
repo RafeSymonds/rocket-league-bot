@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from rlgym_ppo import Learner
@@ -21,6 +22,28 @@ from rocket_league_bot_src.config import (
     Stage,
 )
 from rocket_league_bot_src.env import EnvBuilder
+
+
+def _disable_background_kbhit() -> None:
+    if sys.stdin.isatty():
+        return
+
+    class _NoOpKBHit:
+        def kbhit(self) -> bool:
+            return False
+
+        def getch(self) -> str:
+            return ""
+
+        def set_normal_term(self) -> None:
+            return None
+
+    try:
+        import rlgym_ppo.learner as learner_module
+
+        learner_module.KBHit = _NoOpKBHit
+    except Exception:
+        pass
 
 
 def _attach_curriculum_checkpoint_hook(learner: Learner, env_builder: EnvBuilder) -> None:
@@ -59,7 +82,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--min-inference-size", type=int, default=1)
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--opponent-device", type=str, default="gpu")
-    parser.add_argument("--self-play-mode", choices=("current", "frozen"), default="current")
+    parser.add_argument("--self-play-mode", choices=("current", "frozen"), default="frozen")
     parser.add_argument("--load-path", type=str, default="")
     parser.add_argument("--checkpoint-root", type=str, default=DEFAULT_CHECKPOINT_ROOT)
     parser.add_argument("--force-stage", type=str, default="")
@@ -74,6 +97,7 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     args = parse_args()
+    _disable_background_kbhit()
 
     load_path = args.load_path
     if not load_path and args.resume_latest:

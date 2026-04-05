@@ -10,6 +10,10 @@ from rlgym.rocket_league.api import GameState
 from rlgym.rocket_league.reward_functions import TouchReward
 
 
+def _opponent_goal_y(is_orange: bool) -> float:
+    return -common_values.BACK_NET_Y if is_orange else common_values.BACK_NET_Y
+
+
 class GoalEventMixin:
     def reset(self, agents, initial_state, shared_info):
         self._prev_goal = False
@@ -65,7 +69,7 @@ class BallSpeedTowardGoalReward(TouchStatefulReward):
                 continue
 
             car = state.cars[agent]
-            target_y = common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
+            target_y = _opponent_goal_y(car.is_orange)
             to_goal = np.array([0.0, target_y, 0.0], dtype=np.float32) - ball.position
             norm = float(np.linalg.norm(to_goal))
             if norm < 1e-6:
@@ -92,7 +96,7 @@ class BallDistanceToGoalDeltaReward(RewardFunction):
         rewards: Dict[AgentID, float] = {}
         for agent in agents:
             car = state.cars[agent]
-            target_y = common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
+            target_y = _opponent_goal_y(car.is_orange)
             goal = np.array([0.0, target_y, 0.0], dtype=np.float32)
             dist = float(np.linalg.norm(state.ball.position - goal))
             prev = float(self.prev_dist.get(agent, dist))

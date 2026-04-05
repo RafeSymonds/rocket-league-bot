@@ -139,6 +139,37 @@ def find_opponent_checkpoint(
     return ""
 
 
+def sample_opponent_checkpoint(
+    checkpoint_root: str,
+    current_ts: int,
+    target_gap_ts: int,
+    expected_obs_dim: int = OBS_DIM,
+    exclude_checkpoint_dir: str = "",
+    band_width_ts: int = 1_500_000,
+    prefer_newest: bool = True,
+) -> str:
+    compatible = list_compatible_checkpoints(checkpoint_root, expected_obs_dim)
+    exclude_checkpoint_dir = str(Path(exclude_checkpoint_dir)) if exclude_checkpoint_dir else ""
+    compatible = [
+        (ts, mtime, checkpoint_dir)
+        for ts, mtime, checkpoint_dir in compatible
+        if checkpoint_dir != exclude_checkpoint_dir and ts < int(current_ts)
+    ]
+    if not compatible:
+        return ""
+
+    target_ts = max(0, int(current_ts) - int(target_gap_ts))
+    band = max(1, int(band_width_ts))
+    in_band = [
+        (ts, mtime, checkpoint_dir)
+        for ts, mtime, checkpoint_dir in compatible
+        if abs(ts - target_ts) <= band
+    ]
+    candidates = in_band if in_band else compatible
+    candidates.sort(key=lambda item: (item[0], item[1]))
+    return candidates[-1][2] if prefer_newest else candidates[0][2]
+
+
 def select_eval_anchor_checkpoints(
     checkpoint_root: str,
     current_checkpoint_dir: str,

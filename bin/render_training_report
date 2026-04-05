@@ -18,7 +18,26 @@ if str(ROOT) not in sys.path:
 
 from rocket_league_bot_src.reporting import write_training_report
 from rocket_league_bot_src.checkpoints import find_latest_compatible_checkpoint
-from rocket_league_bot_src.eval import maybe_refresh_eval_summary
+
+
+def _maybe_refresh_eval(
+    latest_checkpoint: str,
+    episodes: int,
+    device: str,
+    disabled: bool,
+) -> tuple[bool, str, dict[str, object]]:
+    if disabled:
+        return False, "", {}
+    try:
+        from rocket_league_bot_src.eval import maybe_refresh_eval_summary
+    except Exception as exc:
+        return False, f"Evaluation refresh unavailable: {exc}", {}
+    return maybe_refresh_eval_summary(
+        latest_checkpoint=latest_checkpoint,
+        episodes=episodes,
+        device=device,
+        disabled=False,
+    )
 
 
 def parse_args() -> argparse.Namespace:
@@ -35,7 +54,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     latest_checkpoint = find_latest_compatible_checkpoint("data/checkpoints")
-    _, eval_error, _ = maybe_refresh_eval_summary(
+    _, eval_error, _ = _maybe_refresh_eval(
         latest_checkpoint=latest_checkpoint,
         episodes=args.eval_episodes,
         device=args.eval_device,

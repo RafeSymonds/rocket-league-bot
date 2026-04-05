@@ -65,7 +65,41 @@ def _tail_lines(path: Path, n: int) -> list[str]:
     return lines[-n:]
 
 
+def _rotate_file(path: Path, run_tag: str) -> None:
+    if not path.exists():
+        return
+    rotated = path.with_name(f"{path.stem}.{run_tag}{path.suffix}")
+    try:
+        path.replace(rotated)
+    except Exception:
+        return
+
+
+def _prepare_fresh_run_artifacts(extra_args: list[str]) -> None:
+    wants_fresh = "--no-resume-latest" in extra_args
+    if not wants_fresh:
+        return
+
+    run_tag = time.strftime("%Y%m%d-%H%M%S")
+    data_dir = ROOT / "data"
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+    for path in (
+        LOG_PATH,
+        data_dir / "training_metrics.csv",
+        data_dir / "training_report.html",
+        data_dir / "curriculum_state.json",
+        data_dir / "opponent_state.json",
+        data_dir / "eval" / "latest_summary.json",
+        data_dir / "eval" / "ladder_state.json",
+        data_dir / "eval" / "results.csv",
+    ):
+        _rotate_file(path, run_tag)
+
+
 def _default_train_command(extra_args: list[str]) -> list[str]:
+    if extra_args and extra_args[0] == "--":
+        extra_args = extra_args[1:]
     return [
         sys.executable,
         "train.py",
@@ -93,6 +127,10 @@ def _default_train_command(extra_args: list[str]) -> list[str]:
         "400000",
         "--save-every-ts",
         "2000000",
+        "--self-play-mode",
+        "frozen",
+        "--opponent-gap-ts",
+        "4000000",
         "--resume-latest",
         *extra_args,
     ]
@@ -106,6 +144,7 @@ def cmd_start(args: argparse.Namespace) -> int:
         print(f"log={state.get('log_path', str(LOG_PATH))}")
         return 1
 
+    _prepare_fresh_run_artifacts(args.extra_args)
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     log_handle = LOG_PATH.open("a", encoding="utf-8")
     cmd = _default_train_command(args.extra_args)
@@ -164,9 +203,15 @@ def cmd_status(args: argparse.Namespace) -> int:
         print("\nLatest incompatible checkpoint skipped by resume:")
         book = load_checkpoint_book(latest_checkpoint)
         obs_shape = book.get("obs_running_stats", {}).get("shape")
+        latest_stage = book.get("curriculum_state", {}).get("stage")
+        latest_compatible_book = load_checkpoint_book(latest_compatible) if latest_compatible else {}
+        selected_stage = latest_compatible_book.get("curriculum_state", {}).get("stage")
         print(f"  dir: {latest_checkpoint}")
         print(f"  obs_shape: {obs_shape}")
-        print(f"  compatible: {'yes' if is_checkpoint_compatible(latest_checkpoint) else 'no'}")
+        print(f"  compatible_obs: {'yes' if is_checkpoint_compatible(latest_checkpoint) else 'no'}")
+        print(f"  stage: {latest_stage}")
+        if latest_compatible:
+            print(f"  selected_stage: {selected_stage}")
 
     metrics_path = ROOT / "data" / "training_metrics.csv"
     print("\nLatest metrics:")
@@ -176,6 +221,32 @@ def cmd_status(args: argparse.Namespace) -> int:
             print(f"  {lines[-1]}")
         else:
             print("  metrics file exists but has no rows yet")
+    else:
+        print("  none")
+
+    curriculum_path = ROOT / "data" / "curriculum_state.json"
+    curriculum_state = _read_json(curriculum_path)
+    print("\nCurrent curriculum:")
+    if curriculum_state:
+        print(f"  stage: {curriculum_state.get('stage', '')}")
+        print(f"  difficulty: {float(curriculum_state.get('difficulty', 0.0)):.6f}")
+        print(f"  stage_iterations: {int(curriculum_state.get('stage_iterations', 0))}")
+        print(f"  ema_touch_rate: {float(curriculum_state.get('ema_touch_rate', 0.0)):.6f}")
+        print(f"  ema_goal_rate: {float(curriculum_state.get('ema_goal_rate', 0.0)):.6f}")
+    else:
+        print("  none")
+
+    opponent_path = ROOT / "data" / "opponent_state.json"
+    opponent_state = _read_json(opponent_path)
+    print("\nCurrent opponent:")
+    if opponent_state:
+        print(f"  mode: {opponent_state.get('mode', '')}")
+        print(f"  enabled: {'yes' if opponent_state.get('enabled') else 'no'}")
+        print(f"  checkpoint_dir: {opponent_state.get('checkpoint_dir', '')}")
+        print(f"  gap_ts: {int(opponent_state.get('gap_ts', 0) or 0)}")
+        blue_goal_rate = opponent_state.get("blue_goal_rate")
+        if blue_goal_rate is not None:
+            print(f"  blue_goal_rate: {float(blue_goal_rate):.6f}")
     else:
         print("  none")
 

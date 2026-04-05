@@ -24,7 +24,7 @@ from .opponent import SelfPlayOpponentGymWrapper
 from .reporting import write_training_report
 from .rewards import CurriculumReward
 from .utils import Stats
-from .checkpoints import find_opponent_checkpoint, load_checkpoint_book
+from .checkpoints import find_opponent_checkpoint, load_checkpoint_book, sample_opponent_checkpoint
 
 try:
     from rlgym_tools.rocket_league.shared_info_providers.scoreboard_provider import (
@@ -439,18 +439,49 @@ class ProcessIterationLogger:
                 effective_gap_ts = max(500_000, self.opponent_gap_ts // 4)
             elif blue_goal_rate >= 0.75 and goal_rate >= 0.80:
                 effective_gap_ts = max(1_000_000, self.opponent_gap_ts // 2)
+            elif blue_goal_rate <= 0.30 and goal_rate >= 0.70:
+                effective_gap_ts = min(self.opponent_gap_ts * 2, self.opponent_gap_ts + 4_000_000)
+            elif blue_goal_rate <= 0.40:
+                effective_gap_ts = min(self.opponent_gap_ts + 2_000_000, 8_000_000)
 
         if self.fixed_opponent_checkpoint:
             checkpoint_dir = self.fixed_opponent_checkpoint
         elif self.current_checkpoint_dir:
             book = load_checkpoint_book(self.current_checkpoint_dir)
             current_ts = int(book.get("cumulative_timesteps", 0))
-            checkpoint_dir = find_opponent_checkpoint(
-                self.checkpoint_root,
-                current_ts=current_ts,
-                gap_ts=effective_gap_ts,
-                exclude_checkpoint_dir=self.current_checkpoint_dir,
-            )
+            if blue_goal_rate is not None and goal_rate is not None:
+                if blue_goal_rate >= 0.75 and goal_rate >= 0.80:
+                    checkpoint_dir = sample_opponent_checkpoint(
+                        self.checkpoint_root,
+                        current_ts=current_ts,
+                        target_gap_ts=effective_gap_ts,
+                        exclude_checkpoint_dir=self.current_checkpoint_dir,
+                        band_width_ts=1_000_000,
+                        prefer_newest=True,
+                    )
+                elif blue_goal_rate <= 0.40:
+                    checkpoint_dir = sample_opponent_checkpoint(
+                        self.checkpoint_root,
+                        current_ts=current_ts,
+                        target_gap_ts=effective_gap_ts,
+                        exclude_checkpoint_dir=self.current_checkpoint_dir,
+                        band_width_ts=2_000_000,
+                        prefer_newest=False,
+                    )
+                else:
+                    checkpoint_dir = find_opponent_checkpoint(
+                        self.checkpoint_root,
+                        current_ts=current_ts,
+                        gap_ts=effective_gap_ts,
+                        exclude_checkpoint_dir=self.current_checkpoint_dir,
+                    )
+            else:
+                checkpoint_dir = find_opponent_checkpoint(
+                    self.checkpoint_root,
+                    current_ts=current_ts,
+                    gap_ts=effective_gap_ts,
+                    exclude_checkpoint_dir=self.current_checkpoint_dir,
+                )
 
         payload = {
             "enabled": bool(checkpoint_dir),
