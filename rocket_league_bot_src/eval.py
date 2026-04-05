@@ -27,9 +27,11 @@ from .rewards import CurriculumReward
 
 try:
     from rlgym_tools.rocket_league.shared_info_providers.scoreboard_provider import (
+        ScoreboardInfo,
         ScoreboardProvider,
     )
 except Exception:  # pragma: no cover - optional dependency until installed
+    ScoreboardInfo = None
     ScoreboardProvider = None
 
 
@@ -163,6 +165,8 @@ def evaluate_checkpoint_matchup(
     episode_count = 0
     blue_goals = 0
     orange_goals = 0
+    blue_wins = 0
+    orange_wins = 0
     draws = 0
     blue_returns: list[float] = []
     orange_returns: list[float] = []
@@ -198,12 +202,26 @@ def evaluate_checkpoint_matchup(
         episode_count += 1
         blue_returns.append(blue_episode_return)
         orange_returns.append(orange_episode_return)
-        if env.state.goal_scored:
+        scoreboard = env.shared_info.get("scoreboard")
+        if isinstance(scoreboard, ScoreboardInfo) and str(stage).upper() == Stage.SELF_PLAY.value:
+            blue_score = int(scoreboard.blue_score)
+            orange_score = int(scoreboard.orange_score)
+            blue_goals += blue_score
+            orange_goals += orange_score
+            if blue_score > orange_score:
+                blue_wins += 1
+            elif orange_score > blue_score:
+                orange_wins += 1
+            else:
+                draws += 1
+        elif env.state.goal_scored:
             episode_goal_steps.append(episode_step)
             if int(env.state.scoring_team) == 0:
                 blue_goals += 1
+                blue_wins += 1
             else:
                 orange_goals += 1
+                orange_wins += 1
         else:
             draws += 1
 
@@ -222,8 +240,10 @@ def evaluate_checkpoint_matchup(
         "difficulty": float(difficulty),
         "blue_goals": int(blue_goals),
         "orange_goals": int(orange_goals),
+        "blue_wins": int(blue_wins),
+        "orange_wins": int(orange_wins),
         "draws": int(draws),
-        "blue_win_rate": float(blue_goals / total_episodes),
+        "blue_win_rate": float(blue_wins / total_episodes),
         "goal_diff_per_episode": float((blue_goals - orange_goals) / total_episodes),
         "avg_blue_return": float(np.mean(blue_returns) if blue_returns else 0.0),
         "avg_orange_return": float(np.mean(orange_returns) if orange_returns else 0.0),
@@ -250,6 +270,8 @@ def append_eval_rows(
         "episodes",
         "blue_goals",
         "orange_goals",
+        "blue_wins",
+        "orange_wins",
         "draws",
         "blue_win_rate",
         "goal_diff_per_episode",

@@ -78,9 +78,9 @@ Run training directly with custom args:
 python3 train.py --n-proc 1 --resume-latest
 ```
 
-Default training uses frozen-opponent self-play with a 4 million timestep gap so progress is measured against a stable older policy.
+Default training uses current-policy vs current-policy self-play for throughput.
 Use `--self-play-mode frozen` with `--opponent-checkpoint <dir>` to force a specific frozen opponent, or `--self-play-mode frozen --opponent-gap-ts 4000000` to keep the opponent a few million timesteps behind the current resumed checkpoint.
-During self-play, the training manager may now tighten that gap when the learner is dominating or widen it when the learner is consistently losing, so the opponent stays in a useful difficulty band.
+During frozen self-play, the training manager may tighten that gap when the learner is dominating or widen it when the learner is consistently losing, so the opponent stays in a useful difficulty band.
 
 Watch a saved checkpoint locally:
 

@@ -127,10 +127,6 @@ def _default_train_command(extra_args: list[str]) -> list[str]:
         "400000",
         "--save-every-ts",
         "2000000",
-        "--self-play-mode",
-        "frozen",
-        "--opponent-gap-ts",
-        "4000000",
         "--resume-latest",
         *extra_args,
     ]

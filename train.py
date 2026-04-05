@@ -82,7 +82,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--min-inference-size", type=int, default=1)
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--opponent-device", type=str, default="gpu")
-    parser.add_argument("--self-play-mode", choices=("current", "frozen"), default="frozen")
+    parser.add_argument("--self-play-mode", choices=("current", "frozen"), default="current")
     parser.add_argument("--load-path", type=str, default="")
     parser.add_argument("--checkpoint-root", type=str, default=DEFAULT_CHECKPOINT_ROOT)
     parser.add_argument("--force-stage", type=str, default="")
