@@ -27,6 +27,7 @@ class SharedObs(ObsBuilder):
         )
         self.car_vel_coef = 1.0 / common_values.CAR_MAX_SPEED
         self.ball_vel_coef = 1.0 / common_values.BALL_MAX_SPEED
+        self.ang_vel_coef = 1.0 / np.pi
         self.boost_coef = 1.0 / 100.0
         self.height_coef = 1.0 / common_values.CEILING_Z
 
@@ -72,9 +73,11 @@ class SharedObs(ObsBuilder):
 
             forward = car_phys.forward.astype(np.float32)
             self_vel = car_phys.linear_velocity * self.car_vel_coef
+            self_ang_vel = car_phys.angular_velocity * self.ang_vel_coef
 
             rel_ball_pos = ball_phys.position - car_phys.position
             rel_ball_vel = ball_phys.linear_velocity - car_phys.linear_velocity
+            ball_ang_vel = ball_phys.angular_velocity * self.ang_vel_coef
 
             to_ball_dir, to_ball_dist = self._dir_dist(rel_ball_pos)
 
@@ -127,10 +130,16 @@ class SharedObs(ObsBuilder):
                     forward,  # 3
                     car_phys.up.astype(np.float32),  # 3
                     self_vel,  # 3
+                    self_ang_vel,  # 3
                     np.array([car.boost_amount * self.boost_coef], np.float32),  # 1
                     np.array([float(car.on_ground)], np.float32),  # 1
+                    np.array([float(car.is_supersonic)], np.float32),  # 1
+                    np.array([float(car.has_jumped)], np.float32),  # 1
+                    np.array([float(car.has_double_jumped)], np.float32),  # 1
+                    np.array([float(car.is_demoed)], np.float32),  # 1
                     rel_ball_pos * self.pos_coef,  # 3
                     rel_ball_vel * self.ball_vel_coef,  # 3
+                    ball_ang_vel,  # 3
                     to_ball_dir,  # 3
                     np.array([to_ball_dist * self.dist_coef], np.float32),  # 1
                     np.array([ball_speed], np.float32),  # 1

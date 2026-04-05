@@ -27,8 +27,10 @@ The training pipeline is intentionally staged:
    The bot learns to convert open-net and forward-ball scenarios into goals.
 4. `DEFEND`
    The bot learns to clear dangerous balls and survive threat-heavy starts.
-5. `SELF_PLAY`
-   The bot trains in 1v1 with mixed resets and much sparser shaping.
+5. `DUEL`
+   The bot learns short-form 1v1 conversions from replay-like attack and defense starts.
+6. `SELF_PLAY`
+   The bot trains in full-match 1v1 after the structured duel stage.
 
 The current design lives primarily in:
 
@@ -205,6 +207,7 @@ The `bin/` entrypoints now prefer the repo-local `./env/bin/python` automaticall
 
 - `watch.py` now discovers the latest checkpoint instead of using a hardcoded run path.
 - Training uses `RepeatAction(LookupTableAction(), repeats=8)` to match common RLGym practice more closely than the old `repeats=2`.
+- The observation contract now includes angular velocity and core car-state flags inspired by the standard RLGym observation builder. This changed `OBS_DIM`, so older checkpoints are intentionally incompatible with current training.
 - Observation compatibility still matters. If you change `rocket_league_bot_src/obs.py`, review `BotBoi_v1/src/bot.py` as well.
 - Snapshot metadata for future old-version self-play is stored under `data/league/snapshots.json`.
 - The RLBot package lives at `BotBoi_v1/src/bot.cfg`. After exporting, load that bot in RLBot GUI.
@@ -216,4 +219,4 @@ The `bin/` entrypoints now prefer the repo-local `./env/bin/python` automaticall
 
 ## Further Reading
 
-Project-specific training notes are in [docs/training.md](/Users/rafe/games/rocket-league-bot/docs/training.md).
+Project-specific training notes are in [docs/training.md](/home/rafe/games/rocket-league-bot/docs/training.md).

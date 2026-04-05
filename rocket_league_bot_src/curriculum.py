@@ -23,7 +23,8 @@ class CurriculumManager:
     DRIBBLE -> learn to keep pressure and advance the ball.
     SHOOT -> learn to convert attacking scenarios.
     DEFEND -> learn to clear/save from dangerous positions.
-    SELF_PLAY -> continue from mixed resets in 1v1.
+    DUEL -> learn short 1v1 conversions from replay-like attack/defense starts.
+    SELF_PLAY -> continue from full-match 1v1.
     """
 
     def __init__(self):
@@ -55,7 +56,14 @@ class CurriculumManager:
         target_difficulty = ema_gate * (0.75 * touch_skill + 0.25 * speed_skill)
         self.difficulty = self._smooth(self.difficulty, float(target_difficulty))
 
-        ready = self.ema_touch_rate >= 0.32 and stats.median_t_first <= 95.0
+        min_iters = self.stage_iterations >= 6
+        ready = (
+            min_iters
+            and self.difficulty >= 0.12
+            and self.ema_touch_rate >= 0.38
+            and stats.touch_rate >= 0.55
+            and stats.median_t_first <= 70.0
+        )
         rescue = self.stage_iterations >= 14 and self.ema_touch_rate >= 0.16
         stalled = self.stage_iterations >= 30 and self.ema_touch_rate < 0.10
         if ready or rescue:
@@ -96,6 +104,18 @@ class CurriculumManager:
         ready = self.ema_touch_rate >= 0.68 and self.ema_goal_rate >= 0.08
         rescue = self.stage_iterations >= 28 and self.ema_touch_rate >= 0.60
         if ready or rescue:
+            self._set_stage(Stage.DUEL)
+
+    def _update_duel(self, stats) -> None:
+        touch_skill = np.clip((stats.touch_rate - 0.65) / 0.25, 0.0, 1.0)
+        goal_skill = np.clip((stats.goal_rate - 0.10) / 0.25, 0.0, 1.0)
+        speed_skill = np.clip((240.0 - stats.median_t_goal) / 160.0, 0.0, 1.0)
+        target_difficulty = 0.45 * touch_skill + 0.35 * goal_skill + 0.20 * speed_skill
+        self.difficulty = self._smooth(self.difficulty, float(target_difficulty), alpha=0.14)
+
+        ready = self.ema_touch_rate >= 0.82 and self.ema_goal_rate >= 0.16
+        rescue = self.stage_iterations >= 30 and self.ema_goal_rate >= 0.10
+        if ready or rescue:
             self._set_stage(Stage.SELF_PLAY)
 
     def _update_self_play(self, stats) -> None:
@@ -117,6 +137,8 @@ class CurriculumManager:
             self._update_shoot(stats)
         elif self.stage == Stage.DEFEND:
             self._update_defend(stats)
+        elif self.stage == Stage.DUEL:
+            self._update_duel(stats)
         else:
             self._update_self_play(stats)
 

@@ -123,18 +123,22 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 `rocket_league_bot_src/curriculum.py`
 
 - Manages stage progression and curriculum state.
+- The curriculum now inserts a short-form `DUEL` stage between `DEFEND` and full-match `SELF_PLAY` so the bot learns 1v1 conversions from replay-like scenario starts before full matches.
 
 `rocket_league_bot_src/rewards.py`
 
 - Central reward shaping logic.
+- Includes the game-relevant shaping terms we currently believe matter most: hard hits, flip touches, saves/clears, boost gain, and boost retention.
 
 `rocket_league_bot_src/obs.py`
 
 - Observation construction. Changes here can break compatibility with saved/exported policies.
+- The current observation set now includes angular velocities and a few core car-state flags inspired by RLGym's default observation builder, not just positions and linear velocities.
 
 `rocket_league_bot_src/mutators.py`
 
 - State reset and match setup behavior.
+- The 1v1 scenario stages now reposition both cars and the ball into more replay-like attack/defense situations instead of only moving the ball while leaving kickoff car positions intact.
 - The final stage uses full-match `1v1` behavior via `rlgym-tools` when available.
 
 `rocket_league_bot_src/reporting.py`
@@ -150,6 +154,7 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 - Checkpoint-vs-checkpoint evaluation ladder logic.
 - Keeps a stable set of older anchor checkpoints for a configurable timestep window, then refreshes them forward.
 - `bin/progress_dashboard` auto-refreshes this ladder for the latest compatible checkpoint unless disabled.
+- Full-match eval now reads the final scoreboard so win rate is not inflated by draw-accounting mistakes on terminal frames.
 
 `rocket_league_bot_src/export.py`
 
@@ -170,6 +175,7 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 - For checkpoint resume/save behavior, inspect `train.py`.
 - For inference/export compatibility issues, inspect `watch.py`, `rocket_league_bot_src/export.py`, and `BotBoi_v1/src/bot.py`.
 - If you change observation features, action dimensions, or policy architecture, call that out explicitly because existing weights may become unusable.
+- Any change to `OBS_DIM` should be treated as a fresh-training boundary unless there is an explicit compatibility migration.
 - If you add scripts, keep them in `bin/` when they are operator-facing helpers.
 - If you change logging or metrics, keep `bin/progress_dashboard`, `bin/manage_training status`, and `data/training_report.html` useful.
 - If you change checkpoint save semantics, keep `--resume-latest` and RLBot auto-export working.
@@ -194,5 +200,7 @@ There is no formal test suite in the repo at the moment. Use lightweight validat
 - `watch.py` auto-discovers the latest checkpoint. If it fails, inspect checkpoint discovery before hardcoding paths.
 - `bin/stats` launches TensorBoard against `runs`. Confirm that path still matches actual logging output before changing monitoring workflows.
 - `train.py` defaults to `--resume-latest`, so be careful not to accidentally continue from an incompatible checkpoint after architecture changes.
+- Training `goal_rate` is not enough to prove the bot is stronger. Use eval against fixed older checkpoints before concluding that self-play is working.
+- `bin/serve_training_report` and `bin/progress_dashboard` can auto-run eval and materially reduce training throughput if they share the same machine.
 - `BotBoi_v1/src/runtime_config.json` is part of the training/runtime contract. If export metadata changes, update the RLBot runtime loader too.
 - There are no other repo-local agent instruction files right now. If more are added later, keep them consistent with this file.

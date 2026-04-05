@@ -52,6 +52,12 @@ class ScenarioResetMutator(StateMutator):
         return next(iter(state.cars.values()))
 
     @staticmethod
+    def _cars(state: GameState) -> tuple[list[Any], list[Any]]:
+        blue = [car for car in state.cars.values() if not car.is_orange]
+        orange = [car for car in state.cars.values() if car.is_orange]
+        return blue, orange
+
+    @staticmethod
     def _clip_ball(pos: np.ndarray) -> np.ndarray:
         pos[0] = np.clip(
             pos[0], -common_values.SIDE_WALL_X + 250.0, common_values.SIDE_WALL_X - 250.0
@@ -67,6 +73,45 @@ class ScenarioResetMutator(StateMutator):
         state.ball.position[:] = position
         state.ball.linear_velocity[:] = velocity
         state.ball.angular_velocity[:] = 0.0
+
+    @staticmethod
+    def _yaw_toward(src: np.ndarray, dst: np.ndarray) -> float:
+        delta = np.asarray(dst, dtype=np.float32) - np.asarray(src, dtype=np.float32)
+        return float(np.arctan2(delta[1], delta[0]))
+
+    @staticmethod
+    def _set_car(
+        car,
+        position: np.ndarray,
+        yaw: float,
+        *,
+        velocity: np.ndarray | None = None,
+        boost: float = 33.0,
+    ) -> None:
+        car.physics.position[:] = np.asarray(position, dtype=np.float32)
+        car.physics.linear_velocity[:] = (
+            np.asarray(velocity, dtype=np.float32) if velocity is not None else 0.0
+        )
+        car.physics.angular_velocity[:] = 0.0
+        car.physics.euler_angles = np.array([0.0, yaw, 0.0], dtype=np.float32)
+        car.on_ground = True
+        car.boost_amount = float(np.clip(boost, 0.0, 100.0))
+        car.supersonic_time = 0.0
+        car.boost_active_time = 0.0
+        car.handbrake = 0.0
+        car.has_jumped = False
+        car.is_holding_jump = False
+        car.is_jumping = False
+        car.jump_time = 0.0
+        car.has_flipped = False
+        car.has_double_jumped = False
+        car.air_time_since_jump = 0.0
+        car.flip_time = 0.0
+        car.flip_torque[:] = 0.0
+        car.is_autoflipping = False
+        car.autoflip_timer = 0.0
+        car.autoflip_direction = 0.0
+        car.ball_touches = 0
 
     def _front_ball_reset(self, state: GameState, cfg, toward_goal_bias: float) -> None:
         car = self._blue_car(state)
@@ -131,6 +176,37 @@ class ScenarioResetMutator(StateMutator):
             dtype=np.float32,
         )
         self._set_ball(state, self._clip_ball(pos), vel)
+        blue, orange = self._cars(state)
+        if blue:
+            blue_pos = np.array(
+                [
+                    pos[0] + np.random.uniform(-350.0, 350.0),
+                    pos[1] - np.random.uniform(900.0, 1500.0),
+                    17.0,
+                ],
+                dtype=np.float32,
+            )
+            self._set_car(
+                blue[0],
+                blue_pos,
+                self._yaw_toward(blue_pos, pos),
+                boost=np.random.uniform(25.0, 60.0),
+            )
+        if orange:
+            orange_pos = np.array(
+                [
+                    pos[0] + np.random.uniform(-350.0, 350.0),
+                    pos[1] + np.random.uniform(900.0, 1500.0),
+                    17.0,
+                ],
+                dtype=np.float32,
+            )
+            self._set_car(
+                orange[0],
+                orange_pos,
+                self._yaw_toward(orange_pos, pos),
+                boost=np.random.uniform(25.0, 60.0),
+            )
 
     def _midfield_dribble_reset(self, state: GameState, cfg) -> None:
         car = self._blue_car(state)
@@ -177,24 +253,89 @@ class ScenarioResetMutator(StateMutator):
             to_goal /= norm
         speed = np.random.uniform(0.35 * cfg.ball_speed_max, cfg.ball_speed_max)
         self._set_ball(state, self._clip_ball(pos), to_goal * speed)
+        blue, orange = self._cars(state)
+        if blue:
+            blue_pos = np.array(
+                [
+                    np.clip(pos[0] + np.random.uniform(-500.0, 500.0), -2500.0, 2500.0),
+                    sign * np.random.uniform(3600.0, 4700.0),
+                    17.0,
+                ],
+                dtype=np.float32,
+            )
+            self._set_car(
+                blue[0],
+                blue_pos,
+                self._yaw_toward(blue_pos, pos),
+                boost=np.random.uniform(20.0, 80.0),
+            )
+        if orange:
+            orange_pos = np.array(
+                [
+                    np.clip(pos[0] + np.random.uniform(-400.0, 400.0), -2800.0, 2800.0),
+                    sign * np.random.uniform(1200.0, 2600.0),
+                    17.0,
+                ],
+                dtype=np.float32,
+            )
+            self._set_car(
+                orange[0],
+                orange_pos,
+                self._yaw_toward(orange_pos, pos + to_goal * 600.0),
+                boost=np.random.uniform(15.0, 55.0),
+            )
 
     def _attack_self_play_reset(self, state: GameState, cfg) -> None:
-        sign = -1.0 if np.random.rand() < 0.5 else 1.0
+        attack_blue = np.random.rand() < 0.5
+        sign = 1.0 if attack_blue else -1.0
         pos = np.array(
             [
                 np.random.uniform(-1800.0, 1800.0),
-                sign * np.random.uniform(500.0, 2600.0),
+                sign * np.random.uniform(900.0, 2600.0),
                 common_values.BALL_RADIUS,
             ],
             dtype=np.float32,
         )
-        target_y = -common_values.BACK_NET_Y if sign < 0.0 else common_values.BACK_NET_Y
+        target_y = common_values.BACK_NET_Y if attack_blue else -common_values.BACK_NET_Y
         to_goal = np.array([0.0, target_y, 0.0], dtype=np.float32) - pos
         norm = float(np.linalg.norm(to_goal))
         if norm > 1e-6:
             to_goal /= norm
         speed = np.random.uniform(0.25 * cfg.ball_speed_max, cfg.ball_speed_max)
         self._set_ball(state, self._clip_ball(pos), to_goal * speed)
+        blue, orange = self._cars(state)
+        attacker_back = -1.0 if attack_blue else 1.0
+        defender_forward = 1.0 if attack_blue else -1.0
+        if blue:
+            blue_pos = np.array(
+                [
+                    np.clip(pos[0] + np.random.uniform(-500.0, 500.0), -3000.0, 3000.0),
+                    pos[1] + (attacker_back if attack_blue else defender_forward) * np.random.uniform(700.0, 1500.0),
+                    17.0,
+                ],
+                dtype=np.float32,
+            )
+            self._set_car(
+                blue[0],
+                blue_pos,
+                self._yaw_toward(blue_pos, pos if attack_blue else np.array([0.0, -common_values.BACK_NET_Y, 0.0], dtype=np.float32)),
+                boost=np.random.uniform(20.0, 75.0),
+            )
+        if orange:
+            orange_pos = np.array(
+                [
+                    np.clip(pos[0] + np.random.uniform(-500.0, 500.0), -3000.0, 3000.0),
+                    pos[1] + (defender_forward if attack_blue else attacker_back) * np.random.uniform(700.0, 1500.0),
+                    17.0,
+                ],
+                dtype=np.float32,
+            )
+            self._set_car(
+                orange[0],
+                orange_pos,
+                self._yaw_toward(orange_pos, np.array([0.0, common_values.BACK_NET_Y, 0.0], dtype=np.float32) if attack_blue else pos),
+                boost=np.random.uniform(20.0, 75.0),
+            )
 
     @override
     def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
@@ -227,6 +368,13 @@ class ScenarioResetMutator(StateMutator):
                 self._neutral_self_play_reset(state, cfg)
             else:
                 self._defense_reset(state, cfg)
+            return
+
+        if cfg.stage == Stage.DUEL:
+            if roll < cfg.kickoff_reset_prob + cfg.neutral_reset_prob:
+                self._neutral_self_play_reset(state, cfg)
+            else:
+                self._attack_self_play_reset(state, cfg)
             return
 
         if roll < cfg.kickoff_reset_prob + cfg.neutral_reset_prob:

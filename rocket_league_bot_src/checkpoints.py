@@ -12,7 +12,8 @@ _STAGE_ORDER = {
     Stage.DRIBBLE.value: 1,
     Stage.SHOOT.value: 2,
     Stage.DEFEND.value: 3,
-    Stage.SELF_PLAY.value: 4,
+    Stage.DUEL.value: 4,
+    Stage.SELF_PLAY.value: 5,
 }
 
 

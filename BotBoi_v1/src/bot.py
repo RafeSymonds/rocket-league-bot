@@ -24,11 +24,12 @@ BALL_MAX_SPEED = 6000.0
 POS_COEF = np.array([1.0 / SIDE_WALL_X, 1.0 / BACK_NET_Y, 1.0 / CEILING_Z], dtype=np.float32)
 CAR_VEL_COEF = 1.0 / CAR_MAX_SPEED
 BALL_VEL_COEF = 1.0 / BALL_MAX_SPEED
+ANG_VEL_COEF = 1.0 / math.pi
 BOOST_COEF = 1.0 / 100.0
 HEIGHT_COEF = 1.0 / CEILING_Z
 DIST_COEF = 1.0 / float(np.linalg.norm([SIDE_WALL_X, BACK_NET_Y, CEILING_Z]))
 
-OBS_DIM = 44
+OBS_DIM = 54
 DEFAULT_HIDDEN_SIZES = [512, 512, 256]
 
 
@@ -157,6 +158,10 @@ class BotBoi(BaseAgent):
 
         car_pos = np.array([me.physics.location.x, me.physics.location.y, me.physics.location.z], dtype=np.float32)
         car_vel = np.array([me.physics.velocity.x, me.physics.velocity.y, me.physics.velocity.z], dtype=np.float32)
+        car_ang_vel = np.array(
+            [me.physics.angular_velocity.x, me.physics.angular_velocity.y, me.physics.angular_velocity.z],
+            dtype=np.float32,
+        )
         car_fwd = forward_vector(float(me.physics.rotation.pitch), float(me.physics.rotation.yaw))
         car_up = up_vector(
             float(me.physics.rotation.pitch),
@@ -166,14 +171,20 @@ class BotBoi(BaseAgent):
 
         ball_pos = np.array([ball.physics.location.x, ball.physics.location.y, ball.physics.location.z], dtype=np.float32)
         ball_vel = np.array([ball.physics.velocity.x, ball.physics.velocity.y, ball.physics.velocity.z], dtype=np.float32)
+        ball_ang_vel = np.array(
+            [ball.physics.angular_velocity.x, ball.physics.angular_velocity.y, ball.physics.angular_velocity.z],
+            dtype=np.float32,
+        )
 
         if self.team == 1:
             car_pos = invert_xy(car_pos)
             car_vel = invert_xy(car_vel)
+            car_ang_vel = invert_xy(car_ang_vel)
             car_fwd = invert_xy(car_fwd)
             car_up = invert_xy(car_up)
             ball_pos = invert_xy(ball_pos)
             ball_vel = invert_xy(ball_vel)
+            ball_ang_vel = invert_xy(ball_ang_vel)
             my_goal = np.array([0.0, BACK_NET_Y, 0.0], dtype=np.float32)
             enemy_goal = np.array([0.0, -BACK_NET_Y, 0.0], dtype=np.float32)
         else:
@@ -236,10 +247,16 @@ class BotBoi(BaseAgent):
                 car_fwd,
                 car_up,
                 car_vel * CAR_VEL_COEF,
+                car_ang_vel * ANG_VEL_COEF,
                 np.array([float(me.boost) * BOOST_COEF], dtype=np.float32),
                 np.array([1.0 if me.has_wheel_contact else 0.0], dtype=np.float32),
+                np.array([1.0 if me.is_super_sonic else 0.0], dtype=np.float32),
+                np.array([1.0 if me.jumped else 0.0], dtype=np.float32),
+                np.array([1.0 if me.double_jumped else 0.0], dtype=np.float32),
+                np.array([1.0 if me.is_demolished else 0.0], dtype=np.float32),
                 rel_ball_pos * POS_COEF,
                 rel_ball_vel * BALL_VEL_COEF,
+                ball_ang_vel * ANG_VEL_COEF,
                 to_ball_dir,
                 np.array([to_ball_dist * DIST_COEF], dtype=np.float32),
                 np.array([ball_speed], dtype=np.float32),

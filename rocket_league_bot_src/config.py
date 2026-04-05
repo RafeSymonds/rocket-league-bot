@@ -5,7 +5,7 @@ from enum import Enum
 
 
 ACTION_REPEAT = 8
-OBS_DIM = 44
+OBS_DIM = 54
 POLICY_LAYER_SIZES = (512, 512, 256)
 CRITIC_LAYER_SIZES = (512, 512, 256)
 DEFAULT_CHECKPOINT_ROOT = "data/checkpoints"
@@ -16,6 +16,7 @@ class Stage(Enum):
     DRIBBLE = "DRIBBLE"
     SHOOT = "SHOOT"
     DEFEND = "DEFEND"
+    DUEL = "DUEL"
     SELF_PLAY = "SELF_PLAY"
 
 
@@ -28,6 +29,11 @@ class RewardWeights:
     in_air: float = 0.0
     ball_speed_to_goal: float = 0.0
     ball_distance_to_goal: float = 0.0
+    hard_hit: float = 0.0
+    flip_touch: float = 0.0
+    save_clear: float = 0.0
+    boost_gain: float = 0.0
+    boost_keep: float = 0.0
     step_penalty: float = 0.0
 
 
@@ -73,6 +79,7 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
                 touch=4.5,
                 speed_to_ball=0.55,
                 face_ball=0.06,
+                hard_hit=0.08,
                 in_air=0.01,
                 step_penalty=0.75,
             ),
@@ -103,6 +110,10 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
                 in_air=0.015,
                 ball_speed_to_goal=0.8,
                 ball_distance_to_goal=0.45,
+                hard_hit=0.18,
+                flip_touch=0.06,
+                boost_gain=0.03,
+                boost_keep=0.003,
                 step_penalty=1.0,
             ),
             touch_min_dist=_lerp(250.0, 900.0, d),
@@ -132,6 +143,10 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
                 in_air=0.01,
                 ball_speed_to_goal=1.4,
                 ball_distance_to_goal=0.3,
+                hard_hit=0.30,
+                flip_touch=0.14,
+                boost_gain=0.04,
+                boost_keep=0.004,
                 step_penalty=1.0,
             ),
             touch_min_dist=_lerp(450.0, 1000.0, d),
@@ -161,6 +176,11 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
                 in_air=0.01,
                 ball_speed_to_goal=0.9,
                 ball_distance_to_goal=0.35,
+                hard_hit=0.22,
+                flip_touch=0.10,
+                save_clear=0.70,
+                boost_gain=0.05,
+                boost_keep=0.006,
                 step_penalty=1.0,
             ),
             touch_min_dist=_lerp(500.0, 1200.0, d),
@@ -170,6 +190,40 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
             kickoff_reset_prob=_lerp(0.15, 0.05, d),
             neutral_reset_prob=_lerp(0.20, 0.15, d),
             attack_reset_prob=_lerp(0.65, 0.80, d),
+        )
+
+    if stage == Stage.DUEL:
+        return StageConfig(
+            stage=stage,
+            blue_players=1,
+            orange_players=1,
+            full_match=False,
+            end_on_touch=False,
+            end_on_goal=True,
+            no_touch_timeout_s=12,
+            timeout_s=24,
+            reward_weights=RewardWeights(
+                goal=14.0,
+                touch=0.16,
+                speed_to_ball=0.03,
+                face_ball=0.01,
+                in_air=0.003,
+                ball_speed_to_goal=0.55,
+                ball_distance_to_goal=0.12,
+                hard_hit=0.30,
+                flip_touch=0.15,
+                save_clear=0.45,
+                boost_gain=0.05,
+                boost_keep=0.005,
+                step_penalty=1.05,
+            ),
+            touch_min_dist=_lerp(600.0, 1400.0, d),
+            touch_max_dist=_lerp(1800.0, 3400.0, d),
+            touch_max_angle_deg=_lerp(18.0, 70.0, d),
+            ball_speed_max=_lerp(500.0, 1900.0, d),
+            kickoff_reset_prob=_lerp(0.12, 0.05, d),
+            neutral_reset_prob=_lerp(0.35, 0.25, d),
+            attack_reset_prob=_lerp(0.53, 0.70, d),
         )
 
     return StageConfig(
@@ -182,13 +236,18 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
         no_touch_timeout_s=12,
         timeout_s=35,
         reward_weights=RewardWeights(
-            goal=14.0,
+            goal=16.0,
             touch=0.08,
             speed_to_ball=0.015,
             face_ball=0.005,
             in_air=0.002,
             ball_speed_to_goal=0.45,
             ball_distance_to_goal=0.08,
+            hard_hit=0.25,
+            flip_touch=0.12,
+            save_clear=0.55,
+            boost_gain=0.05,
+            boost_keep=0.006,
             step_penalty=1.15,
         ),
         touch_min_dist=_lerp(700.0, 1400.0, d),
