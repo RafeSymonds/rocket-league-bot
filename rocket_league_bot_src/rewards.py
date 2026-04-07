@@ -146,12 +146,83 @@ class FaceBallReward(RewardFunction):
         return rewards
 
 
+class ForwardDriveReward(RewardFunction):
+    def reset(self, agents, initial_state, shared_info):
+        pass
+
+    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+        rewards: Dict[AgentID, float] = {}
+        for agent in agents:
+            car = state.cars[agent]
+            car_phys = car.inverted_physics if car.is_orange else car.physics
+            ball_phys = state.inverted_ball if car.is_orange else state.ball
+            to_ball = ball_phys.position - car_phys.position
+            norm = float(np.linalg.norm(to_ball))
+            if norm < 1e-6:
+                rewards[agent] = 0.0
+                continue
+            facing_ball = max(0.0, float(np.dot(car_phys.forward, to_ball / norm)))
+            forward_speed = float(np.dot(car_phys.linear_velocity, car_phys.forward))
+            rewards[agent] = float(
+                np.clip((forward_speed / common_values.CAR_MAX_SPEED) * facing_ball, -1.0, 1.0)
+            )
+        return rewards
+
+
 class InAirReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         pass
 
     def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
         return {agent: 0.0 if state.cars[agent].on_ground else 1.0 for agent in agents}
+
+
+class AerialControlReward(RewardFunction):
+    def reset(self, agents, initial_state, shared_info):
+        pass
+
+    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+        rewards: Dict[AgentID, float] = {}
+        for agent in agents:
+            car = state.cars[agent]
+            if car.on_ground:
+                rewards[agent] = 0.0
+                continue
+
+            car_phys = car.inverted_physics if car.is_orange else car.physics
+            ball_phys = state.inverted_ball if car.is_orange else state.ball
+            to_ball = ball_phys.position - car_phys.position
+            norm = float(np.linalg.norm(to_ball))
+            if norm < 1e-6:
+                rewards[agent] = 0.0
+                continue
+
+            to_ball_dir = to_ball / norm
+            forward_align = max(0.0, float(np.dot(car_phys.forward, to_ball_dir)))
+            up_align = max(0.0, float(np.dot(car_phys.up, to_ball_dir)))
+            closing_speed = max(
+                0.0,
+                float(np.dot(car_phys.linear_velocity, to_ball_dir)) / common_values.CAR_MAX_SPEED,
+            )
+            ball_height = float(
+                np.clip(
+                    (ball_phys.position[2] - 180.0) / (common_values.CEILING_Z - 180.0),
+                    0.0,
+                    1.0,
+                )
+            )
+            car_height = float(
+                np.clip(
+                    (car_phys.position[2] - 80.0) / (common_values.CEILING_Z - 80.0),
+                    0.0,
+                    1.0,
+                )
+            )
+            rewards[agent] = float(
+                np.clip(ball_height * (0.55 * forward_align + 0.25 * up_align + 0.20 * closing_speed), 0.0, 1.0)
+                * max(0.35, car_height)
+            )
+        return rewards
 
 
 class StepPenalty(RewardFunction):
@@ -327,7 +398,9 @@ class CurriculumReward(RewardFunction):
         self.touch = TouchReward()
         self.speed_to_ball = SpeedTowardBallReward()
         self.face_ball = FaceBallReward()
+        self.forward_drive = ForwardDriveReward()
         self.in_air = InAirReward()
+        self.aerial_control = AerialControlReward()
         self.ball_speed_to_goal = BallSpeedTowardGoalReward()
         self.ball_distance_to_goal = BallDistanceToGoalDeltaReward()
         self.hard_hit = HardHitReward()
@@ -342,7 +415,9 @@ class CurriculumReward(RewardFunction):
             self.touch,
             self.speed_to_ball,
             self.face_ball,
+            self.forward_drive,
             self.in_air,
+            self.aerial_control,
             self.ball_speed_to_goal,
             self.ball_distance_to_goal,
             self.hard_hit,
@@ -379,7 +454,9 @@ class CurriculumReward(RewardFunction):
         add(self.touch, weights.touch)
         add(self.speed_to_ball, weights.speed_to_ball)
         add(self.face_ball, weights.face_ball)
+        add(self.forward_drive, weights.forward_drive)
         add(self.in_air, weights.in_air)
+        add(self.aerial_control, weights.aerial_control)
         add(self.ball_speed_to_goal, weights.ball_speed_to_goal)
         add(self.ball_distance_to_goal, weights.ball_distance_to_goal)
         add(self.hard_hit, weights.hard_hit)

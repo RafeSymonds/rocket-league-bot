@@ -28,7 +28,9 @@ class RewardWeights:
     touch: float = 0.0
     speed_to_ball: float = 0.0
     face_ball: float = 0.0
+    forward_drive: float = 0.0
     in_air: float = 0.0
+    aerial_control: float = 0.0
     ball_speed_to_goal: float = 0.0
     ball_distance_to_goal: float = 0.0
     hard_hit: float = 0.0
@@ -82,6 +84,7 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
                 touch=4.5,
                 speed_to_ball=0.55,
                 face_ball=0.06,
+                forward_drive=0.10,
                 hard_hit=0.08,
                 in_air=0.01,
                 step_penalty=0.75,
@@ -110,7 +113,9 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
                 touch=0.8,
                 speed_to_ball=0.10,
                 face_ball=0.04,
+                forward_drive=0.10,
                 in_air=0.015,
+                aerial_control=0.02,
                 ball_speed_to_goal=0.8,
                 ball_distance_to_goal=0.45,
                 hard_hit=0.18,
@@ -143,7 +148,9 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
                 touch=0.5,
                 speed_to_ball=0.06,
                 face_ball=0.03,
+                forward_drive=0.08,
                 in_air=0.01,
+                aerial_control=0.05,
                 ball_speed_to_goal=1.4,
                 ball_distance_to_goal=0.3,
                 hard_hit=0.30,
@@ -176,7 +183,9 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
                 touch=0.30,
                 speed_to_ball=0.08,
                 face_ball=0.02,
+                forward_drive=0.06,
                 in_air=0.008,
+                aerial_control=0.06,
                 ball_speed_to_goal=0.90,
                 ball_distance_to_goal=0.20,
                 hard_hit=0.32,
@@ -210,7 +219,9 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
                 touch=0.52,
                 speed_to_ball=0.16,
                 face_ball=0.04,
+                forward_drive=0.04,
                 in_air=0.01,
+                aerial_control=0.03,
                 ball_speed_to_goal=0.18,
                 ball_distance_to_goal=0.03,
                 hard_hit=0.28,
@@ -244,7 +255,9 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
                 touch=0.34,
                 speed_to_ball=0.12,
                 face_ball=0.025,
+                forward_drive=0.05,
                 in_air=0.01,
+                aerial_control=0.05,
                 ball_speed_to_goal=0.40,
                 ball_distance_to_goal=0.08,
                 hard_hit=0.30,
@@ -279,7 +292,9 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
                 touch=0.0,
                 speed_to_ball=0.01,
                 face_ball=0.0,
+                forward_drive=0.04,
                 in_air=0.0,
+                aerial_control=0.03,
                 ball_speed_to_goal=0.32,
                 ball_distance_to_goal=0.04,
                 hard_hit=0.10,
@@ -313,7 +328,9 @@ def build_stage_config(stage: Stage, difficulty: float) -> StageConfig:
             touch=0.0,
             speed_to_ball=0.0,
             face_ball=0.0,
+            forward_drive=0.03,
             in_air=0.0,
+            aerial_control=0.02,
             ball_speed_to_goal=0.14,
             ball_distance_to_goal=0.03,
             hard_hit=0.05,

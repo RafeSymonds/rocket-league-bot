@@ -75,6 +75,25 @@ class ScenarioResetMutator(StateMutator):
         state.ball.angular_velocity[:] = 0.0
 
     @staticmethod
+    def _maybe_loft_ball(
+        position: np.ndarray,
+        velocity: np.ndarray,
+        *,
+        chance: float,
+        min_height: float,
+        max_height: float,
+        min_up_speed: float,
+        max_up_speed: float,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        pos = np.asarray(position, dtype=np.float32).copy()
+        vel = np.asarray(velocity, dtype=np.float32).copy()
+        if np.random.rand() >= chance:
+            return pos, vel
+        pos[2] = np.random.uniform(min_height, max_height)
+        vel[2] = np.random.uniform(min_up_speed, max_up_speed)
+        return pos, vel
+
+    @staticmethod
     def _yaw_toward(src: np.ndarray, dst: np.ndarray) -> float:
         delta = np.asarray(dst, dtype=np.float32) - np.asarray(src, dtype=np.float32)
         return float(np.arctan2(delta[1], delta[0]))
@@ -263,11 +282,17 @@ class ScenarioResetMutator(StateMutator):
             velocity=to_goal * np.random.uniform(250.0, 550.0),
             boost=np.random.uniform(25.0, 65.0),
         )
-        self._set_ball(
-            state,
-            self._clip_ball(ball_pos),
-            to_goal * np.random.uniform(0.20 * cfg.ball_speed_max, 0.55 * cfg.ball_speed_max),
+        ball_vel = to_goal * np.random.uniform(0.20 * cfg.ball_speed_max, 0.55 * cfg.ball_speed_max)
+        ball_pos, ball_vel = self._maybe_loft_ball(
+            ball_pos,
+            ball_vel,
+            chance=0.25,
+            min_height=220.0,
+            max_height=560.0,
+            min_up_speed=120.0,
+            max_up_speed=520.0,
         )
+        self._set_ball(state, self._clip_ball(ball_pos), ball_vel)
 
     def _neutral_self_play_reset(self, state: GameState, cfg) -> None:
         pos = np.array(
@@ -364,7 +389,17 @@ class ScenarioResetMutator(StateMutator):
         if norm > 1e-6:
             to_goal /= norm
         speed = np.random.uniform(0.80 * cfg.ball_speed_max, cfg.ball_speed_max)
-        self._set_ball(state, self._clip_ball(pos), to_goal * speed)
+        ball_vel = to_goal * speed
+        pos, ball_vel = self._maybe_loft_ball(
+            pos,
+            ball_vel,
+            chance=0.18,
+            min_height=180.0,
+            max_height=420.0,
+            min_up_speed=80.0,
+            max_up_speed=360.0,
+        )
+        self._set_ball(state, self._clip_ball(pos), ball_vel)
         blue, orange = self._cars(state)
         defenders = blue if defend_blue_side else orange
         attackers = orange if defend_blue_side else blue
@@ -419,7 +454,17 @@ class ScenarioResetMutator(StateMutator):
         if norm > 1e-6:
             to_goal /= norm
         speed = np.random.uniform(0.25 * cfg.ball_speed_max, cfg.ball_speed_max)
-        self._set_ball(state, self._clip_ball(pos), to_goal * speed)
+        ball_vel = to_goal * speed
+        pos, ball_vel = self._maybe_loft_ball(
+            pos,
+            ball_vel,
+            chance=0.28,
+            min_height=220.0,
+            max_height=620.0,
+            min_up_speed=120.0,
+            max_up_speed=520.0,
+        )
+        self._set_ball(state, self._clip_ball(pos), ball_vel)
         blue, orange = self._cars(state)
         attacker_back = -1.0 if attack_blue else 1.0
         defender_forward = 1.0 if attack_blue else -1.0
@@ -550,11 +595,17 @@ class ScenarioResetMutator(StateMutator):
         norm = float(np.linalg.norm(to_goal))
         if norm > 1e-6:
             to_goal /= norm
-        self._set_ball(
-            state,
-            self._clip_ball(ball_pos),
-            to_goal * np.random.uniform(0.18 * cfg.ball_speed_max, 0.45 * cfg.ball_speed_max),
+        ball_vel = to_goal * np.random.uniform(0.18 * cfg.ball_speed_max, 0.45 * cfg.ball_speed_max)
+        ball_pos, ball_vel = self._maybe_loft_ball(
+            ball_pos,
+            ball_vel,
+            chance=0.30,
+            min_height=260.0,
+            max_height=700.0,
+            min_up_speed=150.0,
+            max_up_speed=600.0,
         )
+        self._set_ball(state, self._clip_ball(ball_pos), ball_vel)
         blue, orange = self._cars(state)
         attacker = blue[0] if attack_blue and blue else orange[0] if orange else None
         defender = orange[0] if attack_blue and orange else blue[0] if blue else None

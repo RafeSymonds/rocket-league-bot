@@ -131,6 +131,7 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 
 - Central reward shaping logic.
 - Includes the game-relevant shaping terms we currently believe matter most: hard hits, flip touches, saves/clears, boost gain, and boost retention.
+- Includes a forward-drive shaping term so "face the ball while reversing" is less attractive, and an aerial-control shaping term for airborne approaches toward lofted balls.
 - Later competitive stages also use a light attack-pressure term so faster threatening shots get some learning signal before a goal is actually scored.
 - `DUEL` and `SELF_PLAY` treat shaping competitively, subtracting opponent-team shaping instead of rewarding both teams independently.
 - `SELF_PLAY` shaping should remain sparse and competitive; avoid dense symmetric shaping that can reward both teams for scoreless stalemates.
@@ -144,6 +145,7 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 
 - State reset and match setup behavior.
 - The 1v1 scenario stages now reposition both cars and the ball into more replay-like attack/defense situations instead of only moving the ball while leaving kickoff car positions intact.
+- Later attack-oriented stages now occasionally loft the ball so the policy sees jump-and-boost approach situations during normal curriculum training, not only ground dribbles.
 - `DEFEND` is intentionally threat-heavy and should bias toward genuine save/clear situations rather than mostly neutral 1v1 starts.
 - The final stage uses full-match `1v1` behavior via `rlgym-tools` when available.
 
