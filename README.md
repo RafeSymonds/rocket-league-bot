@@ -199,6 +199,12 @@ Export the latest checkpoint into the RLBot package:
 bin/export_rlbot
 ```
 
+Refresh the latest RLBot package and sync it into your RLBot botpack folder when one is detected:
+
+```bash
+bin/use_latest_rlbot
+```
+
 Validate the RLBot package before opening RLBot:
 
 ```bash
@@ -213,8 +219,12 @@ The `bin/` entrypoints now prefer the repo-local `./env/bin/python` automaticall
 - Training uses `RepeatAction(LookupTableAction(), repeats=8)` to match common RLGym practice more closely than the old `repeats=2`.
 - The observation contract now includes angular velocity and core car-state flags inspired by the standard RLGym observation builder. This changed `OBS_DIM`, so older checkpoints are intentionally incompatible with current training.
 - Observation compatibility still matters. If you change `rocket_league_bot_src/obs.py`, review `BotBoi_v1/src/bot.py` as well.
+- Later competitive stages now include a small dense attack-pressure shaping term so the bot gets credit for creating faster, more dangerous shots before sparse goal events arrive. Goals still dominate the reward mix.
+- `DUEL` and `SELF_PLAY` now use competitive shaping, so non-goal reward is scored relative to the opponent team instead of being added symmetrically for both sides.
 - Snapshot metadata for future old-version self-play is stored under `data/league/snapshots.json`.
-- The RLBot package lives at `BotBoi_v1/src/bot.cfg`. After exporting, load that bot in RLBot GUI.
+- `bin/use_latest_rlbot` is the one-command way to refresh the package for in-game use. It exports the newest compatible checkpoint into `BotBoi_v1/src` and, when it finds an RLBot botpack directory, copies the `BotBoi_v1` package there too.
+- If RLBot is installed in a non-standard location, set `RLBOT_BOTPACK_DIR` or pass `--botpack-dir` to `bin/use_latest_rlbot`.
+- The RLBot package lives at `BotBoi_v1/src/bot.cfg`. If auto-install is skipped, load that bot config directly in RLBot GUI.
 - `BotBoi_v1/src/runtime_config.json` is now the contract between training and the in-game bot package.
 - During unattended training, PID 0 now auto-exports the newest checkpoint into the RLBot package when it detects a fresh save.
 - Background run state is stored in `data/training_run.json` and logs go to `data/logs/train_latest.log`.

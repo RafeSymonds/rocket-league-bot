@@ -102,6 +102,7 @@ Export and validate the RLBot package:
 
 ```bash
 bin/export_rlbot
+bin/use_latest_rlbot
 bin/validate_rlbot_package
 ```
 
@@ -130,6 +131,8 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 
 - Central reward shaping logic.
 - Includes the game-relevant shaping terms we currently believe matter most: hard hits, flip touches, saves/clears, boost gain, and boost retention.
+- Later competitive stages also use a light attack-pressure term so faster threatening shots get some learning signal before a goal is actually scored.
+- `DUEL` and `SELF_PLAY` treat shaping competitively, subtracting opponent-team shaping instead of rewarding both teams independently.
 - `SELF_PLAY` shaping should remain sparse and competitive; avoid dense symmetric shaping that can reward both teams for scoreless stalemates.
 
 `rocket_league_bot_src/obs.py`
@@ -162,6 +165,7 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 `rocket_league_bot_src/export.py`
 
 - Shared checkpoint-to-RLBot export logic.
+- Also contains RLBot botpack detection and package install helpers used by `bin/use_latest_rlbot`.
 
 `rocket_league_bot_src/league.py`
 
@@ -170,6 +174,7 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 `BotBoi_v1/src/bot.py`
 
 - Standalone inference/runtime bot for RLBot.
+- Generates the discrete action lookup table locally so RLBot runtime does not need `rlgym` installed just to load an exported policy.
 - Reads `runtime_config.json` so training-side action repeat and network settings stay aligned with the packaged bot.
 
 ## Change Guidance
@@ -196,6 +201,7 @@ There is no formal test suite in the repo at the moment. Use lightweight validat
   - `python3 bin/progress_dashboard`
   - `python3 bin/render_training_report`
   - `python3 bin/export_rlbot`
+  - `python3 bin/use_latest_rlbot --no-install`
   - `python3 bin/validate_rlbot_package`
 
 ## Safety Notes
@@ -206,4 +212,5 @@ There is no formal test suite in the repo at the moment. Use lightweight validat
 - Training `goal_rate` is not enough to prove the bot is stronger. Use eval against fixed older checkpoints before concluding that self-play is working.
 - `bin/serve_training_report` and `bin/progress_dashboard` can auto-run eval and materially reduce training throughput if they share the same machine.
 - `BotBoi_v1/src/runtime_config.json` is part of the training/runtime contract. If export metadata changes, update the RLBot runtime loader too.
+- `bin/use_latest_rlbot` is the preferred operator command for pushing the newest compatible checkpoint into RLBot. Keep `RLBOT_BOTPACK_DIR` and common Windows RLBot locations working when changing that flow.
 - There are no other repo-local agent instruction files right now. If more are added later, keep them consistent with this file.

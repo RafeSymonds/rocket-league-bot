@@ -1,0 +1,89 @@
+#!/bin/sh
+""":"
+ROOT_DIR=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+if [ -x "$ROOT_DIR/env/bin/python" ]; then
+  exec "$ROOT_DIR/env/bin/python" "$0" "$@"
+fi
+exec python3 "$0" "$@"
+":"""
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from rocket_league_bot_src.checkpoints import find_latest_compatible_checkpoint
+from rocket_league_bot_src.export import (
+    detect_rlbot_botpack_dir,
+    export_checkpoint_to_rlbot_package,
+    install_rlbot_package,
+    summarize_rlbot_package,
+)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Export the newest compatible checkpoint into the RLBot package and, "
+            "when possible, sync it into an RLBot botpack directory."
+        )
+    )
+    parser.add_argument("--checkpoint-root", default="data/checkpoints")
+    parser.add_argument("--checkpoint-dir", default="")
+    parser.add_argument("--bot-dir", default="BotBoi_v1/src")
+    parser.add_argument(
+        "--botpack-dir",
+        default="",
+        help="Optional RLBot botpack directory. If omitted, the script tries common RLBot locations.",
+    )
+    parser.add_argument(
+        "--no-install",
+        action="store_true",
+        help="Only refresh the repo-local RLBot package and skip botpack sync.",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    checkpoint_dir = args.checkpoint_dir or find_latest_compatible_checkpoint(args.checkpoint_root)
+    if not checkpoint_dir:
+        raise SystemExit("No compatible checkpoint found to export")
+
+    bot_dir = Path(args.bot_dir)
+    export_checkpoint_to_rlbot_package(checkpoint_dir, str(bot_dir))
+    summary = summarize_rlbot_package(str(bot_dir))
+    if summary["missing"]:
+        raise SystemExit(f"RLBot package is incomplete after export: {summary['missing']}")
+
+    runtime = summary["runtime"]
+    print("RLBot package refreshed.")
+    print(f"source={checkpoint_dir}")
+    print(f"local_bot_cfg={bot_dir / 'bot.cfg'}")
+    print(f"timesteps={runtime.get('cumulative_timesteps', 0)}")
+    print(f"obs_dim={runtime.get('obs_dim', '')}")
+    print(f"action_repeat={runtime.get('action_repeat', '')}")
+
+    if args.no_install:
+        print("install=skipped")
+        return 0
+
+    botpack_dir = Path(args.botpack_dir).expanduser() if args.botpack_dir else detect_rlbot_botpack_dir()
+    if botpack_dir is None:
+        print("install=skipped")
+        print("reason=No RLBot botpack directory was detected. Set RLBOT_BOTPACK_DIR or pass --botpack-dir.")
+        return 0
+
+    package_root = bot_dir.parent
+    install_path = install_rlbot_package(str(package_root), str(botpack_dir))
+    print(f"installed_to={install_path}")
+    print(f"installed_bot_cfg={install_path / 'src' / 'bot.cfg'}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

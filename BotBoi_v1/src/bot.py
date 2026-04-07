@@ -12,8 +12,6 @@ import torch.nn as nn
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
-from rlgym.rocket_league.action_parsers import LookupTableAction
-
 
 SIDE_WALL_X = 4096.0
 BACK_NET_Y = 5120.0
@@ -31,6 +29,32 @@ DIST_COEF = 1.0 / float(np.linalg.norm([SIDE_WALL_X, BACK_NET_Y, CEILING_Z]))
 
 OBS_DIM = 54
 DEFAULT_HIDDEN_SIZES = [512, 512, 256]
+
+
+def make_lookup_table() -> np.ndarray:
+    actions: list[list[float]] = []
+    # Match rlgym's 90-action discrete lookup table so exported policies stay compatible.
+    for throttle in (-1, 0, 1):
+        for steer in (-1, 0, 1):
+            for boost in (0, 1):
+                for handbrake in (0, 1):
+                    if boost == 1 and throttle != 1:
+                        continue
+                    actions.append([throttle or boost, steer, 0, steer, 0, 0, boost, handbrake])
+
+    for pitch in (-1, 0, 1):
+        for yaw in (-1, 0, 1):
+            for roll in (-1, 0, 1):
+                for jump in (0, 1):
+                    for boost in (0, 1):
+                        if jump == 1 and yaw != 0:
+                            continue
+                        if pitch == roll == jump == 0:
+                            continue
+                        handbrake = jump == 1 and (pitch != 0 or yaw != 0 or roll != 0)
+                        actions.append([boost, yaw, pitch, yaw, roll, jump, boost, handbrake])
+
+    return np.asarray(actions, dtype=np.float32)
 
 
 class MLPPolicy(nn.Module):
@@ -99,8 +123,7 @@ class BotBoi(BaseAgent):
     def initialize_agent(self):
         bot_dir = os.path.dirname(__file__)
 
-        self.action_parser = LookupTableAction()
-        self.action_table = self.action_parser._lookup_table
+        self.action_table = make_lookup_table()
 
         book_path = os.path.join(bot_dir, "BOOK_KEEPING_VARS.json")
         book: dict[str, Any] = {}

@@ -251,6 +251,46 @@ class SaveClearReward(TouchStatefulReward):
         return rewards
 
 
+class AttackPressureReward(RewardFunction):
+    def reset(self, agents, initial_state, shared_info):
+        pass
+
+    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+        rewards: Dict[AgentID, float] = {}
+        for agent in agents:
+            car = state.cars[agent]
+            ball = state.inverted_ball if car.is_orange else state.ball
+
+            enemy_goal = np.array([0.0, common_values.BACK_NET_Y, 0.0], dtype=np.float32)
+            own_goal = np.array([0.0, -common_values.BACK_NET_Y, 0.0], dtype=np.float32)
+
+            to_enemy_goal = enemy_goal - ball.position
+            enemy_dist = float(np.linalg.norm(to_enemy_goal))
+            if enemy_dist > 1e-6:
+                toward_enemy_goal = float(np.dot(ball.linear_velocity, to_enemy_goal / enemy_dist))
+            else:
+                toward_enemy_goal = 0.0
+
+            to_own_goal = own_goal - ball.position
+            own_dist = float(np.linalg.norm(to_own_goal))
+            if own_dist > 1e-6:
+                toward_own_goal = float(np.dot(ball.linear_velocity, to_own_goal / own_dist))
+            else:
+                toward_own_goal = 0.0
+
+            attack_half = float(np.clip((ball.position[1] - 200.0) / 3200.0, 0.0, 1.0))
+            own_half = float(np.clip((-ball.position[1] - 200.0) / 3200.0, 0.0, 1.0))
+            goal_proximity = float(
+                np.clip((common_values.BACK_NET_Y - enemy_dist) / common_values.BACK_NET_Y, 0.0, 1.0)
+            )
+            shot_speed = float(np.clip(toward_enemy_goal / 2500.0, 0.0, 1.0))
+            own_goal_danger = own_half * float(np.clip(toward_own_goal / 2500.0, 0.0, 1.0))
+
+            pressure = attack_half * (0.55 + 0.45 * goal_proximity) * shot_speed
+            rewards[agent] = float(np.clip(pressure - (0.65 * own_goal_danger), -1.0, 1.0))
+        return rewards
+
+
 class BoostGainReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         self.prev_boost = {
@@ -293,6 +333,7 @@ class CurriculumReward(RewardFunction):
         self.hard_hit = HardHitReward()
         self.flip_touch = FlipTouchReward()
         self.save_clear = SaveClearReward()
+        self.attack_pressure = AttackPressureReward()
         self.boost_gain = BoostGainReward()
         self.boost_keep = BoostKeepReward()
         self.step_penalty = StepPenalty()
@@ -307,6 +348,7 @@ class CurriculumReward(RewardFunction):
             self.hard_hit,
             self.flip_touch,
             self.save_clear,
+            self.attack_pressure,
             self.boost_gain,
             self.boost_keep,
             self.step_penalty,
@@ -343,11 +385,12 @@ class CurriculumReward(RewardFunction):
         add(self.hard_hit, weights.hard_hit)
         add(self.flip_touch, weights.flip_touch)
         add(self.save_clear, weights.save_clear)
+        add(self.attack_pressure, weights.attack_pressure)
         add(self.boost_gain, weights.boost_gain)
         add(self.boost_keep, weights.boost_keep)
         add(self.step_penalty, weights.step_penalty)
 
-        if cfg.stage == Stage.SELF_PLAY:
+        if cfg.stage in (Stage.DUEL, Stage.SELF_PLAY):
             team_agents = {
                 False: [agent for agent in agents if not state.cars[agent].is_orange],
                 True: [agent for agent in agents if state.cars[agent].is_orange],

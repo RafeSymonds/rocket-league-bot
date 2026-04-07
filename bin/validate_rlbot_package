@@ -8,7 +8,6 @@ exec python3 "$0" "$@"
 ":"""
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
@@ -16,27 +15,21 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from rocket_league_bot_src.export import summarize_rlbot_package
+
 
 def main() -> int:
     bot_dir = ROOT / "BotBoi_v1" / "src"
-    required = [
-        bot_dir / "bot.py",
-        bot_dir / "bot.cfg",
-        bot_dir / "appearance.cfg",
-        bot_dir / "PPO_POLICY.pt",
-        bot_dir / "BOOK_KEEPING_VARS.json",
-        bot_dir / "runtime_config.json",
-    ]
-
-    missing = [str(path) for path in required if not path.exists()]
+    summary = summarize_rlbot_package(str(bot_dir))
+    missing = summary["missing"]
     if missing:
         print("Missing files:")
         for path in missing:
             print(f"  {path}")
         return 1
 
-    runtime = json.loads((bot_dir / "runtime_config.json").read_text())
-    book = json.loads((bot_dir / "BOOK_KEEPING_VARS.json").read_text())
+    runtime = summary["runtime"]
+    book = summary["book"]
 
     print("RLBot package looks complete.")
     print(f"checkpoint={runtime.get('checkpoint_dir', '')}")
