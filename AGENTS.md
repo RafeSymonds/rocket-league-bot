@@ -125,6 +125,7 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 
 - Manages stage progression and curriculum state.
 - The curriculum now inserts harder contested pre-duel stages so the bot must prove it can score under pressure and save-clear under pressure before `DUEL` and full-match `SELF_PLAY`.
+- The later curriculum now also includes `AERIAL_CONTACT`, `AERIAL_SHOOT`, `SHADOW_DEFEND`, and `POSITIONAL_DUEL` so the bot learns jump contacts, goal-side defense, and behind-ball spacing before self-play.
 - Stage transitions now reset stage EMAs so later stages do not auto-promote off inherited stats from earlier ones.
 
 `rocket_league_bot_src/rewards.py`
@@ -134,6 +135,7 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 - Includes a forward-drive shaping term so "face the ball while reversing" is less attractive, and an aerial-control shaping term for airborne approaches toward lofted balls.
 - Later competitive stages also use a light attack-pressure term so faster threatening shots get some learning signal before a goal is actually scored.
 - `DUEL` and `SELF_PLAY` treat shaping competitively, subtracting opponent-team shaping instead of rewarding both teams independently.
+- Includes explicit late-curriculum shaping for aerial touches, goal-side positioning, and staying behind the ball before challenging.
 - `SELF_PLAY` shaping should remain sparse and competitive; avoid dense symmetric shaping that can reward both teams for scoreless stalemates.
 
 `rocket_league_bot_src/obs.py`
@@ -146,6 +148,7 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 - State reset and match setup behavior.
 - The 1v1 scenario stages now reposition both cars and the ball into more replay-like attack/defense situations instead of only moving the ball while leaving kickoff car positions intact.
 - Later attack-oriented stages now occasionally loft the ball so the policy sees jump-and-boost approach situations during normal curriculum training, not only ground dribbles.
+- The late-stage scenario family now also includes medium-height aerial contact/shoot setups plus shadow-defense and positional-duel starts to preload jump timing and spacing before self-play.
 - `DEFEND` is intentionally threat-heavy and should bias toward genuine save/clear situations rather than mostly neutral 1v1 starts.
 - The final stage uses full-match `1v1` behavior via `rlgym-tools` when available.
 
@@ -188,6 +191,7 @@ The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall bac
 - Any change to `OBS_DIM` should be treated as a fresh-training boundary unless there is an explicit compatibility migration.
 - If you add scripts, keep them in `bin/` when they are operator-facing helpers.
 - If you change logging or metrics, keep `bin/progress_dashboard`, `bin/manage_training status`, and `data/training_report.html` useful.
+- Training metrics now include `aerial_touch_rate`, `goal_side_rate`, and `behind_ball_rate`; keep dashboards and migration logic aligned if metrics change again.
 - If you change checkpoint save semantics, keep `--resume-latest` and RLBot auto-export working.
 
 ## Validation
