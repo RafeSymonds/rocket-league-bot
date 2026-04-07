@@ -31,7 +31,9 @@ class SignedGoalReward(GoalEventMixin, RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         GoalEventMixin.reset(self, agents, initial_state, shared_info)
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards = {a: 0.0 for a in agents}
         if not self.goal_event(state):
             return rewards
@@ -62,7 +64,9 @@ class BallSpeedTowardGoalReward(TouchStatefulReward):
         super().__init__()
         self.scale = float(scale)
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards: Dict[AgentID, float] = {}
         ball = state.ball
         for agent in agents:
@@ -92,9 +96,13 @@ class BallDistanceToGoalDeltaReward(RewardFunction):
             car = initial_state.cars[agent]
             target_y = _opponent_goal_y(car.is_orange)
             goal = np.array([0.0, target_y, 0.0], dtype=np.float32)
-            self.prev_dist[agent] = float(np.linalg.norm(initial_state.ball.position - goal))
+            self.prev_dist[agent] = float(
+                np.linalg.norm(initial_state.ball.position - goal)
+            )
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards: Dict[AgentID, float] = {}
         for agent in agents:
             car = state.cars[agent]
@@ -111,7 +119,9 @@ class SpeedTowardBallReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         pass
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards: Dict[AgentID, float] = {}
         for agent in agents:
             car = state.cars[agent]
@@ -123,7 +133,9 @@ class SpeedTowardBallReward(RewardFunction):
                 rewards[agent] = 0.0
                 continue
             speed_toward_ball = float(np.dot(car_phys.linear_velocity, to_ball / norm))
-            rewards[agent] = float(np.clip(speed_toward_ball / common_values.CAR_MAX_SPEED, -0.2, 1.0))
+            rewards[agent] = float(
+                np.clip(speed_toward_ball / common_values.CAR_MAX_SPEED, -0.2, 1.0)
+            )
         return rewards
 
 
@@ -131,7 +143,9 @@ class FaceBallReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         pass
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards: Dict[AgentID, float] = {}
         for agent in agents:
             car = state.cars[agent]
@@ -142,7 +156,9 @@ class FaceBallReward(RewardFunction):
             if norm < 1e-6:
                 rewards[agent] = 0.0
                 continue
-            rewards[agent] = float(np.clip(np.dot(car_phys.forward, to_ball / norm), -1.0, 1.0))
+            rewards[agent] = float(
+                np.clip(np.dot(car_phys.forward, to_ball / norm), -1.0, 1.0)
+            )
         return rewards
 
 
@@ -150,7 +166,9 @@ class ForwardDriveReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         pass
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards: Dict[AgentID, float] = {}
         for agent in agents:
             car = state.cars[agent]
@@ -164,7 +182,11 @@ class ForwardDriveReward(RewardFunction):
             facing_ball = max(0.0, float(np.dot(car_phys.forward, to_ball / norm)))
             forward_speed = float(np.dot(car_phys.linear_velocity, car_phys.forward))
             rewards[agent] = float(
-                np.clip((forward_speed / common_values.CAR_MAX_SPEED) * facing_ball, -1.0, 1.0)
+                np.clip(
+                    (forward_speed / common_values.CAR_MAX_SPEED) * facing_ball,
+                    -1.0,
+                    1.0,
+                )
             )
         return rewards
 
@@ -173,7 +195,9 @@ class InAirReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         pass
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         return {agent: 0.0 if state.cars[agent].on_ground else 1.0 for agent in agents}
 
 
@@ -181,7 +205,9 @@ class AerialControlReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         pass
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards: Dict[AgentID, float] = {}
         for agent in agents:
             car = state.cars[agent]
@@ -202,7 +228,8 @@ class AerialControlReward(RewardFunction):
             up_align = max(0.0, float(np.dot(car_phys.up, to_ball_dir)))
             closing_speed = max(
                 0.0,
-                float(np.dot(car_phys.linear_velocity, to_ball_dir)) / common_values.CAR_MAX_SPEED,
+                float(np.dot(car_phys.linear_velocity, to_ball_dir))
+                / common_values.CAR_MAX_SPEED,
             )
             ball_height = float(
                 np.clip(
@@ -219,9 +246,32 @@ class AerialControlReward(RewardFunction):
                 )
             )
             rewards[agent] = float(
-                np.clip(ball_height * (0.55 * forward_align + 0.25 * up_align + 0.20 * closing_speed), 0.0, 1.0)
+                np.clip(
+                    ball_height
+                    * (0.55 * forward_align + 0.25 * up_align + 0.20 * closing_speed),
+                    0.0,
+                    1.0,
+                )
                 * max(0.35, car_height)
             )
+        return rewards
+
+
+class AerialTouchReward(TouchStatefulReward):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
+        rewards: Dict[AgentID, float] = {}
+        for agent in agents:
+            if not self._is_new_touch(agent, state):
+                rewards[agent] = 0.0
+                continue
+            car = state.cars[agent]
+            if car.on_ground:
+                rewards[agent] = 0.0
+                continue
+            ball_height = float(state.ball.position[2])
+            rewards[agent] = float(np.clip((ball_height - 120.0) / 260.0, 0.0, 1.0))
         return rewards
 
 
@@ -229,7 +279,9 @@ class StepPenalty(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         pass
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         return {agent: -0.001 for agent in agents}
 
 
@@ -241,7 +293,9 @@ class HardHitReward(TouchStatefulReward):
             return
         self.prev_ball_speed = float(np.linalg.norm(initial_state.ball.linear_velocity))
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards: Dict[AgentID, float] = {}
         cur_ball_speed = float(np.linalg.norm(state.ball.linear_velocity))
         speed_gain = max(0.0, cur_ball_speed - float(self.prev_ball_speed))
@@ -257,14 +311,20 @@ class HardHitReward(TouchStatefulReward):
 
 
 class FlipTouchReward(TouchStatefulReward):
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards: Dict[AgentID, float] = {}
         for agent in agents:
             if not self._is_new_touch(agent, state):
                 rewards[agent] = 0.0
                 continue
             car = state.cars[agent]
-            rewards[agent] = 1.0 if car.is_flipping or (not car.on_ground and car.has_flipped) else 0.0
+            rewards[agent] = (
+                1.0
+                if car.is_flipping or (not car.on_ground and car.has_flipped)
+                else 0.0
+            )
         return rewards
 
 
@@ -282,7 +342,9 @@ class SaveClearReward(TouchStatefulReward):
             else np.zeros(3, dtype=np.float32)
         )
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards: Dict[AgentID, float] = {}
         cur_ball_pos = np.asarray(state.ball.position, dtype=np.float32)
         cur_ball_vel = np.asarray(state.ball.linear_velocity, dtype=np.float32)
@@ -293,7 +355,9 @@ class SaveClearReward(TouchStatefulReward):
                 continue
 
             car = state.cars[agent]
-            own_goal_y = common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
+            own_goal_y = (
+                common_values.BACK_NET_Y if car.is_orange else -common_values.BACK_NET_Y
+            )
             own_goal = np.array([0.0, own_goal_y, 0.0], dtype=np.float32)
 
             prev_to_goal = own_goal - self.prev_ball_pos
@@ -302,7 +366,9 @@ class SaveClearReward(TouchStatefulReward):
                 rewards[agent] = 0.0
                 continue
 
-            prev_toward_own_goal = float(np.dot(self.prev_ball_vel, prev_to_goal / prev_dist))
+            prev_toward_own_goal = float(
+                np.dot(self.prev_ball_vel, prev_to_goal / prev_dist)
+            )
             own_goal_to_ball = cur_ball_pos - own_goal
             away_norm = float(np.linalg.norm(own_goal_to_ball))
             if away_norm < 1e-6:
@@ -310,7 +376,7 @@ class SaveClearReward(TouchStatefulReward):
                 continue
 
             cur_away_speed = float(np.dot(cur_ball_vel, own_goal_to_ball / away_norm))
-            defensive_touch = prev_dist <= 3200.0 and prev_toward_own_goal >= 250.0
+            defensive_touch = prev_dist <= 4500.0 and prev_toward_own_goal >= 150.0
             if not defensive_touch:
                 rewards[agent] = 0.0
                 continue
@@ -326,50 +392,70 @@ class AttackPressureReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         pass
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards: Dict[AgentID, float] = {}
         for agent in agents:
             car = state.cars[agent]
             ball = state.inverted_ball if car.is_orange else state.ball
 
-            enemy_goal = np.array([0.0, common_values.BACK_NET_Y, 0.0], dtype=np.float32)
+            enemy_goal = np.array(
+                [0.0, common_values.BACK_NET_Y, 0.0], dtype=np.float32
+            )
             own_goal = np.array([0.0, -common_values.BACK_NET_Y, 0.0], dtype=np.float32)
 
             to_enemy_goal = enemy_goal - ball.position
             enemy_dist = float(np.linalg.norm(to_enemy_goal))
             if enemy_dist > 1e-6:
-                toward_enemy_goal = float(np.dot(ball.linear_velocity, to_enemy_goal / enemy_dist))
+                toward_enemy_goal = float(
+                    np.dot(ball.linear_velocity, to_enemy_goal / enemy_dist)
+                )
             else:
                 toward_enemy_goal = 0.0
 
             to_own_goal = own_goal - ball.position
             own_dist = float(np.linalg.norm(to_own_goal))
             if own_dist > 1e-6:
-                toward_own_goal = float(np.dot(ball.linear_velocity, to_own_goal / own_dist))
+                toward_own_goal = float(
+                    np.dot(ball.linear_velocity, to_own_goal / own_dist)
+                )
             else:
                 toward_own_goal = 0.0
 
             attack_half = float(np.clip((ball.position[1] - 200.0) / 3200.0, 0.0, 1.0))
             own_half = float(np.clip((-ball.position[1] - 200.0) / 3200.0, 0.0, 1.0))
             goal_proximity = float(
-                np.clip((common_values.BACK_NET_Y - enemy_dist) / common_values.BACK_NET_Y, 0.0, 1.0)
+                np.clip(
+                    (common_values.BACK_NET_Y - enemy_dist) / common_values.BACK_NET_Y,
+                    0.0,
+                    1.0,
+                )
             )
             shot_speed = float(np.clip(toward_enemy_goal / 2500.0, 0.0, 1.0))
-            own_goal_danger = own_half * float(np.clip(toward_own_goal / 2500.0, 0.0, 1.0))
+            own_goal_danger = own_half * float(
+                np.clip(toward_own_goal / 2500.0, 0.0, 1.0)
+            )
 
             pressure = attack_half * (0.55 + 0.45 * goal_proximity) * shot_speed
-            rewards[agent] = float(np.clip(pressure - (0.65 * own_goal_danger), -1.0, 1.0))
+            rewards[agent] = float(
+                np.clip(pressure - (0.65 * own_goal_danger), -1.0, 1.0)
+            )
         return rewards
 
 
 class BoostGainReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         self.prev_boost = {
-            agent: float(initial_state.cars[agent].boost_amount) if initial_state is not None else 0.0
+            agent: float(initial_state.cars[agent].boost_amount)
+            if initial_state is not None
+            else 0.0
             for agent in agents
         }
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards: Dict[AgentID, float] = {}
         for agent in agents:
             current = float(state.cars[agent].boost_amount)
@@ -383,11 +469,93 @@ class BoostKeepReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         pass
 
-    def get_rewards(self, agents, state: GameState, is_terminated, is_truncated, shared_info):
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
         rewards: Dict[AgentID, float] = {}
         for agent in agents:
-            boost_frac = float(np.clip(state.cars[agent].boost_amount / 100.0, 0.0, 1.0))
+            boost_frac = float(
+                np.clip(state.cars[agent].boost_amount / 100.0, 0.0, 1.0)
+            )
             rewards[agent] = float(np.sqrt(boost_frac))
+        return rewards
+
+
+class GoalSidePositionReward(RewardFunction):
+    def reset(self, agents, initial_state, shared_info):
+        pass
+
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
+        rewards: Dict[AgentID, float] = {}
+        ball_pos = np.asarray(state.ball.position, dtype=np.float32)
+        for agent in agents:
+            car = state.cars[agent]
+            own_goal = np.array(
+                [
+                    0.0,
+                    common_values.BACK_NET_Y
+                    if car.is_orange
+                    else -common_values.BACK_NET_Y,
+                    0.0,
+                ],
+                dtype=np.float32,
+            )
+            lane = ball_pos - own_goal
+            lane_norm_sq = float(np.dot(lane, lane))
+            if lane_norm_sq < 1e-6:
+                rewards[agent] = 0.0
+                continue
+            goal_to_car = np.asarray(car.physics.position, dtype=np.float32) - own_goal
+            proj = float(np.dot(goal_to_car, lane) / lane_norm_sq)
+            if proj <= 0.02 or proj >= 1.05:
+                rewards[agent] = 0.0
+                continue
+            lateral = goal_to_car - (proj * lane)
+            lateral_penalty = float(np.linalg.norm(lateral) / 2500.0)
+            rewards[agent] = float(np.clip(1.0 - lateral_penalty, 0.0, 1.0))
+        return rewards
+
+
+class BehindBallReward(RewardFunction):
+    def reset(self, agents, initial_state, shared_info):
+        pass
+
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
+        rewards: Dict[AgentID, float] = {}
+        ball_pos = np.asarray(state.ball.position, dtype=np.float32)
+        for agent in agents:
+            car = state.cars[agent]
+            enemy_goal = np.array(
+                [
+                    0.0,
+                    -common_values.BACK_NET_Y
+                    if car.is_orange
+                    else common_values.BACK_NET_Y,
+                    0.0,
+                ],
+                dtype=np.float32,
+            )
+            ball_to_goal = enemy_goal - ball_pos
+            norm = float(np.linalg.norm(ball_to_goal))
+            if norm < 1e-6:
+                rewards[agent] = 0.0
+                continue
+            direction = ball_to_goal / norm
+            ball_to_car = np.asarray(car.physics.position, dtype=np.float32) - ball_pos
+            depth = float(np.dot(ball_to_car, direction))
+            if depth >= -60.0:
+                rewards[agent] = 0.0
+                continue
+            lateral = ball_to_car - depth * direction
+            lateral_penalty = float(np.linalg.norm(lateral) / 2600.0)
+            depth_bonus = float(np.clip((-depth - 60.0) / 1200.0, 0.0, 1.0))
+            rewards[agent] = float(
+                np.clip(depth_bonus * (1.0 - lateral_penalty), 0.0, 1.0)
+            )
         return rewards
 
 
@@ -401,12 +569,15 @@ class CurriculumReward(RewardFunction):
         self.forward_drive = ForwardDriveReward()
         self.in_air = InAirReward()
         self.aerial_control = AerialControlReward()
+        self.aerial_touch = AerialTouchReward()
         self.ball_speed_to_goal = BallSpeedTowardGoalReward()
         self.ball_distance_to_goal = BallDistanceToGoalDeltaReward()
         self.hard_hit = HardHitReward()
         self.flip_touch = FlipTouchReward()
         self.save_clear = SaveClearReward()
         self.attack_pressure = AttackPressureReward()
+        self.goal_side = GoalSidePositionReward()
+        self.behind_ball = BehindBallReward()
         self.boost_gain = BoostGainReward()
         self.boost_keep = BoostKeepReward()
         self.step_penalty = StepPenalty()
@@ -418,12 +589,15 @@ class CurriculumReward(RewardFunction):
             self.forward_drive,
             self.in_air,
             self.aerial_control,
+            self.aerial_touch,
             self.ball_speed_to_goal,
             self.ball_distance_to_goal,
             self.hard_hit,
             self.flip_touch,
             self.save_clear,
             self.attack_pressure,
+            self.goal_side,
+            self.behind_ball,
             self.boost_gain,
             self.boost_keep,
             self.step_penalty,
@@ -439,10 +613,14 @@ class CurriculumReward(RewardFunction):
         rewards = {agent: 0.0 for agent in agents}
         shaping_rewards = {agent: 0.0 for agent in agents}
 
-        def add(source: RewardFunction, weight: float, *, is_goal: bool = False) -> None:
+        def add(
+            source: RewardFunction, weight: float, *, is_goal: bool = False
+        ) -> None:
             if weight == 0.0:
                 return
-            values = source.get_rewards(agents, state, is_terminated, is_truncated, shared_info)
+            values = source.get_rewards(
+                agents, state, is_terminated, is_truncated, shared_info
+            )
             for agent in agents:
                 weighted = float(weight) * float(values[agent])
                 if is_goal:
@@ -457,12 +635,15 @@ class CurriculumReward(RewardFunction):
         add(self.forward_drive, weights.forward_drive)
         add(self.in_air, weights.in_air)
         add(self.aerial_control, weights.aerial_control)
+        add(self.aerial_touch, weights.aerial_touch)
         add(self.ball_speed_to_goal, weights.ball_speed_to_goal)
         add(self.ball_distance_to_goal, weights.ball_distance_to_goal)
         add(self.hard_hit, weights.hard_hit)
         add(self.flip_touch, weights.flip_touch)
         add(self.save_clear, weights.save_clear)
         add(self.attack_pressure, weights.attack_pressure)
+        add(self.goal_side, weights.goal_side)
+        add(self.behind_ball, weights.behind_ball)
         add(self.boost_gain, weights.boost_gain)
         add(self.boost_keep, weights.boost_keep)
         add(self.step_penalty, weights.step_penalty)

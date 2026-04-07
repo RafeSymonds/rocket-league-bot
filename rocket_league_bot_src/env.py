@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 
 from rlgym.api import RLGym
+from rlgym.rocket_league import common_values
 from rlgym.rocket_league.action_parsers import LookupTableAction, RepeatAction
 from rlgym.rocket_league.sim import RocketSimEngine
 from rlgym_ppo.util.rlgym_v2_gym_wrapper import RLGymV2GymWrapper
@@ -24,7 +25,11 @@ from .opponent import SelfPlayOpponentGymWrapper
 from .reporting import write_training_report
 from .rewards import CurriculumReward
 from .utils import Stats
-from .checkpoints import find_opponent_checkpoint, load_checkpoint_book, sample_opponent_checkpoint
+from .checkpoints import (
+    find_opponent_checkpoint,
+    load_checkpoint_book,
+    sample_opponent_checkpoint,
+)
 
 try:
     from rlgym_tools.rocket_league.shared_info_providers.scoreboard_provider import (
@@ -56,6 +61,9 @@ class ProcessIterationLogger:
         "median_t_goal",
         "blue_median_t_goal",
         "orange_median_t_goal",
+        "aerial_touch_rate",
+        "goal_side_rate",
+        "behind_ball_rate",
         "ema_touch",
         "ema_goal",
     ]
@@ -133,7 +141,9 @@ class ProcessIterationLogger:
                 continue
             migrated_rows.append(
                 [
-                    row[header_index[name]] if name in header_index and header_index[name] < len(row) else ""
+                    row[header_index[name]]
+                    if name in header_index and header_index[name] < len(row)
+                    else ""
                     for name in self._METRICS_COLUMNS
                 ]
             )
@@ -161,6 +171,9 @@ class ProcessIterationLogger:
         self.iteration_median_t_goal = []
         self.iteration_blue_median_t_goal = []
         self.iteration_orange_median_t_goal = []
+        self.iteration_blue_aerial_touch_eps = 0
+        self.iteration_goal_side_rates = []
+        self.iteration_behind_ball_rates = []
 
     def _reset_episode_stats(self):
         self.ep_return = 0.0
@@ -175,7 +188,50 @@ class ProcessIterationLogger:
         self.ep_goal_step = -1
         self.ep_blue_goal_step = -1
         self.ep_orange_goal_step = -1
+        self.ep_blue_aerial_touch = False
+        self.ep_blue_control_steps = 0
+        self.ep_blue_goal_side_steps = 0
+        self.ep_blue_behind_ball_steps = 0
         self._prev_touches = {}
+
+    @staticmethod
+    def _blue_car(state):
+        for car in state.cars.values():
+            if not car.is_orange:
+                return car
+        return None
+
+    @staticmethod
+    def _goal_side_value(car, ball_pos) -> float:
+        own_goal = np.array([0.0, -common_values.BACK_NET_Y, 0.0], dtype=np.float32)
+        lane = ball_pos - own_goal
+        lane_norm_sq = float(np.dot(lane, lane))
+        if lane_norm_sq < 1e-6:
+            return 0.0
+        goal_to_car = np.asarray(car.physics.position, dtype=np.float32) - own_goal
+        proj = float(np.dot(goal_to_car, lane) / lane_norm_sq)
+        if proj <= 0.02 or proj >= 1.05:
+            return 0.0
+        lateral = goal_to_car - proj * lane
+        return float(np.clip(1.0 - (np.linalg.norm(lateral) / 2500.0), 0.0, 1.0))
+
+    @staticmethod
+    def _behind_ball_value(car, ball_pos) -> float:
+        enemy_goal = np.array([0.0, common_values.BACK_NET_Y, 0.0], dtype=np.float32)
+        ball_to_goal = enemy_goal - ball_pos
+        norm = float(np.linalg.norm(ball_to_goal))
+        if norm < 1e-6:
+            return 0.0
+        direction = ball_to_goal / norm
+        ball_to_car = np.asarray(car.physics.position, dtype=np.float32) - ball_pos
+        depth = float(np.dot(ball_to_car, direction))
+        if depth >= -60.0:
+            return 0.0
+        lateral = ball_to_car - depth * direction
+        depth_bonus = float(np.clip((-depth - 60.0) / 1200.0, 0.0, 1.0))
+        return float(
+            np.clip(depth_bonus * (1.0 - (np.linalg.norm(lateral) / 2600.0)), 0.0, 1.0)
+        )
 
     def _append_metrics_row(
         self,
@@ -197,6 +253,9 @@ class ProcessIterationLogger:
         median_t_goal: float,
         blue_median_t_goal: float,
         orange_median_t_goal: float,
+        aerial_touch_rate: float,
+        goal_side_rate: float,
+        behind_ball_rate: float,
     ) -> None:
         if self._metrics_path is None:
             return
@@ -225,6 +284,9 @@ class ProcessIterationLogger:
                     f"{median_t_goal:.3f}",
                     f"{blue_median_t_goal:.3f}",
                     f"{orange_median_t_goal:.3f}",
+                    f"{aerial_touch_rate:.6f}",
+                    f"{goal_side_rate:.6f}",
+                    f"{behind_ball_rate:.6f}",
                     f"{snap.ema_touch:.6f}",
                     f"{snap.ema_goal:.6f}",
                 ]
@@ -266,7 +328,9 @@ class ProcessIterationLogger:
         state = info.get("state")
         blue_rewards: list[float] = []
         orange_rewards: list[float] = []
-        if isinstance(reward, (list, tuple, np.ndarray)) and hasattr(self.env, "agent_map"):
+        if isinstance(reward, (list, tuple, np.ndarray)) and hasattr(
+            self.env, "agent_map"
+        ):
             for idx, rew in enumerate(reward):
                 agent_id = self.env.agent_map.get(idx)
                 if state is None:
@@ -287,6 +351,16 @@ class ProcessIterationLogger:
             self.ep_orange_return += float(np.mean(orange_rewards))
 
         if state is not None:
+            blue_car = self._blue_car(state)
+            if blue_car is not None:
+                ball_pos = np.asarray(state.ball.position, dtype=np.float32)
+                self.ep_blue_control_steps += 1
+                self.ep_blue_goal_side_steps += int(
+                    self._goal_side_value(blue_car, ball_pos) >= 0.55
+                )
+                self.ep_blue_behind_ball_steps += int(
+                    self._behind_ball_value(blue_car, ball_pos) >= 0.35
+                )
             for agent, car in state.cars.items():
                 prev = self._prev_touches.get(agent, int(car.ball_touches))
                 cur = int(car.ball_touches)
@@ -303,6 +377,10 @@ class ProcessIterationLogger:
                         self.ep_blue_touches += 1
                         if self.ep_blue_first_touch_step == -1:
                             self.ep_blue_first_touch_step = self.ep_steps
+                        if (not car.on_ground) and float(
+                            state.ball.position[2]
+                        ) >= 150.0:
+                            self.ep_blue_aerial_touch = True
             if state.goal_scored and self.ep_goal_step == -1:
                 self.ep_goal_step = self.ep_steps
                 if int(state.scoring_team) == 0:
@@ -322,9 +400,20 @@ class ProcessIterationLogger:
             if self.ep_blue_touches > 0:
                 self.iteration_blue_touch_eps += 1
                 self.iteration_blue_median_t_first.append(self.ep_blue_first_touch_step)
+            if self.ep_blue_aerial_touch:
+                self.iteration_blue_aerial_touch_eps += 1
             if self.ep_orange_touches > 0:
                 self.iteration_orange_touch_eps += 1
-                self.iteration_orange_median_t_first.append(self.ep_orange_first_touch_step)
+                self.iteration_orange_median_t_first.append(
+                    self.ep_orange_first_touch_step
+                )
+            if self.ep_blue_control_steps > 0:
+                self.iteration_goal_side_rates.append(
+                    self.ep_blue_goal_side_steps / self.ep_blue_control_steps
+                )
+                self.iteration_behind_ball_rates.append(
+                    self.ep_blue_behind_ball_steps / self.ep_blue_control_steps
+                )
 
             if self.ep_goal_step != -1:
                 self.iteration_goals += 1
@@ -344,28 +433,95 @@ class ProcessIterationLogger:
         return obs, reward, terminated, truncated, info
 
     def _report_and_reset_iteration(self):
-        avg_return = self.iteration_return / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
-        orange_avg_return = self.iteration_orange_return / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
-        total_avg_return = self.iteration_total_return / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
-        touch_rate = self.iteration_success_eps / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
-        blue_touch_rate = self.iteration_blue_touch_eps / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
-        orange_touch_rate = self.iteration_orange_touch_eps / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
-        goal_rate = self.iteration_goals / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
-        blue_goal_rate = self.iteration_blue_goals / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
-        orange_goal_rate = self.iteration_orange_goals / self.iteration_episodes if self.iteration_episodes > 0 else 0.0
-        median_t_first = np.median(self.iteration_median_t_first) if self.iteration_median_t_first else -1.0
+        avg_return = (
+            self.iteration_return / self.iteration_episodes
+            if self.iteration_episodes > 0
+            else 0.0
+        )
+        orange_avg_return = (
+            self.iteration_orange_return / self.iteration_episodes
+            if self.iteration_episodes > 0
+            else 0.0
+        )
+        total_avg_return = (
+            self.iteration_total_return / self.iteration_episodes
+            if self.iteration_episodes > 0
+            else 0.0
+        )
+        touch_rate = (
+            self.iteration_success_eps / self.iteration_episodes
+            if self.iteration_episodes > 0
+            else 0.0
+        )
+        blue_touch_rate = (
+            self.iteration_blue_touch_eps / self.iteration_episodes
+            if self.iteration_episodes > 0
+            else 0.0
+        )
+        orange_touch_rate = (
+            self.iteration_orange_touch_eps / self.iteration_episodes
+            if self.iteration_episodes > 0
+            else 0.0
+        )
+        goal_rate = (
+            self.iteration_goals / self.iteration_episodes
+            if self.iteration_episodes > 0
+            else 0.0
+        )
+        blue_goal_rate = (
+            self.iteration_blue_goals / self.iteration_episodes
+            if self.iteration_episodes > 0
+            else 0.0
+        )
+        orange_goal_rate = (
+            self.iteration_orange_goals / self.iteration_episodes
+            if self.iteration_episodes > 0
+            else 0.0
+        )
+        median_t_first = (
+            np.median(self.iteration_median_t_first)
+            if self.iteration_median_t_first
+            else -1.0
+        )
         blue_median_t_first = (
-            np.median(self.iteration_blue_median_t_first) if self.iteration_blue_median_t_first else -1.0
+            np.median(self.iteration_blue_median_t_first)
+            if self.iteration_blue_median_t_first
+            else -1.0
         )
         orange_median_t_first = (
-            np.median(self.iteration_orange_median_t_first) if self.iteration_orange_median_t_first else -1.0
+            np.median(self.iteration_orange_median_t_first)
+            if self.iteration_orange_median_t_first
+            else -1.0
         )
-        median_t_goal = np.median(self.iteration_median_t_goal) if self.iteration_median_t_goal else -1.0
+        median_t_goal = (
+            np.median(self.iteration_median_t_goal)
+            if self.iteration_median_t_goal
+            else -1.0
+        )
         blue_median_t_goal = (
-            np.median(self.iteration_blue_median_t_goal) if self.iteration_blue_median_t_goal else -1.0
+            np.median(self.iteration_blue_median_t_goal)
+            if self.iteration_blue_median_t_goal
+            else -1.0
         )
         orange_median_t_goal = (
-            np.median(self.iteration_orange_median_t_goal) if self.iteration_orange_median_t_goal else -1.0
+            np.median(self.iteration_orange_median_t_goal)
+            if self.iteration_orange_median_t_goal
+            else -1.0
+        )
+        aerial_touch_rate = (
+            self.iteration_blue_aerial_touch_eps / self.iteration_episodes
+            if self.iteration_episodes > 0
+            else 0.0
+        )
+        goal_side_rate = (
+            float(np.mean(self.iteration_goal_side_rates))
+            if self.iteration_goal_side_rates
+            else 0.0
+        )
+        behind_ball_rate = (
+            float(np.mean(self.iteration_behind_ball_rates))
+            if self.iteration_behind_ball_rates
+            else 0.0
         )
 
         duration = max(time.time() - self.iteration_start_time, 1e-6)
@@ -392,6 +548,9 @@ class ProcessIterationLogger:
             median_t_goal=float(median_t_goal),
             blue_median_t_goal=float(blue_median_t_goal),
             orange_median_t_goal=float(orange_median_t_goal),
+            aerial_touch_rate=aerial_touch_rate,
+            goal_side_rate=goal_side_rate,
+            behind_ball_rate=behind_ball_rate,
         )
 
         if self.pid == 0 and self.log_counter % 3 == 0:
@@ -404,6 +563,8 @@ class ProcessIterationLogger:
                 f"OrangeRet={orange_avg_return:7.3f} | "
                 f"Touch={touch_rate:0.2f} | "
                 f"Goal={goal_rate:0.2f} | "
+                f"Aerial={aerial_touch_rate:0.2f} | "
+                f"GoalSide={goal_side_rate:0.2f} | "
                 f"BlueGoal={blue_goal_rate:0.2f} | "
                 f"OrangeGoal={orange_goal_rate:0.2f}"
             )
@@ -416,6 +577,9 @@ class ProcessIterationLogger:
             orange_goal_rate=orange_goal_rate,
             median_t_first=float(median_t_first if median_t_first != -1 else 9999.0),
             median_t_goal=float(median_t_goal if median_t_goal != -1 else 9999.0),
+            aerial_touch_rate=aerial_touch_rate,
+            goal_side_rate=goal_side_rate,
+            behind_ball_rate=behind_ball_rate,
         )
         if self.pid == 0:
             self.cm.maybe_advance(stats)
@@ -544,20 +708,28 @@ class ProcessIterationLogger:
                 "checkpoint_dir": "",
                 "gap_ts": 0,
                 "base_gap_ts": int(self.opponent_gap_ts),
-                "blue_goal_rate": None if blue_goal_rate is None else float(blue_goal_rate),
+                "blue_goal_rate": None
+                if blue_goal_rate is None
+                else float(blue_goal_rate),
             }
             path.write_text(json.dumps(payload, indent=2, sort_keys=True))
             return
 
         checkpoint_dir = ""
         effective_gap_ts = int(self.opponent_gap_ts)
-        if blue_goal_rate is not None and goal_rate is not None and self.cm.current_config().full_match:
+        if (
+            blue_goal_rate is not None
+            and goal_rate is not None
+            and self.cm.current_config().full_match
+        ):
             if blue_goal_rate >= 0.90 and goal_rate >= 0.90:
                 effective_gap_ts = max(500_000, self.opponent_gap_ts // 4)
             elif blue_goal_rate >= 0.75 and goal_rate >= 0.80:
                 effective_gap_ts = max(1_000_000, self.opponent_gap_ts // 2)
             elif blue_goal_rate <= 0.30 and goal_rate >= 0.70:
-                effective_gap_ts = min(self.opponent_gap_ts * 2, self.opponent_gap_ts + 4_000_000)
+                effective_gap_ts = min(
+                    self.opponent_gap_ts * 2, self.opponent_gap_ts + 4_000_000
+                )
             elif blue_goal_rate <= 0.40:
                 effective_gap_ts = min(self.opponent_gap_ts + 2_000_000, 8_000_000)
 

@@ -23,10 +23,25 @@ _STAGE_META: dict[str, dict[str, str]] = {
         "goal": "Convert open attacking setups into goals.",
         "watch": "Goal rate should rise before live defenders are introduced.",
     },
+    "AERIAL_CONTACT": {
+        "label": "Aerial Contact",
+        "goal": "Learn to jump into medium-height balls with intent.",
+        "watch": "Aerial touch rate should rise without first-touch speed collapsing.",
+    },
+    "AERIAL_SHOOT": {
+        "label": "Aerial Shoot",
+        "goal": "Turn simple lofted setups into net-directed touches and goals.",
+        "watch": "Aerial touch rate and goal rate should climb together.",
+    },
     "SHOOT_CONTESTED": {
         "label": "Shoot Contested",
         "goal": "Finish chances with a live defender present.",
         "watch": "The bot should still score once pressure and blocks exist.",
+    },
+    "SHADOW_DEFEND": {
+        "label": "Shadow Defend",
+        "goal": "Stay goal-side and delay before diving into saves.",
+        "watch": "Goal-side rate should rise while orange goal rate falls.",
     },
     "DEFEND": {
         "label": "Defend",
@@ -37,6 +52,11 @@ _STAGE_META: dict[str, dict[str, str]] = {
         "label": "Defend Clear",
         "goal": "Turn saves into real clears and exits.",
         "watch": "Touches should lead to space, relief, and occasional counter goals.",
+    },
+    "POSITIONAL_DUEL": {
+        "label": "Positional Duel",
+        "goal": "Win short 1v1 scenarios with better spacing and approach shape.",
+        "watch": "Behind-ball rate should improve before full duel pressure.",
     },
     "DUEL": {
         "label": "Duel",
@@ -86,7 +106,9 @@ def _filter_rows(
         latest_time = max(_to_float(row, "unix_time") for row in filtered)
         if latest_time > 0:
             min_time = latest_time - (max_age_hours * 3600.0)
-            filtered = [row for row in filtered if _to_float(row, "unix_time") >= min_time]
+            filtered = [
+                row for row in filtered if _to_float(row, "unix_time") >= min_time
+            ]
     if max_rows is not None and max_rows > 0 and len(filtered) > max_rows:
         filtered = filtered[-max_rows:]
     return filtered
@@ -186,7 +208,9 @@ def _polyline_points_with_bounds(
     return " ".join(points)
 
 
-def _stage_spans(rows: list[dict[str, str]], x_values: list[float], width: int, pad: int) -> str:
+def _stage_spans(
+    rows: list[dict[str, str]], x_values: list[float], width: int, pad: int
+) -> str:
     if not x_values:
         return ""
     if len(rows) < 2:
@@ -196,9 +220,13 @@ def _stage_spans(rows: list[dict[str, str]], x_values: list[float], width: int, 
         "CONTACT": "#d8f3dc",
         "DRIBBLE": "#bee1e6",
         "SHOOT": "#ffd6a5",
+        "AERIAL_CONTACT": "#e9d5ff",
+        "AERIAL_SHOOT": "#ddd6fe",
         "SHOOT_CONTESTED": "#ffdfba",
+        "SHADOW_DEFEND": "#fecdd3",
         "DEFEND": "#ffcad4",
         "DEFEND_CLEAR": "#f4acb7",
+        "POSITIONAL_DUEL": "#fde68a",
         "DUEL": "#d9d9f3",
         "SELF_PLAY": "#cddafd",
     }
@@ -281,7 +309,10 @@ def _multi_chart_svg(
     height = 220
     pad = 28
     x_values = _x_values(rows, x_axis)
-    series_values = [([_to_float(row, key) for row in rows], label, color) for label, key, color in series]
+    series_values = [
+        ([_to_float(row, key) for row in rows], label, color)
+        for label, key, color in series
+    ]
     y_lo, y_hi = _series_bounds([values for values, _, _ in series_values])
     spans = _stage_spans(rows, x_values, width, pad)
     polylines: list[str] = []
@@ -293,10 +324,14 @@ def _multi_chart_svg(
     seen_series: list[tuple[str, list[float]]] = []
 
     for values, label, color in series_values:
-        points = _polyline_points_with_bounds(x_values, values, width, height, pad, y_lo, y_hi)
+        points = _polyline_points_with_bounds(
+            x_values, values, width, height, pad, y_lo, y_hi
+        )
         overlap_with = ""
         for prev_label, prev_values in seen_series:
-            if len(prev_values) == len(values) and all(abs(a - b) < 1e-9 for a, b in zip(prev_values, values)):
+            if len(prev_values) == len(values) and all(
+                abs(a - b) < 1e-9 for a, b in zip(prev_values, values)
+            ):
                 overlap_with = prev_label
                 break
 
@@ -310,7 +345,9 @@ def _multi_chart_svg(
                 f'stroke-dasharray="7 5" stroke-linecap="round" points="{points}" />'
             )
             overlap_notes.append(f"{label} matches {overlap_with}")
-            legend_suffix = f' <span class="legend-note">same as {html.escape(overlap_with)}</span>'
+            legend_suffix = (
+                f' <span class="legend-note">same as {html.escape(overlap_with)}</span>'
+            )
         else:
             polylines.append(
                 f'<polyline fill="none" stroke="{color}" stroke-width="3" stroke-linecap="round" points="{points}" />'
@@ -340,13 +377,13 @@ def _multi_chart_svg(
         <div class="chart-meta">{html.escape(latest_text)} | min {lo:.3f} | max {hi:.3f}</div>
       </div>
       <div class="legend-row">
-        {''.join(legend_items)}
+        {"".join(legend_items)}
       </div>
       <svg viewBox="0 0 {width} {height}" class="chart">
         {spans}
         <line x1="{pad}" y1="{height - pad}" x2="{width - pad}" y2="{height - pad}" class="axis" />
         <line x1="{pad}" y1="{pad}" x2="{pad}" y2="{height - pad}" class="axis" />
-        {''.join(polylines)}
+        {"".join(polylines)}
       </svg>
     </section>
     """
@@ -393,9 +430,15 @@ def _filter_eval_history_rows(
             int(_to_float(row, "opponent_timesteps")),
         ),
     )
-    unique_current_ts = sorted({int(_to_float(row, "current_timesteps")) for row in filtered})
+    unique_current_ts = sorted(
+        {int(_to_float(row, "current_timesteps")) for row in filtered}
+    )
     keep_current_ts = set(unique_current_ts[-max_current_points:])
-    return [row for row in filtered if int(_to_float(row, "current_timesteps")) in keep_current_ts]
+    return [
+        row
+        for row in filtered
+        if int(_to_float(row, "current_timesteps")) in keep_current_ts
+    ]
 
 
 def _eval_history_section(eval_rows: list[dict[str, str]]) -> str:
@@ -411,11 +454,12 @@ def _eval_history_section(eval_rows: list[dict[str, str]]) -> str:
         </section>
         """
 
-    opponent_ts_values = sorted({int(_to_float(row, "opponent_timesteps")) for row in rows})
+    opponent_ts_values = sorted(
+        {int(_to_float(row, "opponent_timesteps")) for row in rows}
+    )
     palette = ["#2563eb", "#dc2626", "#0891b2", "#ca8a04", "#7c3aed", "#0f766e"]
     color_map = {
-        ts: palette[idx % len(palette)]
-        for idx, ts in enumerate(opponent_ts_values)
+        ts: palette[idx % len(palette)] for idx, ts in enumerate(opponent_ts_values)
     }
 
     width = 900
@@ -441,7 +485,11 @@ def _eval_history_section(eval_rows: list[dict[str, str]]) -> str:
     summary_rows: list[str] = []
 
     for opponent_ts in opponent_ts_values:
-        series = [row for row in rows if int(_to_float(row, "opponent_timesteps")) == opponent_ts]
+        series = [
+            row
+            for row in rows
+            if int(_to_float(row, "opponent_timesteps")) == opponent_ts
+        ]
         series.sort(key=lambda row: int(_to_float(row, "current_timesteps")))
         points = " ".join(
             f"{map_x(_to_float(row, 'current_timesteps')):.1f},{map_y(_to_float(row, 'blue_win_rate')):.1f}"
@@ -458,7 +506,7 @@ def _eval_history_section(eval_rows: list[dict[str, str]]) -> str:
         latest_gd = _to_float(latest, "goal_diff_per_episode")
         legend_items.append(
             f'<span class="legend-item"><span class="legend-swatch" style="background:{color}"></span>'
-            f'opp {opponent_ts}</span>'
+            f"opp {opponent_ts}</span>"
         )
         summary_rows.append(
             "<tr>"
@@ -489,13 +537,13 @@ def _eval_history_section(eval_rows: list[dict[str, str]]) -> str:
         <div class="chart-meta">blue win rate vs current checkpoint timesteps</div>
       </div>
       <div class="legend-row">
-        {''.join(legend_items)}
+        {"".join(legend_items)}
       </div>
       <svg viewBox="0 0 {width} {height}" class="chart">
-        {''.join(y_guides)}
+        {"".join(y_guides)}
         <line x1="{pad}" y1="{height - pad}" x2="{width - pad}" y2="{height - pad}" class="axis" />
         <line x1="{pad}" y1="{pad}" x2="{pad}" y2="{height - pad}" class="axis" />
-        {''.join(polylines)}
+        {"".join(polylines)}
       </svg>
       <div class="table-wrap">
         <table class="eval-table">
@@ -511,7 +559,7 @@ def _eval_history_section(eval_rows: list[dict[str, str]]) -> str:
             </tr>
           </thead>
           <tbody>
-            {''.join(summary_rows)}
+            {"".join(summary_rows)}
           </tbody>
         </table>
       </div>
@@ -578,7 +626,11 @@ def _overview_section(
     completed = max(0, current_index)
     total = len(_STAGE_ORDER)
     eval_text = _eval_diagnosis(eval_summary)
-    avg_eval_wr = float(eval_summary.get("avg_blue_win_rate", 0.0) or 0.0) if eval_summary else 0.0
+    avg_eval_wr = (
+        float(eval_summary.get("avg_blue_win_rate", 0.0) or 0.0)
+        if eval_summary
+        else 0.0
+    )
 
     return f"""
     <section class="hero-card">
@@ -590,17 +642,17 @@ def _overview_section(
         <p class="hero-diagnosis">{html.escape(eval_text)}</p>
       </div>
         <div class="hero-stats">
-        <div class="summary-card"><span>Latest Checkpoint</span><strong>{latest_ts or 'n/a'}</strong></div>
+        <div class="summary-card"><span>Latest Checkpoint</span><strong>{latest_ts or "n/a"}</strong></div>
         <div class="summary-card"><span>Current Stage</span><strong>{html.escape(stage)}</strong></div>
         <div class="summary-card"><span>Stage Progress</span><strong>{completed + 1}/{total}</strong></div>
-        <div class="summary-card"><span>Difficulty</span><strong>{_to_float(last, 'difficulty'):.3f}</strong></div>
-        <div class="summary-card"><span>Blue Return</span><strong>{_to_float(last, 'avg_return'):.3f}</strong></div>
-        <div class="summary-card"><span>Orange Return</span><strong>{_to_float(last, 'orange_avg_return'):.3f}</strong></div>
-        <div class="summary-card"><span>Total Return</span><strong>{_to_float(last, 'total_avg_return'):.3f}</strong></div>
-        <div class="summary-card"><span>Blue Touch Rate</span><strong>{_to_float(last, 'blue_touch_rate'):.3f}</strong></div>
-        <div class="summary-card"><span>Orange Touch Rate</span><strong>{_to_float(last, 'orange_touch_rate'):.3f}</strong></div>
-        <div class="summary-card"><span>Blue Goal Rate</span><strong>{_to_float(last, 'blue_goal_rate'):.3f}</strong></div>
-        <div class="summary-card"><span>Orange Goal Rate</span><strong>{_to_float(last, 'orange_goal_rate'):.3f}</strong></div>
+        <div class="summary-card"><span>Difficulty</span><strong>{_to_float(last, "difficulty"):.3f}</strong></div>
+        <div class="summary-card"><span>Blue Return</span><strong>{_to_float(last, "avg_return"):.3f}</strong></div>
+        <div class="summary-card"><span>Orange Return</span><strong>{_to_float(last, "orange_avg_return"):.3f}</strong></div>
+        <div class="summary-card"><span>Total Return</span><strong>{_to_float(last, "total_avg_return"):.3f}</strong></div>
+        <div class="summary-card"><span>Blue Touch Rate</span><strong>{_to_float(last, "blue_touch_rate"):.3f}</strong></div>
+        <div class="summary-card"><span>Orange Touch Rate</span><strong>{_to_float(last, "orange_touch_rate"):.3f}</strong></div>
+        <div class="summary-card"><span>Blue Goal Rate</span><strong>{_to_float(last, "blue_goal_rate"):.3f}</strong></div>
+        <div class="summary-card"><span>Orange Goal Rate</span><strong>{_to_float(last, "orange_goal_rate"):.3f}</strong></div>
         <div class="summary-card"><span>Avg Eval Win</span><strong>{avg_eval_wr:.3f}</strong></div>
       </div>
     </section>
@@ -645,9 +697,9 @@ def _curriculum_tracker_section(rows: list[dict[str, str]]) -> str:
                 <span class="stage-index">{idx + 1}</span>
                 <span class="stage-badge">{badge}</span>
               </div>
-              <h3>{html.escape(meta['label'])}</h3>
-              <p>{html.escape(meta['goal'])}</p>
-              <div class="stage-watch">{html.escape(meta['watch'])}</div>
+              <h3>{html.escape(meta["label"])}</h3>
+              <p>{html.escape(meta["goal"])}</p>
+              <div class="stage-watch">{html.escape(meta["watch"])}</div>
             </article>
             """
         )
@@ -658,7 +710,7 @@ def _curriculum_tracker_section(rows: list[dict[str, str]]) -> str:
         <div class="chart-meta">What each stage is trying to teach</div>
       </div>
       <div class="stage-grid">
-        {''.join(cards)}
+        {"".join(cards)}
       </div>
     </section>
     """
@@ -751,7 +803,7 @@ def _eval_section(
         <h2>Evaluation Ladder</h2>
         <div class="chart-meta">not available yet</div>
       </div>
-      <div class="eval-note{' error' if eval_error else ''}">{pending_note}</div>
+      <div class="eval-note{" error" if eval_error else ""}">{pending_note}</div>
     </section>
     """
 
@@ -843,6 +895,16 @@ def write_training_report(
                     ],
                     x_axis,
                 ),
+                _multi_chart_svg(
+                    "Aerial / Positioning",
+                    rows,
+                    [
+                        ("Aerial Touch", "aerial_touch_rate", "#7c3aed"),
+                        ("Goal Side", "goal_side_rate", "#0f766e"),
+                        ("Behind Ball", "behind_ball_rate", "#b45309"),
+                    ],
+                    x_axis,
+                ),
                 _chart_svg("Difficulty", rows, "difficulty", "#7c3aed", x_axis),
                 _chart_svg("SPS", rows, "sps", "#475569", x_axis),
                 _multi_chart_svg(
@@ -857,7 +919,9 @@ def write_training_report(
             ]
         )
     else:
-        summary = '<p class="empty">No metrics yet. Start training and refresh this page.</p>'
+        summary = (
+            '<p class="empty">No metrics yet. Start training and refresh this page.</p>'
+        )
         charts = ""
     tracker_html = _curriculum_tracker_section(rows)
     eval_html = _eval_section(eval_summary, latest_checkpoint, eval_error)

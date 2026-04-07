@@ -4,18 +4,28 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .config import ACTION_REPEAT, CRITIC_LAYER_SIZES, OBS_DIM, POLICY_LAYER_SIZES, Stage
+from .config import (
+    ACTION_REPEAT,
+    CRITIC_LAYER_SIZES,
+    OBS_DIM,
+    POLICY_LAYER_SIZES,
+    Stage,
+)
 
 
 _STAGE_ORDER = {
     Stage.CONTACT.value: 0,
     Stage.DRIBBLE.value: 1,
     Stage.SHOOT.value: 2,
-    Stage.SHOOT_CONTESTED.value: 3,
-    Stage.DEFEND.value: 4,
-    Stage.DEFEND_CLEAR.value: 5,
-    Stage.DUEL.value: 6,
-    Stage.SELF_PLAY.value: 7,
+    Stage.AERIAL_CONTACT.value: 3,
+    Stage.AERIAL_SHOOT.value: 4,
+    Stage.SHOOT_CONTESTED.value: 5,
+    Stage.SHADOW_DEFEND.value: 6,
+    Stage.DEFEND.value: 7,
+    Stage.DEFEND_CLEAR.value: 8,
+    Stage.POSITIONAL_DUEL.value: 9,
+    Stage.DUEL.value: 10,
+    Stage.SELF_PLAY.value: 11,
 }
 
 
@@ -93,17 +103,25 @@ def _checkpoint_stage_rank(checkpoint_dir: str) -> int:
     return -1
 
 
-def find_latest_compatible_checkpoint(checkpoint_root: str, expected_obs_dim: int = OBS_DIM) -> str:
+def find_latest_compatible_checkpoint(
+    checkpoint_root: str, expected_obs_dim: int = OBS_DIM
+) -> str:
     compatible: list[tuple[int, int, float, str]] = []
-    for ts, mtime, checkpoint_dir in list_compatible_checkpoints(checkpoint_root, expected_obs_dim):
-        compatible.append((_checkpoint_stage_rank(checkpoint_dir), ts, mtime, checkpoint_dir))
+    for ts, mtime, checkpoint_dir in list_compatible_checkpoints(
+        checkpoint_root, expected_obs_dim
+    ):
+        compatible.append(
+            (_checkpoint_stage_rank(checkpoint_dir), ts, mtime, checkpoint_dir)
+        )
     if not compatible:
         return ""
     compatible.sort(key=lambda item: (item[0], item[1], item[2]))
     return compatible[-1][3]
 
 
-def is_checkpoint_compatible(checkpoint_dir: str, expected_obs_dim: int = OBS_DIM) -> bool:
+def is_checkpoint_compatible(
+    checkpoint_dir: str, expected_obs_dim: int = OBS_DIM
+) -> bool:
     obs_dim = _checkpoint_obs_dim(checkpoint_dir)
     return obs_dim is None or obs_dim == int(expected_obs_dim)
 
@@ -119,7 +137,9 @@ def find_opponent_checkpoint(
     if not compatible:
         return ""
 
-    exclude_checkpoint_dir = str(Path(exclude_checkpoint_dir)) if exclude_checkpoint_dir else ""
+    exclude_checkpoint_dir = (
+        str(Path(exclude_checkpoint_dir)) if exclude_checkpoint_dir else ""
+    )
     target_ts = int(current_ts) - int(gap_ts)
 
     eligible = [
@@ -152,7 +172,9 @@ def sample_opponent_checkpoint(
     prefer_newest: bool = True,
 ) -> str:
     compatible = list_compatible_checkpoints(checkpoint_root, expected_obs_dim)
-    exclude_checkpoint_dir = str(Path(exclude_checkpoint_dir)) if exclude_checkpoint_dir else ""
+    exclude_checkpoint_dir = (
+        str(Path(exclude_checkpoint_dir)) if exclude_checkpoint_dir else ""
+    )
     compatible = [
         (ts, mtime, checkpoint_dir)
         for ts, mtime, checkpoint_dir in compatible
