@@ -12,12 +12,12 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
-from gymnasium import spaces
-from rlgym.utils.action_parsers import ActionParser
-from rlgym.utils.gamestates import GameState
+from rlgym.api import AgentID
+from rlgym.api.config.action_parser import ActionParser
+from rlgym.rocket_league.api import GameState
 
 
-class NectoAction(ActionParser):
+class NectoAction(ActionParser[AgentID, np.ndarray, np.ndarray, GameState, tuple[str, int]]):
     """
     Discrete action parser with 124 actions:
     - 54 ground actions (throttle/steer/boost/handbrake combos)
@@ -63,8 +63,11 @@ class NectoAction(ActionParser):
 
         return np.array(actions, dtype=np.float32)
 
-    def get_action_space(self) -> spaces.Space:
-        return spaces.Discrete(len(self._lookup_table))
+    def get_action_space(self, agent: AgentID) -> tuple[str, int]:
+        return ("discrete", len(self._lookup_table))
+
+    def reset(self, agents, initial_state: GameState, shared_info: dict[str, Any]) -> None:
+        pass
 
     def get_lookup_table(self) -> np.ndarray:
         """Return the lookup table for policy head split."""
@@ -74,37 +77,49 @@ class NectoAction(ActionParser):
         """Return number of discrete actions."""
         return len(self._lookup_table)
 
-    def parse_actions(self, actions: Any, state: GameState) -> np.ndarray:
+    def parse_actions(
+        self,
+        actions: dict[AgentID, np.ndarray],
+        state: GameState,
+        shared_info: dict[str, Any],
+    ) -> dict[AgentID, np.ndarray]:
         """
         Convert discrete action indices to continuous action vectors.
 
         Supports two modes:
-        - Discrete indices: actions shape (N,) -> continuous (N, 8)
-        - Continuous already: actions shape (N, 8) -> passed through
+        - Discrete indices: action shape `(ticks,)` or `(ticks, 1)` -> continuous `(ticks, 8)`
+        - Continuous already: action shape `(ticks, 8)` -> passed through
         """
-        parsed_actions = []
+        parsed_actions = {}
 
-        for action in actions:
-            if action.size != 8:
-                if action.shape == ():
-                    action = np.expand_dims(action, axis=0)
+        for agent, action in actions.items():
+            action = np.asarray(action)
+            if action.shape == ():
+                action = np.expand_dims(action, axis=0)
 
-                if np.isnan(action).any():
-                    stripped = action[~np.isnan(action)].squeeze().astype(int)
-                    parsed_actions.append(self._lookup_table[stripped])
-                else:
-                    padded = np.pad(
-                        action.astype(float),
-                        (0, 8 - action.size),
-                        "constant",
-                        constant_values=np.NAN,
-                    )
-                    stripped = padded[~np.isnan(padded)].squeeze().astype(int)
-                    parsed_actions.append(self._lookup_table[stripped])
-            else:
-                parsed_actions.append(np.asarray(action, dtype=np.float32))
+            if len(action.shape) == 2 and action.shape[1] == 1:
+                action = action.squeeze(1)
 
-        return np.asarray(parsed_actions)
+            # PPO discrete outputs are integer indices over ticks.
+            if np.issubdtype(action.dtype, np.integer):
+                parsed_actions[agent] = self._lookup_table[action.astype(int)]
+                continue
+
+            # Legacy NaN-padded discrete indices.
+            if len(action.shape) == 1 and action.size != 8:
+                stripped = action[~np.isnan(action)] if np.isnan(action).any() else action
+                parsed_actions[agent] = self._lookup_table[stripped.astype(int)]
+                continue
+
+            # True continuous controls must already be shaped (8,) or (ticks, 8).
+            if len(action.shape) == 2 and action.shape[1] != 8:
+                raise ValueError(f"Unexpected action shape {action.shape}")
+            parsed = np.asarray(action, dtype=np.float32)
+            if len(parsed.shape) == 1:
+                parsed = np.expand_dims(parsed, axis=0)
+            parsed_actions[agent] = parsed
+
+        return parsed_actions
 
 
 def test_action_parser():
@@ -112,11 +127,11 @@ def test_action_parser():
     ap = NectoAction()
     table = ap.get_lookup_table()
     print(f"Lookup table shape: {table.shape}")
-    print(f"Action space: {ap.get_action_space()}")
+    print(f"Action space: {ap.get_action_space('agent')}")
     print(f"Ground actions: 54, Aerial actions: 70, Total: {len(table)}")
 
     test_action = np.array([0, 1, 2, 3])
-    parsed = ap.parse_actions(test_action, None)
+    parsed = ap.parse_actions({"agent": test_action}, None, {})
     print(f"Test parse: {parsed.shape}")
 
 

@@ -19,6 +19,7 @@ Usage:
 """
 
 import argparse
+import concurrent.futures
 import json
 import os
 import shutil
@@ -55,19 +56,13 @@ def load_dotenv(dotenv_path: Path) -> dict[str, str]:
     return values
 
 
-def get_replays_by_playlist(api: bc.Api, playlist: str, min_rank: str = "supersonic-legend", count: int = 1000):
-    """Get replays from ballchasing API."""
-    replays = []
-    for replay in api.get_replays(playlist=playlist, min_rank=min_rank, count=count):
-        replays.append({
-            "id": replay["id"],
-            "rocket_league_id": replay["rocket_league_id"],
-            "playlist": replay["playlist_id"],
-            "date": replay["date"],
-            "min_rank": replay["min_rank"],
-            "max_rank": replay["max_rank"],
-        })
-    return replays
+def iter_replays_by_playlist(api: bc.Api, playlist: str, min_rank: str):
+    """Yield replay metadata from ballchasing for the requested playlist."""
+    yield from api.get_replays(
+        playlist=playlist,
+        min_rank=min_rank,
+        count=100000,
+    )
 
 
 def export_parsed_replay(analysis, parquet_folder: Path) -> None:
@@ -127,8 +122,20 @@ def export_parsed_replay(analysis, parquet_folder: Path) -> None:
         player.data.to_pickle(parquet_folder / f"player_{player.online_id}.pkl")
 
 
-def download_and_parse_replay(api: bc.Api, replay_id: str, output_folder: Path, playlist: str) -> tuple[bool, str]:
+def is_permanent_parse_failure(reason: str) -> bool:
+    markers = (
+        "Did not expect a property of: StructProperty",
+        "unknown or not implemented",
+        "time is out of range",
+        "Could not decode replay header properties",
+        "Error decoding frame:",
+    )
+    return any(marker in reason for marker in markers)
+
+
+def download_and_parse_replay(api_token: str, replay_id: str, output_folder: Path, playlist: str) -> tuple[bool, str]:
     """Download a single replay and parse it with carball."""
+    api = bc.Api(api_token)
     replay_folder = output_folder / playlist / replay_id
     replay_path = replay_folder / f"{replay_id}.replay"
     parquet_folder = replay_folder / "parquet"
@@ -159,8 +166,8 @@ def download_and_parse_replay(api: bc.Api, replay_id: str, output_folder: Path, 
         return True, "ok"
 
     except Exception as e:
-        if parquet_folder.exists():
-            shutil.rmtree(parquet_folder, ignore_errors=True)
+        if replay_folder.exists():
+            shutil.rmtree(replay_folder, ignore_errors=True)
         print(f"  Error processing {replay_id}: {e}")
         return False, str(e)
 
@@ -182,6 +189,7 @@ def main():
     parser.add_argument("--count", type=int, default=1000, help="Number of replays to download")
     parser.add_argument("--min-rank", default="supersonic-legend", help="Minimum rank filter")
     parser.add_argument("--rate-limit", type=int, default=10, help="Requests per second limit")
+    parser.add_argument("--workers", type=int, default=4, help="Parallel replay download/parse workers")
     
     args = parser.parse_args()
 
@@ -201,9 +209,7 @@ def main():
     api = bc.Api(api_token)
     output_folder = Path(args.output)
     
-    print(f"Fetching replay list for {args.playlist} (min rank: {args.min_rank})...")
-    replays = get_replays_by_playlist(api, args.playlist, args.min_rank, args.count)
-    print(f"Found {len(replays)} replays")
+    print(f"Fetching replays for {args.playlist} (min rank: {args.min_rank})...")
     
     playlist_folder = output_folder / args.playlist
     playlist_folder.mkdir(parents=True, exist_ok=True)
@@ -216,6 +222,7 @@ def main():
     else:
         downloaded_ids = set()
         skipped_ids = {}
+    known_ids = downloaded_ids | set(skipped_ids)
 
     def write_metadata() -> None:
         metadata = {
@@ -224,26 +231,59 @@ def main():
             "replay_ids": sorted(downloaded_ids),
             "skipped_replay_ids": skipped_ids,
         }
-        metadata_file.write_text(json.dumps(metadata, indent=2, sort_keys=True))
-    
-    for replay in tqdm(replays, desc="Downloading replays"):
-        replay_id = replay["id"]
-        
-        if replay_id in downloaded_ids or replay_id in skipped_ids:
-            continue
+        tmp_path = metadata_file.with_suffix(".tmp")
+        tmp_path.write_text(json.dumps(metadata, indent=2, sort_keys=True))
+        tmp_path.replace(metadata_file)
 
-        success, reason = download_and_parse_replay(api, replay_id, output_folder, args.playlist)
+    progress = tqdm(total=args.count, initial=min(len(downloaded_ids), args.count), desc="Working replays")
+    scheduled_ids = set()
+    futures: dict[concurrent.futures.Future, str] = {}
+    replay_iter = iter_replays_by_playlist(api, args.playlist, args.min_rank)
+    submission_interval = 1.0 / args.rate_limit if args.rate_limit > 0 else 0.0
+    last_submit_time = 0.0
 
-        if success:
-            downloaded_ids.add(replay_id)
-        else:
-            skipped_ids[replay_id] = reason
+    def submit_until_full(executor: concurrent.futures.ThreadPoolExecutor) -> None:
+        nonlocal last_submit_time
+        while len(downloaded_ids) + len(futures) < args.count and len(futures) < args.workers:
+            replay = next(replay_iter, None)
+            if replay is None:
+                return
+            replay_id = replay["id"]
+            if replay_id in known_ids or replay_id in scheduled_ids:
+                continue
+            if submission_interval > 0:
+                now = time.monotonic()
+                sleep_for = submission_interval - (now - last_submit_time)
+                if sleep_for > 0:
+                    time.sleep(sleep_for)
+                last_submit_time = time.monotonic()
+            future = executor.submit(download_and_parse_replay, api_token, replay_id, output_folder, args.playlist)
+            futures[future] = replay_id
+            scheduled_ids.add(replay_id)
 
-        write_metadata()
-        
-        time.sleep(1.0 / args.rate_limit)
-    
-    print(f"Done! Downloaded {len(downloaded_ids)} replays to {output_folder}")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
+        submit_until_full(executor)
+        while futures and len(downloaded_ids) < args.count:
+            done, _ = concurrent.futures.wait(
+                list(futures.keys()),
+                return_when=concurrent.futures.FIRST_COMPLETED,
+            )
+            for future in done:
+                replay_id = futures.pop(future)
+                scheduled_ids.discard(replay_id)
+                success, reason = future.result()
+                if success:
+                    downloaded_ids.add(replay_id)
+                    known_ids.add(replay_id)
+                    progress.update(1)
+                elif is_permanent_parse_failure(reason):
+                    skipped_ids[replay_id] = reason
+                    known_ids.add(replay_id)
+                write_metadata()
+            submit_until_full(executor)
+
+    progress.close()
+    print(f"Done! Downloaded {len(downloaded_ids)} working replays to {output_folder}")
 
 
 if __name__ == "__main__":
