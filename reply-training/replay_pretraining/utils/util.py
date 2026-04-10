@@ -10,8 +10,16 @@ try:
 except ImportError:
     def njit(func):
         return func
-from rlgym_sim.utils.common_values import BALL_RADIUS, BLUE_TEAM, CEILING_Z, BACK_WALL_Y
-from rlgym_sim.utils.gamestates.game_state import GameState
+try:
+    from rlgym_sim.utils.common_values import BALL_RADIUS, BLUE_TEAM, CEILING_Z, BACK_WALL_Y
+    from rlgym_sim.utils.gamestates.game_state import GameState
+except ImportError:
+    from replay_pretraining.utils.game_state import GameState
+
+    BALL_RADIUS = 91.25
+    BLUE_TEAM = 0
+    CEILING_Z = 2044
+    BACK_WALL_Y = 5120
 try:
     import torch
     import torch.jit  # noqa: F401

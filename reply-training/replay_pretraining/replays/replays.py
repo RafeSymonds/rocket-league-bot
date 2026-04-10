@@ -6,8 +6,49 @@ import warnings
 import pandas as pd
 
 import numpy as np
-from rlgym_sim.utils.common_values import BOOST_LOCATIONS, BALL_RADIUS
-from rlgym_sim.utils.gamestates import GameState
+try:
+    from rlgym_sim.utils.common_values import BOOST_LOCATIONS, BALL_RADIUS
+    from rlgym_sim.utils.gamestates import GameState
+except ImportError:
+    from replay_pretraining.utils.game_state import GameState
+
+    BALL_RADIUS = 91.25
+    BOOST_LOCATIONS = (
+        (0.0, -4240.0, 70.0),
+        (-1792.0, -4184.0, 70.0),
+        (1792.0, -4184.0, 70.0),
+        (-3072.0, -4096.0, 73.0),
+        (3072.0, -4096.0, 73.0),
+        (-940.0, -3308.0, 70.0),
+        (940.0, -3308.0, 70.0),
+        (0.0, -2816.0, 70.0),
+        (-3584.0, -2484.0, 70.0),
+        (3584.0, -2484.0, 70.0),
+        (-1788.0, -2300.0, 70.0),
+        (1788.0, -2300.0, 70.0),
+        (-2048.0, -1036.0, 73.0),
+        (0.0, -1024.0, 73.0),
+        (2048.0, -1036.0, 73.0),
+        (-3584.0, 0.0, 70.0),
+        (-1024.0, 0.0, 73.0),
+        (1024.0, 0.0, 73.0),
+        (3584.0, 0.0, 70.0),
+        (-2048.0, 1036.0, 73.0),
+        (0.0, 1024.0, 73.0),
+        (2048.0, 1036.0, 73.0),
+        (-1788.0, 2300.0, 70.0),
+        (1788.0, 2300.0, 70.0),
+        (-3584.0, 2484.0, 70.0),
+        (3584.0, 2484.0, 70.0),
+        (0.0, 2816.0, 70.0),
+        (-940.0, 3308.0, 70.0),
+        (940.0, 3308.0, 70.0),
+        (-3072.0, 4096.0, 73.0),
+        (3072.0, 4096.0, 73.0),
+        (-1792.0, 4184.0, 70.0),
+        (1792.0, 4184.0, 70.0),
+        (0.0, 4240.0, 70.0),
+    )
 
 from replay_pretraining.replays.inverse_aerial_controls import pyr_from_dataframe
 from replay_pretraining.utils.util import LIN_NORM, ANG_NORM, \
@@ -70,16 +111,25 @@ def get_data_df(df: pd.DataFrame, actions: np.ndarray):
 
 
 def load_parsed_replay(replay_folder):
+    def load_frame(path_without_ext):
+        parquet_path = f"{path_without_ext}.parquet"
+        pickle_path = f"{path_without_ext}.pkl"
+        if os.path.exists(parquet_path):
+            return pd.read_parquet(parquet_path)
+        if os.path.exists(pickle_path):
+            return pd.read_pickle(pickle_path)
+        raise FileNotFoundError(parquet_path)
+
     metadata = json.load(open(os.path.join(replay_folder, "metadata.json")))
     analyzer = json.load(open(os.path.join(replay_folder, "analyzer.json")))
-    ball = pd.read_parquet(os.path.join(replay_folder, "__ball.parquet"))
-    game = pd.read_parquet(os.path.join(replay_folder, "__game.parquet"))
+    ball = load_frame(os.path.join(replay_folder, "__ball"))
+    game = load_frame(os.path.join(replay_folder, "__game"))
     players = {}
     for player in metadata["players"]:
         uid = player["unique_id"]
-        player_path = os.path.join(replay_folder, f"player_{uid}.parquet")
-        if os.path.exists(player_path):
-            players[uid] = pd.read_parquet(player_path)
+        player_base = os.path.join(replay_folder, f"player_{uid}")
+        if os.path.exists(f"{player_base}.parquet") or os.path.exists(f"{player_base}.pkl"):
+            players[uid] = load_frame(player_base)
 
     # Make and return named tuple
     return Replay(

@@ -21,12 +21,14 @@ Usage:
 import argparse
 import json
 import os
+import shutil
 import time
 from pathlib import Path
 
 try:
     import ballchasing as bc
     import carball
+    from carball.analysis.saltie_game.saltie_game import SaltieGame
     from tqdm import tqdm
 except ImportError as exc:
     raise SystemExit(
@@ -68,37 +70,99 @@ def get_replays_by_playlist(api: bc.Api, playlist: str, min_rank: str = "superso
     return replays
 
 
-def download_and_parse_replay(api: bc.Api, replay_id: str, output_folder: Path, playlist: str) -> bool:
+def export_parsed_replay(analysis, parquet_folder: Path) -> None:
+    game = analysis.game
+    parquet_folder.mkdir(parents=True, exist_ok=True)
+
+    metadata = {
+        "players": [
+            {
+                "name": player.name,
+                "unique_id": str(player.online_id),
+            }
+            for player in game.players
+        ],
+        "game": {
+            "goals": [
+                {
+                    "frame": int(goal.frame_number),
+                    "player_name": goal.player_name,
+                    "is_orange": bool(goal.player_team),
+                }
+                for goal in game.goals
+            ]
+        },
+    }
+
+    proto_game = analysis.get_protobuf_data()
+    hits = [
+        {
+            "frame_number": int(hit.frame_number),
+            "player_unique_id": str(hit.player_id.id),
+        }
+        for hit in proto_game.game_stats.hits
+    ]
+
+    kickoff_frames = [int(frame) for frame in SaltieGame.get_kickoff_frames(game)]
+    goal_frames = sorted(int(goal.frame_number) for goal in game.goals)
+    gameplay_periods = []
+    for start_frame in kickoff_frames:
+        goal_frame = next((frame for frame in goal_frames if frame > start_frame), None)
+        gameplay_periods.append({
+            "start_frame": start_frame,
+            "goal_frame": goal_frame,
+        })
+
+    analyzer = {
+        "hits": hits,
+        "gameplay_periods": gameplay_periods,
+    }
+
+    (parquet_folder / "metadata.json").write_text(json.dumps(metadata, indent=2))
+    (parquet_folder / "analyzer.json").write_text(json.dumps(analyzer, indent=2))
+
+    game.ball.to_pickle(parquet_folder / "__ball.pkl")
+    game.frames.to_pickle(parquet_folder / "__game.pkl")
+    for player in game.players:
+        player.data.to_pickle(parquet_folder / f"player_{player.online_id}.pkl")
+
+
+def download_and_parse_replay(api: bc.Api, replay_id: str, output_folder: Path, playlist: str) -> tuple[bool, str]:
     """Download a single replay and parse it with carball."""
+    replay_folder = output_folder / playlist / replay_id
+    replay_path = replay_folder / f"{replay_id}.replay"
+    parquet_folder = replay_folder / "parquet"
     try:
-        replay_folder = output_folder / playlist / replay_id
         replay_folder.mkdir(parents=True, exist_ok=True)
-        
-        replay_path = replay_folder / f"{replay_id}.replay"
-        parquet_folder = replay_folder / "parquet"
-        
-        if parquet_folder.exists() and (parquet_folder / "__ball.parquet").exists():
+
+        if parquet_folder.exists() and (
+            (parquet_folder / "__ball.parquet").exists()
+            or (parquet_folder / "__ball.pkl").exists()
+        ):
             print(f"  Skipping {replay_id} (already parsed)")
-            return True
-        
+            return True, "already_parsed"
+
         api.download_replay(replay_id, str(replay_folder))
-        
+
         if not replay_path.exists():
             print(f"  Failed to download {replay_id}")
-            return False
-        
-        analysis = carball.analyze_replay_file(str(replay_path), output_path=str(parquet_folder), overwrite=True)
+            return False, "download_failed"
+
+        analysis = carball.analyze_replay_file(str(replay_path))
+        export_parsed_replay(analysis, parquet_folder)
         proto_data = analysis.get_protobuf_data()
-        
+
         proto_path = parquet_folder / "game.proto"
         with open(proto_path, "wb") as f:
             proto_data.write_to(f)
-        
-        return True
-        
+
+        return True, "ok"
+
     except Exception as e:
+        if parquet_folder.exists():
+            shutil.rmtree(parquet_folder, ignore_errors=True)
         print(f"  Error processing {replay_id}: {e}")
-        return False
+        return False, str(e)
 
 
 def main():
@@ -148,25 +212,34 @@ def main():
     if metadata_file.exists():
         existing = json.loads(metadata_file.read_text())
         downloaded_ids = set(existing.get("replay_ids", []))
+        skipped_ids = existing.get("skipped_replay_ids", {})
     else:
         downloaded_ids = set()
+        skipped_ids = {}
+
+    def write_metadata() -> None:
+        metadata = {
+            "playlist": args.playlist,
+            "count": len(downloaded_ids),
+            "replay_ids": sorted(downloaded_ids),
+            "skipped_replay_ids": skipped_ids,
+        }
+        metadata_file.write_text(json.dumps(metadata, indent=2, sort_keys=True))
     
     for replay in tqdm(replays, desc="Downloading replays"):
         replay_id = replay["id"]
         
-        if replay_id in downloaded_ids:
+        if replay_id in downloaded_ids or replay_id in skipped_ids:
             continue
-        
-        success = download_and_parse_replay(api, replay_id, output_folder, args.playlist)
-        
+
+        success, reason = download_and_parse_replay(api, replay_id, output_folder, args.playlist)
+
         if success:
             downloaded_ids.add(replay_id)
-            metadata = {
-                "playlist": args.playlist,
-                "count": len(downloaded_ids),
-                "replay_ids": list(downloaded_ids),
-            }
-            metadata_file.write_text(json.dumps(metadata, indent=2))
+        else:
+            skipped_ids[replay_id] = reason
+
+        write_metadata()
         
         time.sleep(1.0 / args.rate_limit)
     

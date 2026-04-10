@@ -23,7 +23,6 @@ fi
 "${REPLAY_ENV_DIR}/bin/pip" install --upgrade pip setuptools wheel
 "${REPLAY_ENV_DIR}/bin/pip" install requests==2.32.4
 "${REPLAY_ENV_DIR}/bin/pip" install -r "${ROOT_DIR}/requirements-replay.txt"
-"${REPLAY_ENV_DIR}/bin/pip" install --no-deps git+https://github.com/AechPro/rocket-league-gym-sim@main
 
 echo "Replay environment ready at ${REPLAY_ENV_DIR}"
 echo "Replay scripts now prefer replay-env automatically."
