@@ -6,6 +6,7 @@ import multiprocessing as mp
 import os
 import time
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 
@@ -15,11 +16,11 @@ from rlgym.rocket_league.action_parsers import LookupTableAction, RepeatAction
 from rlgym.rocket_league.sim import RocketSimEngine
 from rlgym_ppo.util.rlgym_v2_gym_wrapper import RLGymV2GymWrapper
 
+from .action_parser import NectoAction
 from .conditions import CurriculumDoneCondition, CurriculumTruncationCondition
-from .config import ACTION_REPEAT
+from .config import ACTION_REPEAT, USE_DISCRETE_ACTIONS
 from .curriculum import CurriculumManager
 from .league import SnapshotLeague
-from .mutators import DynamicMatchMutator
 from .obs import SharedObs
 from .opponent import SelfPlayOpponentGymWrapper
 from .reporting import write_training_report
@@ -30,6 +31,16 @@ from .checkpoints import (
     load_checkpoint_book,
     sample_opponent_checkpoint,
 )
+
+try:
+    from .mutators_with_replay import DynamicMatchMutatorWithReplay
+except ImportError:
+    DynamicMatchMutatorWithReplay = None
+
+try:
+    from .mutators import DynamicMatchMutator
+except ImportError:
+    DynamicMatchMutator = None
 
 try:
     from rlgym_tools.rocket_league.shared_info_providers.scoreboard_provider import (
@@ -795,6 +806,8 @@ class EnvBuilder:
         fixed_opponent_checkpoint: str = "",
         opponent_gap_ts: int = 4_000_000,
         opponent_device: str = "gpu",
+        replay_folder: Optional[str] = None,
+        use_discrete_actions: bool = USE_DISCRETE_ACTIONS,
     ):
         self.iteration_timesteps = iteration_timesteps
         self.checkpoint_root = checkpoint_root
@@ -808,6 +821,8 @@ class EnvBuilder:
         self.fixed_opponent_checkpoint = fixed_opponent_checkpoint
         self.opponent_gap_ts = int(opponent_gap_ts)
         self.opponent_device = opponent_device
+        self.replay_folder = replay_folder
+        self.use_discrete_actions = use_discrete_actions
         Path(self.curriculum_state_path).parent.mkdir(parents=True, exist_ok=True)
         Path(self.curriculum_state_path).write_text(
             json.dumps(self.curriculum_manager.to_dict(), indent=2, sort_keys=True)
@@ -819,10 +834,26 @@ class EnvBuilder:
             process_id = int(process._identity[0] - 1) if process._identity else 0
 
         curriculum_manager = self.curriculum_manager
-        action_parser = RepeatAction(LookupTableAction(), repeats=ACTION_REPEAT)
+
+        if self.use_discrete_actions:
+            action_parser = NectoAction()
+        else:
+            action_parser = RepeatAction(LookupTableAction(), repeats=ACTION_REPEAT)
+
+        if self.replay_folder and DynamicMatchMutatorWithReplay is not None:
+            state_mutator = DynamicMatchMutatorWithReplay(
+                curriculum_manager=curriculum_manager,
+                replay_folder=self.replay_folder,
+                replay_reset_probability=0.7,
+                use_lazy_loading=True,
+            )
+        elif DynamicMatchMutator is not None:
+            state_mutator = DynamicMatchMutator(curriculum_manager)
+        else:
+            raise RuntimeError("No state mutator available. Install rlgym-tools.")
 
         env = RLGym(
-            state_mutator=DynamicMatchMutator(curriculum_manager),
+            state_mutator=state_mutator,
             obs_builder=SharedObs(),
             action_parser=action_parser,
             reward_fn=CurriculumReward(curriculum_manager),

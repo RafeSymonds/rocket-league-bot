@@ -6,6 +6,54 @@ This document outlines a comprehensive plan to close the gap between our trainin
 
 ---
 
+## Current Training Architecture
+
+### Stage Progression (12 stages)
+
+```
+CONTACT → DRIBBLE → SHOOT → AERIAL_CONTACT → AERIAL_SHOOT → SHOOT_CONTESTED
+    → SHADOW_DEFEND → DEFEND → DEFEND_CLEAR → POSITIONAL_DUEL → DUEL → SELF_PLAY
+```
+
+Each stage advances when performance metrics meet thresholds (or after max iterations as rescue).
+
+### Stage Configuration
+
+| Stage | Blue | Orange | Reset Type | Timeout | Key Rewards |
+|-------|------|--------|------------|---------|-------------|
+| **CONTACT** | 1 | 0 | Contact reset (ball near car) | 12s | touch=4.5, speed_to_ball=0.55 |
+| **DRIBBLE** | 1 | 0 | Dribble reset | 24s | goal=6.0, ball_speed_to_goal=0.8 |
+| **SHOOT** | 1 | 0 | Shoot open reset | 30s | goal=10.0, hard_hit=0.30 |
+| **AERIAL_CONTACT** | 1 | 0 | Aerial contact reset | 24s | aerial_touch=1.7, goal=8.0 |
+| **AERIAL_SHOOT** | 1 | 0 | Aerial shoot reset | 28s | aerial_touch=1.9, goal=12.0 |
+| **SHOOT_CONTESTED** | 1 | 1 | Contested shoot reset | 26s | goal=12.0, save_clear=0.15 |
+| **SHADOW_DEFEND** | 1 | 1 | Shadow defend / neutral | 22s | save_clear=1.1, goal_side=0.42 |
+| **DEFEND** | 1 | 1 | Defense reset | 20s | save_clear=1.55, goal=6.0 |
+| **DEFEND_CLEAR** | 1 | 1 | Defend clear reset | 22s | save_clear=1.30, attack_pressure=0.08 |
+| **POSITIONAL_DUEL** | 1 | 1 | Positional duel / neutral | 22s | behind_ball=0.20, goal=14.0 |
+| **DUEL** | 1 | 1 | Duel reset / neutral | 20s | goal=22.0, attack_pressure=0.22 |
+| **SELF_PLAY** | 1 | 1 | Full match (GameMutator) | 35s | goal=26.0, sparse shaping |
+
+### Reset Probabilities per Stage
+
+Stages use `kickoff_reset_prob`, `neutral_reset_prob`, `attack_reset_prob` to choose reset type:
+- `kickoff_reset_prob`: KickoffMutator (kickoff positions)
+- `neutral_reset_prob`: Neutral self-play reset (random positions)
+- `attack_reset_prob`: Attack scenario reset (ball toward goal)
+
+### Current Gap vs Necto
+
+| Aspect | Ours | Necto |
+|--------|------|-------|
+| Reset diversity | Procedural only | 70% replay, 30% procedural |
+| Stages | 12 explicit stages | Implicit (replay provides diversity) |
+| Network | MLP (512,512,256) | EARL Perceiver attention |
+| Actions | Continuous 8-dim | Discrete 124-action |
+| PPO epochs | 3 | 30 |
+| Entropy coef | 0.003 | 0.01 |
+
+---
+
 ## 1. Discrete Action Space
 
 **Status:** Critical Improvement  
@@ -350,7 +398,7 @@ Purely procedural scenarios:
 
 ### Implementation: Replay-Based Resets
 
-We now have a full replay parsing pipeline:
+We have a full replay parsing pipeline:
 
 ```
 .replay file → carball.analyze_replay_file() → parquet → to_rlgym_dfs() → ReplayStateSetter
@@ -360,38 +408,59 @@ We now have a full replay parsing pipeline:
 - `bin/download_replays` - Downloads SSL replays via ballchasing API
 - `bin/parse_replays` - Converts parsed replays to training format
 - `rocket_league_bot_src/replay_setter.py` - ReplayStateSetter for training
+- `rocket_league_bot_src/mutators_with_replay.py` - DynamicMatchMutatorWithReplay
 
 **Usage:**
 ```bash
 # 1. Create the replay env once
 bin/setup_replay_env
 
-# 2. Download replays (need ballchasing API token)
+# 2. Download replays (need ballchasing API token from ballchasing.com)
 python bin/download_replays --api-token YOUR_TOKEN --output data/replays --count 1000
 
 # 3. Parse replays to training format
 python bin/parse_replays --input data/replays --output data/replay_arrays
 
-# 4. Use in training (integrates with curriculum)
+# 4. Integrate with training
 ```
 
 **Integration with Curriculum:**
 
 ```python
-from rocket_league_bot_src.replay_setter import ReplayStateSetter
-from rocket_league_bot_src.mutators import DynamicMatchMutator
+from rocket_league_bot_src.mutators_with_replay import DynamicMatchMutatorWithReplay
 
-class DynamicMatchMutatorWithReplay(StateMutator):
-    def __init__(self, curriculum_manager, replay_folder=None):
-        self.base_mutator = DynamicMatchMutator(curriculum_manager)
-        self.replay_setter = ReplayStateSetter(replay_folder) if replay_folder else None
-
-    def apply(self, state, shared_info):
-        if self.replay_setter and np.random.rand() < 0.7:
-            self.replay_setter.apply(state, shared_info)
-        else:
-            self.base_mutator.apply(state, shared_info)
+mutator = DynamicMatchMutatorWithReplay(
+    curriculum_manager=curriculum_manager,
+    replay_folder="data/replays/ranked-duels",
+    replay_reset_probability=0.7,  # 70% like Necto
+    use_lazy_loading=True,  # For memory efficiency
+)
 ```
+
+**Reset Flow with Replay Integration:**
+
+```
+Roll random [0, 1]
+  ├── < kickoff_prob → KickoffMutator (unchanged)
+  ├── < kickoff_prob + replay_prob (0.70) → ReplayStateSetter
+  └── otherwise → ScenarioResetMutator (procedural scenarios)
+```
+
+**ReplayStateSetter Options:**
+- `ReplayStateSetter`: Preloads all episodes (fast but memory-intensive)
+- `ReplayStateSetterV2`: Lazy loads replays on-demand (memory-efficient)
+
+**ballchasing API:**
+- Free for public replays
+- Rate limits: GC patrons 16 calls/sec, everyone else 2 calls/sec, 500/hour
+- Get token at https://ballchasing.com → Settings → API
+
+**How Many Replays:**
+- Minimum: 500 replays
+- Good: 1000 replays per playlist
+- Optimal: 3000 replays (1000 × 3 playlists: ranked-duels, ranked-doubles, ranked-standard)
+
+Each replay produces ~5-20 usable 30s episodes, so 1000 replays ≈ 5000-20000 training episodes.
 
 ### Enhancement: BetterRandom
 
@@ -437,15 +506,45 @@ Once we have discrete actions, EARL, and enhanced rewards, we may want to consid
 
 ## Implementation Order
 
-| Phase | Change | Files to Modify | Effort |
-|-------|--------|-----------------|--------|
-| 1 | Discrete action parser | New `action_parser.py`, update `env.py` | Low |
-| 2 | Update obs.py for entity format | `obs.py`, `config.py` | Medium |
-| 3 | Implement EARL/attention network | `train.py`, possibly new network module | High |
-| 4 | PPO hyperparameter tuning | `train.py` | Low |
-| 5 | Enhanced reward function | `rewards.py` | Medium |
-| 6 | Replay-based state setters | `mutators.py`, new replay loader | High |
-| 7 | Bot runtime update | `BotBoi_v1/src/bot.py`, `runtime_config.json` | Low |
+| Phase | Change | Status | Files to Modify | Effort |
+|-------|--------|--------|-----------------|--------|
+| 1 | Discrete action parser | **Done** | New `action_parser.py`, update `env.py` | Low |
+| 2 | Update obs.py for entity format | **Pending** | `obs.py`, `config.py` | Medium |
+| 3 | Implement EARL/attention network | **Pending** | `train.py`, possibly new network module | High |
+| 4 | PPO hyperparameter tuning | **Done** | `train.py` | Low |
+| 5 | Enhanced reward function | **Done** | `rewards.py` | Medium |
+| 6 | Replay-based state setters | **Done** | `replay_setter.py`, `mutators_with_replay.py`, `bin/download_replays`, `bin/parse_replays` | High |
+| 7 | Bot runtime update | **Pending** | `BotBoi_v1/src/bot.py`, `runtime_config.json` | Low |
+
+### Completed Items
+
+- **Discrete action parser**: `rocket_league_bot_src/action_parser.py` - 124 discrete actions matching Necto
+- **PPO hyperparameter tuning**: `train.py` - batch 100k, epochs 25, ent_coef 0.01, lr 1e-4
+- **Win-prob reward**: `rocket_league_bot_src/rewards.py` - WinProbReward class added to CurriculumReward
+- **Replay pipeline**: `bin/download_replays`, `bin/parse_replays`, `rocket_league_bot_src/replay_setter.py`
+- **Replay curriculum integration**: `rocket_league_bot_src/mutators_with_replay.py`
+- **Documentation**: `docs/replay_training_pipeline.md`, this document updated
+
+### Pending Priority Items
+
+1. **EARL attention network** (strategic understanding - biggest remaining gap)
+2. **Bot runtime update** for discrete actions
+
+### New Training Command Options
+
+```bash
+# Basic training with new defaults (discrete actions, tuned PPO)
+python train.py
+
+# With replay data for 70% replay-based resets
+python train.py --replay-folder data/replays/ranked-duels
+
+# Force continuous actions (for testing)
+python train.py --use-continuous-actions
+
+# Tuned PPO params (now defaults)
+python train.py --ppo-epochs 25 --ent-coef 0.01 --policy-lr 1e-4 --ppo-batch-size 100000
+```
 
 ---
 
@@ -464,3 +563,16 @@ Once we have discrete actions, EARL, and enhanced rewards, we may want to consid
 2. Eval against fixed older checkpoint shows consistent improvement over time
 3. Training metrics show stable convergence without divergence
 4. Bot demonstrates: aerial plays, shadow defense, effective clearing, 1v1 dribble/shot conversion
+
+---
+
+## Related Documentation
+
+- `docs/replay_training_pipeline.md` - Full replay pipeline setup and usage guide
+- `docs/necto_beat_design.md` - This document - comprehensive improvement plan
+- `rocket_league_bot_src/replay_setter.py` - ReplayStateSetter implementation
+- `rocket_league_bot_src/mutators_with_replay.py` - Curriculum integration with replay support
+- `rocket_league_bot_src/curriculum.py` - Curriculum stage management
+- `rocket_league_bot_src/config.py` - Stage configurations and reward weights
+- `bin/download_replays` - Replay download script
+- `bin/parse_replays` - Replay parsing script

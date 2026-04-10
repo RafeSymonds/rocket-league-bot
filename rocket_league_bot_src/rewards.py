@@ -559,6 +559,81 @@ class BehindBallReward(RewardFunction):
         return rewards
 
 
+class WinProbReward(RewardFunction):
+    """
+    Estimates game advantage using ball position, score differential, and time remaining.
+    Provides a shaping signal that correlates with win probability.
+    """
+
+    def reset(self, agents, initial_state, shared_info):
+        self.prev_win_prob = {agent: 0.5 for agent in agents}
+
+    def _estimate_win_prob(self, state: GameState, agent: AgentID) -> float:
+        """
+        Estimate win probability for an agent's team.
+        Returns value > 0.5 if agent's team is favored, < 0.5 if opponent is favored.
+        """
+        car = state.cars[agent]
+        is_orange = bool(car.is_orange)
+
+        blue_score = int(state.blue_score)
+        orange_score = int(state.orange_score)
+        time_remaining = (
+            float(state.game_time_remaining)
+            if hasattr(state, "game_time_remaining")
+            and state.game_time_remaining is not None
+            else 300.0
+        )
+        is_overtime = time_remaining < 0
+
+        score_diff = blue_score - orange_score
+        if is_orange:
+            score_diff = -score_diff
+
+        if is_overtime:
+            return 0.5 if score_diff == 0 else (0.8 if score_diff > 0 else 0.2)
+
+        ball_pos = np.asarray(state.ball.position, dtype=np.float32)
+        blue_goal = np.array([0.0, -common_values.BACK_NET_Y, 0.0], dtype=np.float32)
+        orange_goal = np.array([0.0, common_values.BACK_NET_Y, 0.0], dtype=np.float32)
+
+        dist_to_opponent_goal = float(
+            np.linalg.norm(ball_pos - (orange_goal if is_orange else blue_goal))
+        )
+        dist_to_own_goal = float(
+            np.linalg.norm(ball_pos - (blue_goal if is_orange else orange_goal))
+        )
+
+        ball_advantage = np.exp(-dist_to_opponent_goal / 2300.0) - np.exp(
+            -dist_to_own_goal / 2300.0
+        )
+        if is_orange:
+            ball_advantage = -ball_advantage
+
+        time_factor = np.clip(time_remaining / 300.0, 0.0, 1.0)
+        score_factor = np.clip(score_diff / 3.0, -1.0, 1.0)
+
+        win_prob = 0.5 + 0.25 * ball_advantage + 0.20 * score_factor * time_factor
+
+        return float(np.clip(win_prob, 0.05, 0.95))
+
+    def get_rewards(
+        self, agents, state: GameState, is_terminated, is_truncated, shared_info
+    ):
+        rewards: Dict[AgentID, float] = {}
+
+        for agent in agents:
+            current_win_prob = self._estimate_win_prob(state, agent)
+            prev_win_prob = self.prev_win_prob.get(agent, 0.5)
+
+            reward = current_win_prob - prev_win_prob
+            rewards[agent] = float(np.clip(reward * 0.5, -0.1, 0.1))
+
+            self.prev_win_prob[agent] = current_win_prob
+
+        return rewards
+
+
 class CurriculumReward(RewardFunction):
     def __init__(self, curriculum_manager):
         self.curriculum_manager = curriculum_manager
@@ -581,6 +656,7 @@ class CurriculumReward(RewardFunction):
         self.boost_gain = BoostGainReward()
         self.boost_keep = BoostKeepReward()
         self.step_penalty = StepPenalty()
+        self.win_prob = WinProbReward()
         self._sources = (
             self.goal,
             self.touch,
@@ -601,6 +677,7 @@ class CurriculumReward(RewardFunction):
             self.boost_gain,
             self.boost_keep,
             self.step_penalty,
+            self.win_prob,
         )
 
     def reset(self, agents, initial_state, shared_info):
@@ -647,6 +724,13 @@ class CurriculumReward(RewardFunction):
         add(self.boost_gain, weights.boost_gain)
         add(self.boost_keep, weights.boost_keep)
         add(self.step_penalty, weights.step_penalty)
+
+        win_prob_weight = 0.0
+        if cfg.stage in (Stage.DUEL, Stage.SELF_PLAY):
+            win_prob_weight = 0.08
+        elif cfg.stage in (Stage.POSITIONAL_DUEL, Stage.DEFEND_CLEAR):
+            win_prob_weight = 0.04
+        add(self.win_prob, win_prob_weight)
 
         if cfg.stage in (Stage.DUEL, Stage.SELF_PLAY):
             team_agents = {

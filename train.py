@@ -46,12 +46,16 @@ def _disable_background_kbhit() -> None:
         pass
 
 
-def _attach_curriculum_checkpoint_hook(learner: Learner, env_builder: EnvBuilder) -> None:
+def _attach_curriculum_checkpoint_hook(
+    learner: Learner, env_builder: EnvBuilder
+) -> None:
     original_save = learner.save
 
     def save_with_curriculum(cumulative_timesteps):
         original_save(cumulative_timesteps)
-        checkpoint_dir = Path(learner.checkpoints_save_folder) / str(cumulative_timesteps)
+        checkpoint_dir = Path(learner.checkpoints_save_folder) / str(
+            cumulative_timesteps
+        )
         book_path = checkpoint_dir / "BOOK_KEEPING_VARS.json"
         if not book_path.exists():
             return
@@ -66,23 +70,27 @@ def _attach_curriculum_checkpoint_hook(learner: Learner, env_builder: EnvBuilder
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Train Rocket League bot with curriculum.")
+    parser = argparse.ArgumentParser(
+        description="Train Rocket League bot with curriculum."
+    )
 
     parser.add_argument("--n-proc", type=int, default=1)
     parser.add_argument("--ts-per-iteration", type=int, default=50_000)
-    parser.add_argument("--ppo-batch-size", type=int, default=50_000)
+    parser.add_argument("--ppo-batch-size", type=int, default=100_000)
     parser.add_argument("--ppo-minibatch-size", type=int, default=10_000)
-    parser.add_argument("--ppo-epochs", type=int, default=3)
-    parser.add_argument("--policy-lr", type=float, default=2.5e-4)
-    parser.add_argument("--critic-lr", type=float, default=2.5e-4)
-    parser.add_argument("--ent-coef", type=float, default=0.003)
+    parser.add_argument("--ppo-epochs", type=int, default=25)
+    parser.add_argument("--policy-lr", type=float, default=1e-4)
+    parser.add_argument("--critic-lr", type=float, default=1e-4)
+    parser.add_argument("--ent-coef", type=float, default=0.01)
     parser.add_argument("--exp-buffer-size", type=int, default=200_000)
     parser.add_argument("--save-every-ts", type=int, default=2_000_000)
     parser.add_argument("--timestep-limit", type=int, default=1_000_000_000)
     parser.add_argument("--min-inference-size", type=int, default=1)
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--opponent-device", type=str, default="gpu")
-    parser.add_argument("--self-play-mode", choices=("current", "frozen"), default="current")
+    parser.add_argument(
+        "--self-play-mode", choices=("current", "frozen"), default="current"
+    )
     parser.add_argument("--load-path", type=str, default="")
     parser.add_argument("--checkpoint-root", type=str, default=DEFAULT_CHECKPOINT_ROOT)
     parser.add_argument("--force-stage", type=str, default="")
@@ -90,10 +98,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--opponent-checkpoint", type=str, default="")
     parser.add_argument("--opponent-gap-ts", type=int, default=4_000_000)
     parser.add_argument("--resume-latest", dest="resume_latest", action="store_true")
-    parser.add_argument("--no-resume-latest", dest="resume_latest", action="store_false")
+    parser.add_argument(
+        "--no-resume-latest", dest="resume_latest", action="store_false"
+    )
+    parser.add_argument(
+        "--replay-folder",
+        type=str,
+        default="",
+        help="Path to parsed replay data for replay-based resets",
+    )
+    parser.add_argument(
+        "--use-continuous-actions",
+        dest="use_discrete_actions",
+        action="store_false",
+        help="Use continuous actions instead of discrete",
+    )
     parser.set_defaults(resume_latest=True)
 
     return parser.parse_args()
+
 
 def main():
     args = parse_args()
@@ -101,7 +124,9 @@ def main():
 
     load_path = args.load_path
     if not load_path and args.resume_latest:
-        load_path = find_latest_compatible_checkpoint(args.checkpoint_root, expected_obs_dim=OBS_DIM)
+        load_path = find_latest_compatible_checkpoint(
+            args.checkpoint_root, expected_obs_dim=OBS_DIM
+        )
         latest_checkpoint = find_latest_checkpoint(args.checkpoint_root)
         if latest_checkpoint and load_path and latest_checkpoint != load_path:
             latest_book = load_checkpoint_book(latest_checkpoint)
@@ -129,7 +154,9 @@ def main():
                 f"Latest checkpoint {latest_checkpoint} has obs shape {latest_obs_shape}, expected {[OBS_DIM]}."
             )
 
-    initial_curriculum_state = load_curriculum_state_from_checkpoint(load_path) if load_path else {}
+    initial_curriculum_state = (
+        load_curriculum_state_from_checkpoint(load_path) if load_path else {}
+    )
     opponent_checkpoint = args.opponent_checkpoint
     if args.self_play_mode == "frozen" and not opponent_checkpoint and load_path:
         current_book = load_checkpoint_book(load_path)
@@ -148,7 +175,9 @@ def main():
     elif args.self_play_mode == "frozen" and opponent_checkpoint:
         print(f"Using fixed opponent checkpoint: {opponent_checkpoint}")
     elif args.self_play_mode == "current" and opponent_checkpoint:
-        print("Ignoring --opponent-checkpoint because --self-play-mode current was selected.")
+        print(
+            "Ignoring --opponent-checkpoint because --self-play-mode current was selected."
+        )
 
     if args.force_stage:
         stage = Stage[str(args.force_stage).upper()]
@@ -173,6 +202,8 @@ def main():
         fixed_opponent_checkpoint=opponent_checkpoint,
         opponent_gap_ts=int(args.opponent_gap_ts),
         opponent_device=str(args.opponent_device),
+        replay_folder=args.replay_folder if args.replay_folder else None,
+        use_discrete_actions=args.use_discrete_actions,
     )
 
     learner = Learner(

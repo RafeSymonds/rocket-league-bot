@@ -6,9 +6,12 @@ from enum import Enum
 
 ACTION_REPEAT = 8
 OBS_DIM = 54
+NUM_DISCRETE_ACTIONS = 124
 POLICY_LAYER_SIZES = (512, 512, 256)
 CRITIC_LAYER_SIZES = (512, 512, 256)
 DEFAULT_CHECKPOINT_ROOT = "data/checkpoints"
+
+USE_DISCRETE_ACTIONS = True
 
 
 class Stage(Enum):
@@ -47,6 +50,7 @@ class RewardWeights:
     boost_gain: float = 0.0
     boost_keep: float = 0.0
     step_penalty: float = 0.0
+    win_prob: float = 0.0
 
 
 @dataclass(frozen=True)
