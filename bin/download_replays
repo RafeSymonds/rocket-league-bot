@@ -154,7 +154,7 @@ def download_and_parse_replay(api: bc.Api, replay_id: str, output_folder: Path, 
 
         proto_path = parquet_folder / "game.proto"
         with open(proto_path, "wb") as f:
-            proto_data.write_to(f)
+            f.write(proto_data.SerializeToString())
 
         return True, "ok"
 
