@@ -1,4 +1,14 @@
-#!/usr/bin/env python3
+#!/bin/sh
+""":"
+ROOT_DIR=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+if [ -x "$ROOT_DIR/replay-env/bin/python" ]; then
+  exec "$ROOT_DIR/replay-env/bin/python" "$0" "$@"
+fi
+if [ -x "$ROOT_DIR/env/bin/python" ]; then
+  exec "$ROOT_DIR/env/bin/python" "$0" "$@"
+fi
+exec python3 "$0" "$@"
+":"""
 """
 Convert parsed carball parquet files into training-ready replay arrays.
 
@@ -12,14 +22,22 @@ Usage:
 import argparse
 import json
 import os
+import sys
 import warnings
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
-from tqdm import tqdm
+try:
+    import numpy as np
+    import pandas as pd
+    from tqdm import tqdm
+except ImportError as exc:
+    raise SystemExit(
+        "Replay parsing dependencies are not installed.\n"
+        "Run `bin/setup_replay_env` once, then rerun this command.\n"
+        "If setup fails, install a compatible replay Python via pyenv and rerun `bin/setup_replay_env`.\n"
+        f"Details: {exc}"
+    )
 
-import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "reply-training"))
 
 from replay_pretraining.replays.replays import to_rlgym_dfs, load_parsed_replay

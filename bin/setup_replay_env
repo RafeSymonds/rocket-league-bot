@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
+REPLAY_ENV_DIR="${ROOT_DIR}/replay-env"
+if [[ -n "${PYTHON_BIN:-}" ]]; then
+  PYTHON_BIN="${PYTHON_BIN}"
+elif command -v pyenv >/dev/null 2>&1 && pyenv prefix 3.8.20 >/dev/null 2>&1; then
+  PYTHON_BIN="$(pyenv prefix 3.8.20)/bin/python"
+elif command -v python3.8 >/dev/null 2>&1; then
+  PYTHON_BIN="python3.8"
+else
+  PYTHON_BIN="python3.10"
+fi
+
+if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
+  echo "Missing ${PYTHON_BIN}."
+  echo "Install a compatible replay Python via pyenv, then rerun: bin/setup_replay_env"
+  exit 1
+fi
+
+"${PYTHON_BIN}" -m venv --clear "${REPLAY_ENV_DIR}"
+"${REPLAY_ENV_DIR}/bin/pip" install --upgrade pip setuptools wheel
+"${REPLAY_ENV_DIR}/bin/pip" install requests==2.32.4
+"${REPLAY_ENV_DIR}/bin/pip" install -r "${ROOT_DIR}/requirements-replay.txt"
+"${REPLAY_ENV_DIR}/bin/pip" install --no-deps git+https://github.com/AechPro/rocket-league-gym-sim@main
+
+echo "Replay environment ready at ${REPLAY_ENV_DIR}"
+echo "Replay scripts now prefer replay-env automatically."
