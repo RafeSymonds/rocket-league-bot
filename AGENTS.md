@@ -41,6 +41,8 @@ Notes:
 
 - `requirements.txt` includes GPU-oriented PyTorch/NVIDIA packages and a git dependency on `rlgym-ppo`.
 - Full-match `1v1` training uses `rlgym-tools`.
+- Replay download/parsing dependencies live in `requirements-replay.txt`; use a Python 3.10 env for that path because `carball` does not install cleanly on Python 3.11.
+- `bin/setup_replay_env` creates `./replay-env`, and replay scripts should prefer that env automatically when present.
 - Network access may be required to install dependencies.
 
 ## Common Commands

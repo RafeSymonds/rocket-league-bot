@@ -363,8 +363,8 @@ We now have a full replay parsing pipeline:
 
 **Usage:**
 ```bash
-# 1. Install dependencies
-pip install carball ballchasing tqdm
+# 1. Create the replay env once
+bin/setup_replay_env
 
 # 2. Download replays (need ballchasing API token)
 python bin/download_replays --api-token YOUR_TOKEN --output data/replays --count 1000

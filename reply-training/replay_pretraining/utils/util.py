@@ -1,13 +1,24 @@
+from __future__ import annotations
+
 import re
 from collections import namedtuple
 from typing import List, Optional, Any
 
 import numpy as np
-import torch.jit
-from numba import njit
+try:
+    from numba import njit
+except ImportError:
+    def njit(func):
+        return func
 from rlgym_sim.utils.common_values import BALL_RADIUS, BLUE_TEAM, CEILING_Z, BACK_WALL_Y
 from rlgym_sim.utils.gamestates.game_state import GameState
-from torch import nn
+try:
+    import torch
+    import torch.jit  # noqa: F401
+    from torch import nn
+except ImportError:
+    torch = None
+    nn = None
 
 INVERT_SIDE_ACTIONS = np.array([1, -1, 1, -1, -1, 1, 1, 1])
 BUTTONS = ['throttle', 'steer', 'pitch', 'yaw', 'roll', 'jump', 'boost', 'handbrake']
@@ -478,8 +489,10 @@ def encoded_states_to_advanced_obs(df, actions):
     yield from ((obs[i], actions[:, i]) for i in range(len(uids)))
 
 
-class ControlsPredictorDot(nn.Module):
+class ControlsPredictorDot(nn.Module if nn is not None else object):
     def __init__(self, in_features, hidden_features, out_features=32, layers=1, actions=None):
+        if torch is None or nn is None:
+            raise ImportError("torch is required for ControlsPredictorDot")
         super().__init__()
         if actions is not None:
             self.actions = torch.from_numpy(actions).float()
@@ -514,8 +527,10 @@ class ControlsPredictorDot(nn.Module):
         return torch.einsum("bad,bd->ba", act_emb, player_emb)
 
 
-class ControlsPredictorLinear(nn.Module):
+class ControlsPredictorLinear(nn.Module if nn is not None else object):
     def __init__(self, in_features, features=32, layers=1, actions=None):
+        if torch is None or nn is None:
+            raise ImportError("torch is required for ControlsPredictorLinear")
         super().__init__()
         if actions is not None:
             self.actions = torch.from_numpy(actions).float()

@@ -14,7 +14,18 @@ Our replay pipeline:
 ## Prerequisites
 
 ```bash
-pip install carball ballchasing tqdm
+bin/setup_replay_env
+```
+
+`requirements-replay.txt` is separate on purpose: `carball` still relies on
+legacy `pandas`/`numpy` build dependencies that do not install cleanly on
+Python 3.11. `bin/setup_replay_env` creates `./replay-env` with Python 3.10,
+and the replay scripts automatically use that env when present.
+
+Set your API token in `.env`:
+
+```bash
+BALLCHASING_API_TOKEN=...
 ```
 
 Get a ballchasing API token from https://ballchasing.com → Settings → API
@@ -22,7 +33,7 @@ Get a ballchasing API token from https://ballchasing.com → Settings → API
 ## Step 1: Download Replays
 
 ```bash
-python bin/download_replays \
+bin/download_replays \
     --api-token YOUR_TOKEN \
     --output data/replays \
     --playlist ranked-duels \
@@ -45,7 +56,7 @@ The script respects these limits automatically.
 ## Step 2: Parse Replays
 
 ```bash
-python bin/parse_replays \
+bin/parse_replays \
     --input data/replays \
     --output data/replay_arrays
 ```
@@ -140,8 +151,10 @@ data/replay_arrays/
 
 ### "carball not found"
 
+Install the replay-only dependencies in a Python 3.10 environment:
+
 ```bash
-pip install carball
+bin/setup_replay_env
 ```
 
 ### "ballchasing API error"

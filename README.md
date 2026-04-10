@@ -68,6 +68,20 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Replay-download tooling uses a separate dependency file because `carball` does
+not install cleanly on Python 3.11. The replay scripts automatically prefer a
+repo-local `./replay-env` when it exists.
+
+```bash
+bin/setup_replay_env
+```
+
+To configure replay downloads, copy `.env.example` to `.env` and set:
+
+```bash
+BALLCHASING_API_TOKEN=...
+```
+
 ## Commands
 
 Start training:

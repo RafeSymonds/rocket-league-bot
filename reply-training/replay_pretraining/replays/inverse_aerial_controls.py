@@ -1,5 +1,9 @@
 import numpy as np
-from numba import njit
+try:
+    from numba import njit
+except ImportError:
+    def njit(func):
+        return func
 
 T_r = -36.07956616966136  # torque coefficient for roll
 T_p = -12.14599781908070  # torque coefficient for pitch
