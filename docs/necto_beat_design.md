@@ -442,9 +442,12 @@ mutator = DynamicMatchMutatorWithReplay(
 ```
 Roll random [0, 1]
   ├── < kickoff_prob → KickoffMutator (unchanged)
-  ├── < kickoff_prob + replay_prob (0.70) → ReplayStateSetter
+  ├── (SELF_PLAY/DUEL/POSITIONAL_DUEL only)
+  │     └── < kickoff_prob + replay_prob (0.70) → ReplayStateSetter
   └── otherwise → ScenarioResetMutator (procedural scenarios)
 ```
+
+**Replay stages:** Replay resets only happen in late-stage curriculum (SELF_PLAY, DUEL, POSITIONAL_DUEL). Early stages (CONTACT through DEFEND_CLEAR) use 100% procedural resets to preserve targeted skill learning.
 
 **ReplayStateSetter Options:**
 - `ReplayStateSetter`: Preloads all episodes (fast but memory-intensive)
@@ -572,6 +575,7 @@ python train.py --ppo-epochs 25 --ent-coef 0.01 --policy-lr 1e-4 --ppo-batch-siz
 ## Related Documentation
 
 - `docs/replay_training_pipeline.md` - Full replay pipeline setup and usage guide
+- `docs/replay_action_usage.md` - Design decision: states only vs BC/actions
 - `docs/necto_beat_design.md` - This document - comprehensive improvement plan
 - `rocket_league_bot_src/replay_setter.py` - ReplayStateSetter implementation
 - `rocket_league_bot_src/mutators_with_replay.py` - Curriculum integration with replay support

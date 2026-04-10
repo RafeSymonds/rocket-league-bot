@@ -75,6 +75,8 @@ class DynamicMatchMutatorWithReplay(StateMutator):
                 probability=replay_reset_probability,
             )
 
+    REPLAY_STAGES = {Stage.SELF_PLAY, Stage.DUEL, Stage.POSITIONAL_DUEL}
+
     @override
     def apply(self, state: GameState, shared_info: dict[str, Any]) -> None:
         cfg = self.curriculum_manager.current_config()
@@ -92,10 +94,12 @@ class DynamicMatchMutatorWithReplay(StateMutator):
         if roll < cfg.kickoff_reset_prob:
             return
 
-        if (
+        use_replay = (
             self.replay_setter
+            and cfg.stage in self.REPLAY_STAGES
             and roll < cfg.kickoff_reset_prob + self.replay_reset_probability
-        ):
+        )
+        if use_replay:
             self.replay_setter.apply(state, shared_info)
             return
 
