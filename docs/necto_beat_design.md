@@ -527,7 +527,10 @@ Once we have discrete actions, EARL, and enhanced rewards, we may want to consid
 
 ### Pending Priority Items
 
-1. **EARL attention network** (strategic understanding - biggest remaining gap)
+1. **EARL attention network** (future improvement)
+   - Requires restructuring obs.py for entity-based format
+   - Would enable attention over ball/boosts/opponents
+   - Fresh-training boundary - revisit after discrete actions + replay prove out
 2. **Bot runtime update** for discrete actions
 
 ### New Training Command Options
