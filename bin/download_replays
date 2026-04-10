@@ -24,6 +24,7 @@ import json
 import os
 import shutil
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 try:
@@ -56,12 +57,26 @@ def load_dotenv(dotenv_path: Path) -> dict[str, str]:
     return values
 
 
-def iter_replays_by_playlist(api: bc.Api, playlist: str, min_rank: str):
+def normalize_rfc3339(value: str) -> str:
+    value = value.strip()
+    if not value:
+        return ""
+    if "T" in value:
+        return value
+    dt = datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def iter_replays_by_playlist(api: bc.Api, playlist: str, min_rank: str, replay_after: str = "", replay_before: str = ""):
     """Yield replay metadata from ballchasing for the requested playlist."""
     yield from api.get_replays(
         playlist=playlist,
         min_rank=min_rank,
+        replay_after=normalize_rfc3339(replay_after) or None,
+        replay_before=normalize_rfc3339(replay_before) or None,
         count=100000,
+        sort_by="replay-date",
+        sort_dir="desc",
     )
 
 
@@ -188,8 +203,10 @@ def main():
                         help="Playlist to download")
     parser.add_argument("--count", type=int, default=1000, help="Number of replays to download")
     parser.add_argument("--min-rank", default="supersonic-legend", help="Minimum rank filter")
+    parser.add_argument("--replay-after", default="2024-01-01", help="Only include replays after this RFC3339/date value")
+    parser.add_argument("--replay-before", default="", help="Only include replays before this RFC3339/date value")
     parser.add_argument("--rate-limit", type=int, default=10, help="Requests per second limit")
-    parser.add_argument("--workers", type=int, default=4, help="Parallel replay download/parse workers")
+    parser.add_argument("--workers", type=int, default=1, help="Parallel replay download/parse workers")
     
     args = parser.parse_args()
 
@@ -209,7 +226,11 @@ def main():
     api = bc.Api(api_token)
     output_folder = Path(args.output)
     
-    print(f"Fetching replays for {args.playlist} (min rank: {args.min_rank})...")
+    print(
+        f"Fetching replays for {args.playlist} "
+        f"(min rank: {args.min_rank}, replay_after: {args.replay_after or 'any'}, "
+        f"replay_before: {args.replay_before or 'any'}, newest first within window)..."
+    )
     
     playlist_folder = output_folder / args.playlist
     playlist_folder.mkdir(parents=True, exist_ok=True)
@@ -236,9 +257,16 @@ def main():
         tmp_path.replace(metadata_file)
 
     progress = tqdm(total=args.count, initial=min(len(downloaded_ids), args.count), desc="Working replays")
+    skipped_count = len(skipped_ids)
     scheduled_ids = set()
     futures: dict[concurrent.futures.Future, str] = {}
-    replay_iter = iter_replays_by_playlist(api, args.playlist, args.min_rank)
+    replay_iter = iter_replays_by_playlist(
+        api,
+        args.playlist,
+        args.min_rank,
+        replay_after=args.replay_after,
+        replay_before=args.replay_before,
+    )
     submission_interval = 1.0 / args.rate_limit if args.rate_limit > 0 else 0.0
     last_submit_time = 0.0
 
@@ -276,10 +304,14 @@ def main():
                     downloaded_ids.add(replay_id)
                     known_ids.add(replay_id)
                     progress.update(1)
+                    progress.write(f"  Parsed {replay_id} ({len(downloaded_ids)}/{args.count})")
                 elif is_permanent_parse_failure(reason):
                     skipped_ids[replay_id] = reason
                     known_ids.add(replay_id)
+                    skipped_count += 1
+                    progress.write(f"  Skipped {replay_id}: {reason}")
                 write_metadata()
+                progress.set_postfix(parsed=len(downloaded_ids), skipped=skipped_count, active=len(futures))
             submit_until_full(executor)
 
     progress.close()

@@ -1,10 +1,7 @@
 # Optional replay-pipeline dependencies.
 #
-# Use a Python 3.10 environment for this file. `carball` still resolves through
-# legacy pandas/numpy build requirements that do not install cleanly on Python 3.11.
-carball==0.7.5
-gym==0.26.2
+# Prefer Python 3.11 for this file. `sprocket-rl-parser` provides a newer
+# maintained replay parser with a carball-compatible Python API.
+sprocket-rl-parser==1.2.37
 requests==2.32.4
-python-ballchasing==0.1.22
-rocketsim==2.1.1.post1
 tqdm==4.67.1
