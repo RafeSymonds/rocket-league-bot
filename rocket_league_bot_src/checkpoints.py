@@ -257,10 +257,25 @@ def select_eval_anchor_checkpoints(
 
 def build_runtime_config(checkpoint_dir: str) -> dict[str, Any]:
     book = load_checkpoint_book(checkpoint_dir)
+
+    policy_type = book.get("policy_type", "mlp")
+
+    if policy_type == "transformer":
+        return {
+            "checkpoint_dir": str(Path(checkpoint_dir)),
+            "cumulative_timesteps": int(book.get("cumulative_timesteps", 0)),
+            "policy_average_reward": float(book.get("policy_average_reward", 0.0)),
+            "policy_type": "transformer",
+            "obs_dim": int(book.get("earl_query_features", 36)),
+            "action_repeat": int(ACTION_REPEAT),
+            "action_dim": int(book.get("action_dim", 90)),
+        }
+
     return {
         "checkpoint_dir": str(Path(checkpoint_dir)),
         "cumulative_timesteps": int(book.get("cumulative_timesteps", 0)),
         "policy_average_reward": float(book.get("policy_average_reward", 0.0)),
+        "policy_type": "mlp",
         "obs_dim": int(OBS_DIM),
         "action_repeat": int(ACTION_REPEAT),
         "policy_hidden_sizes": list(POLICY_LAYER_SIZES),

@@ -48,10 +48,11 @@ PyYAML==6.0.3
 requests==2.32.5
 rlgym==2.0.1
 rlgym-api==2.0.0
-rlgym-ppo @ git+https://github.com/AechPro/rlgym-ppo@4ffd2e924198bf4b2d59f4bf280b29919d7c07ea
+rlgym-ppo @ git+https://github.com/Aech-Pro/rlgym-ppo@4ffd2e924198bf4b2d59f4bf280b29919d7c07ea
 rlgym-rocket-league==2.0.1
 rlgym-tools==2.6.0
 rocketsim==2.1.1.post4
+earl-pytorch==0.5.1
 sentry-sdk==2.50.0
 smmap==5.0.2
 sympy==1.13.1

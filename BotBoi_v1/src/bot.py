@@ -8,6 +8,8 @@ from typing import Any, Optional
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from torch.nn.init import xavier_uniform_
 
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
@@ -19,7 +21,9 @@ CEILING_Z = 2044.0
 CAR_MAX_SPEED = 2300.0
 BALL_MAX_SPEED = 6000.0
 
-POS_COEF = np.array([1.0 / SIDE_WALL_X, 1.0 / BACK_NET_Y, 1.0 / CEILING_Z], dtype=np.float32)
+POS_COEF = np.array(
+    [1.0 / SIDE_WALL_X, 1.0 / BACK_NET_Y, 1.0 / CEILING_Z], dtype=np.float32
+)
 CAR_VEL_COEF = 1.0 / CAR_MAX_SPEED
 BALL_VEL_COEF = 1.0 / BALL_MAX_SPEED
 ANG_VEL_COEF = 1.0 / math.pi
@@ -30,17 +34,189 @@ DIST_COEF = 1.0 / float(np.linalg.norm([SIDE_WALL_X, BACK_NET_Y, CEILING_Z]))
 OBS_DIM = 54
 DEFAULT_HIDDEN_SIZES = [512, 512, 256]
 
+EARL_EMBED_DIM = 256
+EARL_NUM_HEADS = 4
+EARL_NUM_LAYERS = 8
+EARL_QUERY_FEATURES = 36
+EARL_KV_FEATURES = 55
+NUM_BOOSTS = 34
+MAX_PLAYERS = 6
+EARL_ENTITY_COUNT = 1 + MAX_PLAYERS + NUM_BOOSTS
+
+BOOST_LOCATIONS = np.array(
+    [
+        [0, -4096, 0],
+        [0, 4096, 0],
+        [-1024, -2560, 0],
+        [1024, -2560, 0],
+        [-1024, 2560, 0],
+        [1024, 2560, 0],
+        [-2048, 0, 0],
+        [2048, 0, 0],
+        [-3072, -1638, 0],
+        [3072, -1638, 0],
+        [-3072, 1638, 0],
+        [3072, 1638, 0],
+        [-4096, -2560, 0],
+        [0, -2560, 0],
+        [4096, -2560, 0],
+        [-4096, 2560, 0],
+        [0, 2560, 0],
+        [4096, 2560, 0],
+        [-1872, -3706, 0],
+        [1872, -3706, 0],
+        [-1872, 3706, 0],
+        [1872, 3706, 0],
+        [-3584, -496, 0],
+        [3584, -496, 0],
+        [-3584, 496, 0],
+        [3584, 496, 0],
+        [-496, -4688, 0],
+        [496, -4688, 0],
+        [-496, 4688, 0],
+        [496, 4688, 0],
+        [-2648, -1176, 0],
+        [2648, -1176, 0],
+        [-2648, 1176, 0],
+        [2648, 1176, 0],
+    ],
+    dtype=np.float32,
+)
+
+NORM = np.array(
+    [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        2300.0,
+        2300.0,
+        2300.0,
+        2300.0,
+        2300.0,
+        2300.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        5.5,
+        5.5,
+        5.5,
+        1.0,
+        10.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+    ],
+    dtype=np.float32,
+)
+
+INVERT = np.array(
+    [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        -1.0,
+        -1.0,
+        1.0,
+        -1.0,
+        -1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        -1.0,
+        -1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+    ],
+    dtype=np.float32,
+)
+
 
 def make_lookup_table() -> np.ndarray:
-    actions: list[list[float]] = []
-    # Match rlgym's 90-action discrete lookup table so exported policies stay compatible.
+    actions = []
     for throttle in (-1, 0, 1):
         for steer in (-1, 0, 1):
             for boost in (0, 1):
                 for handbrake in (0, 1):
                     if boost == 1 and throttle != 1:
                         continue
-                    actions.append([throttle or boost, steer, 0, steer, 0, 0, boost, handbrake])
+                    actions.append(
+                        [throttle or boost, steer, 0, steer, 0, 0, boost, handbrake]
+                    )
 
     for pitch in (-1, 0, 1):
         for yaw in (-1, 0, 1):
@@ -52,7 +228,9 @@ def make_lookup_table() -> np.ndarray:
                         if pitch == roll == jump == 0:
                             continue
                         handbrake = jump == 1 and (pitch != 0 or yaw != 0 or roll != 0)
-                        actions.append([boost, yaw, pitch, yaw, roll, jump, boost, handbrake])
+                        actions.append(
+                            [boost, yaw, pitch, yaw, roll, jump, boost, handbrake]
+                        )
 
     return np.asarray(actions, dtype=np.float32)
 
@@ -60,7 +238,7 @@ def make_lookup_table() -> np.ndarray:
 class MLPPolicy(nn.Module):
     def __init__(self, obs_dim: int, act_dim: int, hidden_sizes: list[int]):
         super().__init__()
-        layers: list[nn.Module] = []
+        layers = []
         in_dim = obs_dim
         for h in hidden_sizes:
             layers.append(nn.Linear(in_dim, h))
@@ -71,6 +249,77 @@ class MLPPolicy(nn.Module):
 
     def forward(self, obs: torch.Tensor) -> torch.Tensor:
         return self.model(obs)
+
+
+class TransformerActor(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.earl = self._build_earl()
+        self.relu = nn.ReLU()
+        self.action_lookup = torch.from_numpy(make_lookup_table()).float()
+        self.emb_convertor = nn.Linear(EARL_EMBED_DIM, 128)
+        self._reset_parameters()
+
+    def _build_earl(self):
+        try:
+            from earl_pytorch import EARLPerceiver
+
+            return EARLPerceiver(
+                EARL_EMBED_DIM,
+                EARL_NUM_HEADS,
+                EARL_NUM_LAYERS,
+                1,
+                query_features=EARL_QUERY_FEATURES,
+                key_value_features=EARL_KV_FEATURES,
+            )
+        except ImportError:
+            return None
+
+    def _reset_parameters(self):
+        for p in self.parameters():
+            if p.dim() > 1:
+                xavier_uniform_(p)
+
+    def forward(self, q, kv, m):
+        if self.earl is None:
+            raise RuntimeError("EARLPerceiver not available. Install earl-pytorch.")
+        res = self.earl(q, kv, m)
+        weights = None
+        if isinstance(res, tuple):
+            res, weights = res
+        res = self.relu(res)
+        player_emb = self.emb_convertor(res)
+        act_emb = self.action_lookup.to(player_emb.device)
+        logits = torch.einsum("ad,bpd->bpa", act_emb, player_emb)
+        logits = logits[:, 0, :]
+        if weights is None:
+            return logits
+        return logits, weights
+
+
+class TransformerPolicy(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.actor = TransformerActor()
+
+    def forward(self, q, kv, m):
+        return self.actor(q, kv, m)
+
+    def get_action(self, q, kv, m, deterministic=False):
+        q_t = torch.from_numpy(q).float()
+        kv_t = torch.from_numpy(kv).float()
+        m_t = torch.from_numpy(m).float()
+
+        with torch.no_grad():
+            logits, weights = self.actor(q_t, kv_t, m_t)
+            probs = F.softmax(logits, dim=-1)
+            if deterministic:
+                action = torch.argmax(probs, dim=-1)
+            else:
+                dist = torch.distributions.Categorical(probs)
+                action = dist.sample()
+
+        return action.item(), weights
 
 
 def _find_key(d: dict[str, Any], candidates: list[str]) -> Optional[str]:
@@ -126,17 +375,18 @@ class BotBoi(BaseAgent):
         self.action_table = make_lookup_table()
 
         book_path = os.path.join(bot_dir, "BOOK_KEEPING_VARS.json")
-        book: dict[str, Any] = {}
+        book = {}
         if os.path.exists(book_path):
             with open(book_path, "r", encoding="utf-8") as f:
                 book = json.load(f)
 
         runtime_config_path = os.path.join(bot_dir, "runtime_config.json")
-        runtime_config: dict[str, Any] = {}
+        runtime_config = {}
         if os.path.exists(runtime_config_path):
             with open(runtime_config_path, "r", encoding="utf-8") as f:
                 runtime_config = json.load(f)
 
+        self.policy_type = str(runtime_config.get("policy_type", "mlp"))
         self.obs_dim = int(runtime_config.get("obs_dim", OBS_DIM))
 
         act_dim_from_runtime = runtime_config.get("action_dim")
@@ -152,15 +402,24 @@ class BotBoi(BaseAgent):
                 f"[BotBoi] WARNING: act_dim={self.act_dim} but lookup table has {len(self.action_table)} actions"
             )
 
-        hidden_sizes = list(runtime_config.get("policy_hidden_sizes", DEFAULT_HIDDEN_SIZES))
         self.device = torch.device("cpu")
-        self.policy = MLPPolicy(self.obs_dim, self.act_dim, hidden_sizes).to(self.device)
+
+        if self.policy_type == "transformer":
+            self.policy = TransformerPolicy()
+            self._build_obs = self._build_obs_transformer
+        else:
+            hidden_sizes = list(
+                runtime_config.get("policy_hidden_sizes", DEFAULT_HIDDEN_SIZES)
+            )
+            self.policy = MLPPolicy(self.obs_dim, self.act_dim, hidden_sizes)
+            self._build_obs = self._build_obs_mlp
+
+        self.policy.to(self.device)
 
         policy_path = os.path.join(bot_dir, "PPO_POLICY.pt")
         state = torch.load(policy_path, map_location=self.device)
         if isinstance(state, dict) and "state_dict" in state:
             state = state["state_dict"]
-
         self.policy.load_state_dict(state)
         self.policy.eval()
 
@@ -171,31 +430,53 @@ class BotBoi(BaseAgent):
         checkpoint_dir = runtime_config.get("checkpoint_dir", "")
         cumulative_timesteps = runtime_config.get("cumulative_timesteps", "")
         print(
-            f"[BotBoi] Loaded policy. obs_dim={self.obs_dim}, act_dim={self.act_dim}, "
+            f"[BotBoi] Loaded {self.policy_type} policy. obs_dim={self.obs_dim}, act_dim={self.act_dim}, "
             f"hold_ticks={self.hold_ticks}, checkpoint={checkpoint_dir}, ts={cumulative_timesteps}"
         )
 
-    def build_obs(self, packet: GameTickPacket) -> np.ndarray:
+    def _build_obs_mlp(self, packet: GameTickPacket) -> np.ndarray:
         me = packet.game_cars[self.index]
         ball = packet.game_ball
 
-        car_pos = np.array([me.physics.location.x, me.physics.location.y, me.physics.location.z], dtype=np.float32)
-        car_vel = np.array([me.physics.velocity.x, me.physics.velocity.y, me.physics.velocity.z], dtype=np.float32)
-        car_ang_vel = np.array(
-            [me.physics.angular_velocity.x, me.physics.angular_velocity.y, me.physics.angular_velocity.z],
+        car_pos = np.array(
+            [me.physics.location.x, me.physics.location.y, me.physics.location.z],
             dtype=np.float32,
         )
-        car_fwd = forward_vector(float(me.physics.rotation.pitch), float(me.physics.rotation.yaw))
+        car_vel = np.array(
+            [me.physics.velocity.x, me.physics.velocity.y, me.physics.velocity.z],
+            dtype=np.float32,
+        )
+        car_ang_vel = np.array(
+            [
+                me.physics.angular_velocity.x,
+                me.physics.angular_velocity.y,
+                me.physics.angular_velocity.z,
+            ],
+            dtype=np.float32,
+        )
+        car_fwd = forward_vector(
+            float(me.physics.rotation.pitch), float(me.physics.rotation.yaw)
+        )
         car_up = up_vector(
             float(me.physics.rotation.pitch),
             float(me.physics.rotation.yaw),
             float(me.physics.rotation.roll),
         )
 
-        ball_pos = np.array([ball.physics.location.x, ball.physics.location.y, ball.physics.location.z], dtype=np.float32)
-        ball_vel = np.array([ball.physics.velocity.x, ball.physics.velocity.y, ball.physics.velocity.z], dtype=np.float32)
+        ball_pos = np.array(
+            [ball.physics.location.x, ball.physics.location.y, ball.physics.location.z],
+            dtype=np.float32,
+        )
+        ball_vel = np.array(
+            [ball.physics.velocity.x, ball.physics.velocity.y, ball.physics.velocity.z],
+            dtype=np.float32,
+        )
         ball_ang_vel = np.array(
-            [ball.physics.angular_velocity.x, ball.physics.angular_velocity.y, ball.physics.angular_velocity.z],
+            [
+                ball.physics.angular_velocity.x,
+                ball.physics.angular_velocity.y,
+                ball.physics.angular_velocity.z,
+            ],
             dtype=np.float32,
         )
 
@@ -245,11 +526,19 @@ class BotBoi(BaseAgent):
                 continue
 
             other_pos = np.array(
-                [other.physics.location.x, other.physics.location.y, other.physics.location.z],
+                [
+                    other.physics.location.x,
+                    other.physics.location.y,
+                    other.physics.location.z,
+                ],
                 dtype=np.float32,
             )
             other_vel = np.array(
-                [other.physics.velocity.x, other.physics.velocity.y, other.physics.velocity.z],
+                [
+                    other.physics.velocity.x,
+                    other.physics.velocity.y,
+                    other.physics.velocity.z,
+                ],
                 dtype=np.float32,
             )
 
@@ -296,14 +585,194 @@ class BotBoi(BaseAgent):
                 to_opp_dir,
                 np.array([to_opp_dist * DIST_COEF], dtype=np.float32),
             ],
-            axis=0,
-        ).astype(np.float32)
+            dtype=np.float32,
+        )
 
         if obs.shape[0] != self.obs_dim:
             print(f"[BotBoi] ERROR: obs_len={obs.shape[0]}, expected={self.obs_dim}")
             return np.zeros((self.obs_dim,), dtype=np.float32)
 
         return obs
+
+    def _build_obs_transformer(
+        self, packet: GameTickPacket
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        me = packet.game_cars[self.index]
+        ball = packet.game_ball
+        is_orange = int(self.team == 1)
+
+        car_pos = np.array(
+            [me.physics.location.x, me.physics.location.y, me.physics.location.z],
+            dtype=np.float32,
+        )
+        car_vel = np.array(
+            [me.physics.velocity.x, me.physics.velocity.y, me.physics.velocity.z],
+            dtype=np.float32,
+        )
+        car_ang_vel = np.array(
+            [
+                me.physics.angular_velocity.x,
+                me.physics.angular_velocity.y,
+                me.physics.angular_velocity.z,
+            ],
+            dtype=np.float32,
+        )
+        car_fwd = forward_vector(
+            float(me.physics.rotation.pitch), float(me.physics.rotation.yaw)
+        )
+        car_up = up_vector(
+            float(me.physics.rotation.pitch),
+            float(me.physics.rotation.yaw),
+            float(me.physics.rotation.roll),
+        )
+
+        ball_pos = np.array(
+            [ball.physics.location.x, ball.physics.location.y, ball.physics.location.z],
+            dtype=np.float32,
+        )
+        ball_vel = np.array(
+            [ball.physics.velocity.x, ball.physics.velocity.y, ball.physics.velocity.z],
+            dtype=np.float32,
+        )
+        ball_ang_vel = np.array(
+            [
+                ball.physics.angular_velocity.x,
+                ball.physics.angular_velocity.y,
+                ball.physics.angular_velocity.z,
+            ],
+            dtype=np.float32,
+        )
+
+        if is_orange:
+            car_pos[..., :2] *= -1
+            car_vel[..., :2] *= -1
+            car_ang_vel[..., :2] *= -1
+            car_fwd[..., :2] *= -1
+            car_up[..., :2] *= -1
+            ball_pos[..., :2] *= -1
+            ball_vel[..., :2] *= -1
+            ball_ang_vel[..., :2] *= -1
+
+        n_players = packet.num_cars
+        n_entities = n_players + 1 + NUM_BOOSTS
+
+        q = np.zeros((1, 1, EARL_QUERY_FEATURES), dtype=np.float32)
+        kv = np.zeros((n_entities, EARL_KV_FEATURES), dtype=np.float32)
+        m = np.zeros((n_entities,), dtype=np.float32)
+
+        kv[0, :5] = [1, 0, 0, 0, 0]
+        kv[0, 5:8] = car_pos / 2300.0
+        kv[0, 8:11] = car_vel / 2300.0
+        kv[0, 11:14] = car_fwd
+        kv[0, 14:17] = car_up
+        kv[0, 17:20] = car_ang_vel / 5.5
+        kv[0, 20] = np.clip(me.boost, 0, 100) / 100.0
+        kv[0, 21] = float(me.is_demolished)
+        kv[0, 22] = 1.0 if me.has_wheel_contact else 0.0
+        kv[0, 23] = 1.0
+        kv[0, 24] = 1.0 if me.jumped or me.double_jumped else 0.0
+        m[0] = 1.0
+
+        q[0, 0, :5] = kv[0, :5]
+        q[0, 0, 5:8] = kv[0, 5:8]
+        q[0, 0, 8:11] = kv[0, 8:11]
+        q[0, 0, 11:14] = kv[0, 11:14]
+        q[0, 0, 14:17] = kv[0, 14:17]
+        q[0, 0, 17:20] = kv[0, 17:20]
+        q[0, 0, 20] = kv[0, 20]
+        q[0, 0, 21] = kv[0, 21]
+        q[0, 0, 22] = kv[0, 22]
+        q[0, 0, 23] = kv[0, 23]
+        q[0, 0, 24] = kv[0, 24]
+
+        other_idx = 1
+        for i in range(packet.num_cars):
+            if i == self.index:
+                continue
+            other = packet.game_cars[i]
+            other_pos = np.array(
+                [
+                    other.physics.location.x,
+                    other.physics.location.y,
+                    other.physics.location.z,
+                ],
+                dtype=np.float32,
+            )
+            other_vel = np.array(
+                [
+                    other.physics.velocity.x,
+                    other.physics.velocity.y,
+                    other.physics.velocity.z,
+                ],
+                dtype=np.float32,
+            )
+            other_ang_vel = np.array(
+                [
+                    other.physics.angular_velocity.x,
+                    other.physics.angular_velocity.y,
+                    other.physics.angular_velocity.z,
+                ],
+                dtype=np.float32,
+            )
+            other_fwd = forward_vector(
+                float(other.physics.rotation.pitch), float(other.physics.rotation.yaw)
+            )
+            other_up = up_vector(
+                float(other.physics.rotation.pitch),
+                float(other.physics.rotation.yaw),
+                float(other.physics.rotation.roll),
+            )
+
+            if is_orange:
+                other_pos[..., :2] *= -1
+                other_vel[..., :2] *= -1
+                other_ang_vel[..., :2] *= -1
+                other_fwd[..., :2] *= -1
+                other_up[..., :2] *= -1
+
+            other_is_opp = int(other.team != me.team)
+
+            if other_is_opp:
+                kv[other_idx, :5] = [0, 0, 1, 0, 0]
+            else:
+                kv[other_idx, :5] = [0, 1, 0, 0, 0]
+            kv[other_idx, 5:8] = other_pos / 2300.0
+            kv[other_idx, 8:11] = other_vel / 2300.0
+            kv[other_idx, 11:14] = other_fwd
+            kv[other_idx, 14:17] = other_up
+            kv[other_idx, 17:20] = other_ang_vel / 5.5
+            kv[other_idx, 20] = np.clip(other.boost, 0, 100) / 100.0
+            kv[other_idx, 21] = float(other.is_demolished)
+            kv[other_idx, 22] = 1.0 if other.has_wheel_contact else 0.0
+            kv[other_idx, 23] = 1.0
+            kv[other_idx, 24] = 1.0 if other.jumped or other.double_jumped else 0.0
+            m[other_idx] = 1.0
+            other_idx += 1
+
+        ball_idx = n_players
+        kv[ball_idx, :5] = [0, 0, 0, 1, 0]
+        kv[ball_idx, 5:8] = ball_pos / 2300.0
+        kv[ball_idx, 8:11] = ball_vel / 2300.0
+        kv[ball_idx, 17:20] = ball_ang_vel / 5.5
+        m[ball_idx] = 1.0
+
+        boost_start = ball_idx + 1
+        for boost_idx, boost_loc in enumerate(BOOST_LOCATIONS):
+            boost_pos = boost_loc.copy()
+            if is_orange:
+                boost_pos[..., :2] *= -1
+            kv[boost_start + boost_idx, :5] = [0, 0, 0, 0, 1]
+            kv[boost_start + boost_idx, 5:8] = boost_pos / 2300.0
+            kv[boost_start + boost_idx, 21] = 1.0
+            m[boost_start + boost_idx] = 1.0
+
+        kv *= INVERT
+        kv /= NORM
+
+        return q, kv, m
+
+    def build_obs(self, packet: GameTickPacket):
+        return self._build_obs(packet)
 
     def action_index_to_controls(self, action_index: int) -> SimpleControllerState:
         idx = int(np.clip(action_index, 0, len(self.action_table) - 1))
@@ -325,11 +794,15 @@ class BotBoi(BaseAgent):
             return self.action_index_to_controls(self._held_action_index)
 
         obs = self.build_obs(game_tick_packet)
-        obs_t = torch.from_numpy(obs).float().to(self.device)
 
         with torch.no_grad():
-            logits = self.policy(obs_t)
-            action_index = int(torch.argmax(logits).item())
+            if self.policy_type == "transformer":
+                q, kv, m = obs
+                action_index, _ = self.policy.get_action(q, kv, m)
+            else:
+                obs_t = torch.from_numpy(obs).float().to(self.device)
+                logits = self.policy(obs_t)
+                action_index = int(torch.argmax(logits).item())
 
         self._held_action_index = action_index
         self._hold_counter = self.hold_ticks - 1

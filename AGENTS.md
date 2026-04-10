@@ -110,6 +110,52 @@ bin/validate_rlbot_package
 
 The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall back to `python3` when that local env is missing.
 
+## Transformer Architecture (Necto-style)
+
+This repo now supports a transformer-based observation processing architecture inspired by Necto. This uses the EARLPerceiver architecture instead of a standard MLP for processing observations.
+
+### Architecture Overview
+
+- **EARLPerceiver**: A transformer-style attention mechanism that processes entity-based observations
+- **Query (Q)**: Player state + previous actions + goal info (36 dims)
+- **Key-Value (KV)**: All entities (ball + 34 boosts + opponents) with position/velocity/state features
+- **Attention**: Dynamically focuses on relevant entities rather than processing a flat vector
+
+### Transformer Components
+
+- `rocket_league_bot_src/obs_transformer.py`: QKV-based observation builder
+- `rocket_league_bot_src/transformer_policy.py`: TransformerPolicy with EARLPerceiver + ControlsPredictorDot
+- `train_transformer.py`: PPO training script for transformer-based policies
+
+### Configuration (in `config.py`)
+
+```python
+EARL_EMBED_DIM = 256      # Output embedding dimension
+EARL_NUM_HEADS = 4        # Attention heads
+EARL_NUM_LAYERS = 8       # Transformer layers
+EARL_QUERY_FEATURES = 36  # Player query vector size
+EARL_KV_FEATURES = 55     # Entity features (type + pos/vel + state)
+```
+
+### Training Transformer
+
+```bash
+python3 train_transformer.py --n-proc 1 --lr 3e-4 --n-steps 512
+```
+
+### Key Differences from MLP
+
+| Aspect | MLP (Original) | Transformer (EARLPerceiver) |
+|--------|----------------|----------------------------|
+| Architecture | Flat MLP (512, 512, 256) | Attention over entities |
+| Entity Processing | Only closest opponent | All opponents + boosts |
+| Information Flow | Fixed 54-dim observation | Dynamic QKV attention |
+| Relationship Reasoning | Limited to hand-crafted features | Learns entity relationships |
+
+### Fresh Training Boundary
+
+The transformer architecture is a **fresh-training boundary** - existing MLP checkpoints cannot be used with the transformer and vice versa. Set `policy_type` in runtime_config to `"transformer"` or `"mlp"` to distinguish.
+
 ## Repo Map
 
 `rocket_league_bot_src/config.py`
