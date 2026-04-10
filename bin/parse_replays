@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+"""
+Convert parsed carball parquet files into training-ready replay arrays.
+
+This converts the carball output (ball, game, players parquet files) into the format
+used by our ReplayStateSetter for training.
+
+Usage:
+    python bin/parse_replays.py --input data/replays/ranked-duels --output data/replay_arrays
+"""
+
+import argparse
+import json
+import os
+import warnings
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent / "reply-training"))
+
+from replay_pretraining.replays.replays import to_rlgym_dfs, load_parsed_replay
+from replay_pretraining.utils.util import make_lookup_table
+
+
+LIN_NORM = 1 / 2300
+ANG_NORM = 1 / 5.5
+
+
+def convert_replay_to_training_data(replay_path: Path, lookup_table: np.ndarray):
+    """
+    Convert a parsed carball replay folder into training-ready game state DataFrames.
+    
+    Returns list of (gamestate_df, actions_dict) tuples for each gameplay period.
+    """
+    try:
+        parsed_replay = load_parsed_replay(str(replay_path))
+    except Exception as e:
+        print(f"  Error loading replay {replay_path}: {e}")
+        return []
+    
+    if len(parsed_replay.metadata.get("players", [])) % 2 != 0:
+        return []
+    
+    if len(parsed_replay.metadata.get("players", [])) == 0:
+        return []
+    
+    try:
+        episodes = list(to_rlgym_dfs(parsed_replay, lookup_table))
+        return episodes
+    except Exception as e:
+        print(f"  Error converting replay {replay_path}: {e}")
+        return []
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Convert parsed replays to training format")
+    parser.add_argument("--input", required=True, help="Folder containing parsed replay folders")
+    parser.add_argument("--output", required=True, help="Output folder for replay arrays")
+    parser.add_argument("--min-replays", type=int, default=500, help="Minimum replays to process per playlist")
+    parser.add_argument("--lookup-table", action="store_true", help="Generate lookup table stats")
+    
+    args = parser.parse_args()
+    
+    input_path = Path(args.input)
+    output_path = Path(args.output)
+    output_path.mkdir(parents=True, exist_ok=True)
+    
+    lookup_table = make_lookup_table()
+    
+    replay_folders = []
+    for item in input_path.iterdir():
+        if item.is_dir() and not item.name.startswith("_"):
+            for sub_item in item.iterdir():
+                if sub_item.is_dir() and not sub_item.name.startswith("_"):
+                    replay_folders.append(sub_item)
+    
+    print(f"Found {len(replay_folders)} replay folders")
+    
+    all_episodes = []
+    
+    for replay_folder in tqdm(replay_folders, desc="Processing replays"):
+        episodes = convert_replay_to_training_data(replay_folder, lookup_table)
+        all_episodes.extend(episodes)
+    
+    print(f"Extracted {len(all_episodes)} gameplay episodes")
+    
+    metadata = {
+        "num_episodes": len(all_episodes),
+        "input_folder": str(input_path),
+        "lookup_table_size": len(lookup_table),
+    }
+    
+    with open(output_path / "_metadata.json", "w") as f:
+        json.dump(metadata, f, indent=2)
+    
+    print(f"Saved metadata to {output_path / '_metadata.json'}")
+
+
+if __name__ == "__main__":
+    main()
