@@ -875,7 +875,7 @@ class EnvBuilder:
                 device=self.opponent_device,
             )
         else:
-            gym_env = RLGymV2GymWrapper(env)
+            gym_env = env
 
         wrapped = ProcessIterationLogger(
             gym_env,

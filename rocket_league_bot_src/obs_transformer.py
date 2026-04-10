@@ -7,7 +7,6 @@ from gymnasium import spaces
 from rlgym.api import AgentID, ObsBuilder
 from rlgym.rocket_league import common_values
 from rlgym.rocket_league.api import GameState
-from rlgym.utils.gamestates import PlayerData
 
 from .config import (
     EARL_EMBED_DIM,
@@ -203,11 +202,17 @@ class TransformerObs(ObsBuilder):
         self._boost_locations = BOOST_LOCATIONS
         self.demo_timers = None
         self.boost_timers = None
+        self.blue_score = 0
+        self.orange_score = 0
+        self._prev_goal_scored = False
 
     def _reset(self, initial_state: GameState):
-        n_players = len(initial_state.players)
+        n_players = len(initial_state.cars)
         self.demo_timers = np.zeros(n_players, dtype=np.float32)
         self.boost_timers = np.zeros(len(self._boost_locations), dtype=np.float32)
+        self.blue_score = 0
+        self.orange_score = 0
+        self._prev_goal_scored = False
 
     def reset(self, agents, initial_state: GameState, shared_info):
         self._reset(initial_state)
@@ -236,6 +241,13 @@ class TransformerObs(ObsBuilder):
     def build_obs(
         self, agents, state: GameState, shared_info
     ) -> Dict[AgentID, Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+        if state.goal_scored and not self._prev_goal_scored:
+            if state.scoring_team == 0:  # BLUE
+                self.blue_score += 1
+            else:  # ORANGE
+                self.orange_score += 1
+        self._prev_goal_scored = bool(state.goal_scored)
+
         obs = {}
         n_agents = len(agents)
         n_entities = n_agents + 1 + len(self._boost_locations)
@@ -243,12 +255,13 @@ class TransformerObs(ObsBuilder):
         ball_phys = state.ball
         inverted_ball = state.inverted_ball
 
-        blue_score = float(state.blue_score)
-        orange_score = float(state.orange_score)
-        ticks_left = getattr(state, "ticks_left", float("inf"))
-        is_overtime = np.isinf(ticks_left) and ticks_left > 0
+        blue_score = float(self.blue_score)
+        orange_score = float(self.orange_score)
+        # RLGym v2 GameState doesn't have ticks_left easily accessible
+        ticks_left = float("inf") 
+        is_overtime = False
         goal_diff = np.clip(blue_score - orange_score, -5, 5) / 5.0
-        time_left = (0.0 if is_overtime else min(ticks_left, 300 * 60)) / (300 * 60 * 5)
+        time_left = 0.0 # Default since we don't know match duration easily
 
         q = np.zeros((n_agents, 1, 1, EARL_QUERY_FEATURES), dtype=np.float32)
         kv = np.zeros((n_agents, n_entities, EARL_KV_FEATURES), dtype=np.float32)

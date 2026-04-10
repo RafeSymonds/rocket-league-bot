@@ -307,8 +307,8 @@ class TransformerPolicy(nn.Module):
 
     def get_action(self, q, kv, m, deterministic=False):
         q_t = torch.from_numpy(q).float()
-        kv_t = torch.from_numpy(kv).float()
-        m_t = torch.from_numpy(m).float()
+        kv_t = torch.from_numpy(kv).float().unsqueeze(0)
+        m_t = torch.from_numpy(m).float().unsqueeze(0)
 
         with torch.no_grad():
             logits, weights = self.actor(q_t, kv_t, m_t)

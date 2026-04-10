@@ -105,10 +105,11 @@ class TransformerPPO:
         self.optimizer = torch.optim.Adam(policy.parameters(), lr=lr)
 
     def predict(self, obs, deterministic=False):
+        device = next(self.policy.parameters()).device
         q, kv, m = obs
-        q_t = torch.from_numpy(q).float()
-        kv_t = torch.from_numpy(kv).float()
-        m_t = torch.from_numpy(m).float()
+        q_t = torch.as_tensor(q).float().to(device)
+        kv_t = torch.as_tensor(kv).float().to(device).unsqueeze(0)
+        m_t = torch.as_tensor(m).float().to(device).unsqueeze(0)
 
         with torch.no_grad():
             logits, _ = self.policy((q_t, kv_t, m_t))
@@ -126,14 +127,16 @@ class TransformerPPO:
         return action.item(), chosen_log_prob.item()
 
     def evaluate(self, obs, actions):
+        device = next(self.policy.parameters()).device
         q, kv, m = obs
-        q_t = torch.from_numpy(q).float()
-        kv_t = torch.from_numpy(kv).float()
-        m_t = torch.from_numpy(m).float()
-        actions_t = torch.from_numpy(actions).long()
+        q_t = torch.as_tensor(q).float().to(device)
+        kv_t = torch.as_tensor(kv).float().to(device).unsqueeze(0)
+        m_t = torch.as_tensor(m).float().to(device).unsqueeze(0)
+        actions_t = torch.as_tensor(actions).long().to(device)
 
         logits, _ = self.policy((q_t, kv_t, m_t))
         probs = F.softmax(logits, dim=-1)
+        # print(f"DEBUG: probs shape: {probs.shape}, actions_t shape: {actions_t.shape}")
         dist = torch.distributions.Categorical(probs)
 
         log_probs = torch.log(probs + 1e-8)
@@ -312,7 +315,7 @@ class TransformerEnvBuilder:
                 device=self.opponent_device,
             )
         else:
-            gym_env = RLGymV2GymWrapper(env)
+            gym_env = env
 
         return gym_env
 
@@ -332,8 +335,8 @@ def collect_rollout(env, policy: TransformerPPO, n_steps: int, device: str):
             q, kv, m = obs
 
             q_t = torch.from_numpy(q).float().to(device)
-            kv_t = torch.from_numpy(kv).float().to(device)
-            m_t = torch.from_numpy(m).float().to(device)
+            kv_t = torch.from_numpy(kv).float().to(device).unsqueeze(0)
+            m_t = torch.from_numpy(m).float().to(device).unsqueeze(0)
 
             logits, _ = policy.policy((q_t, kv_t, m_t))
             probs = F.softmax(logits, dim=-1)
@@ -493,8 +496,8 @@ def main():
         with torch.no_grad():
             last_obs = observations[-1]
             q_t = torch.from_numpy(last_obs[0]).float().to(device)
-            kv_t = torch.from_numpy(last_obs[1]).float().to(device)
-            m_t = torch.from_numpy(last_obs[2]).float().to(device)
+            kv_t = torch.from_numpy(last_obs[1]).float().to(device).unsqueeze(0)
+            m_t = torch.from_numpy(last_obs[2]).float().to(device).unsqueeze(0)
             next_value = ppo.target_policy.critic((q_t, kv_t, m_t)).item()
 
         advantages, returns = compute_gae(

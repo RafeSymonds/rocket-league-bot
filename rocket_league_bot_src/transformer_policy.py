@@ -53,7 +53,7 @@ class ControlsPredictorDot(nn.Module):
             self.actions = torch.from_numpy(make_lookup_table()).float()
         else:
             self.actions = torch.from_numpy(actions).float()
-        self.net = self._mlp(8, in_features, layers, features)
+        self.net = self._mlp(8, features, layers, features)
         self.emb_convertor = nn.Linear(in_features, features)
 
     @staticmethod
@@ -112,8 +112,7 @@ class TransformerActor(nn.Module):
             res = tuple(r[:, 0, :] for r in res)
         else:
             res = res[:, 0, :]
-        if weights is None:
-            return res
+
         return res, weights
 
 
@@ -162,8 +161,8 @@ class TransformerPolicy(nn.Module):
 
     def get_action(self, q, kv, m, deterministic=False):
         q_t = torch.from_numpy(q).float()
-        kv_t = torch.from_numpy(kv).float()
-        m_t = torch.from_numpy(m).float()
+        kv_t = torch.from_numpy(kv).float().unsqueeze(0)
+        m_t = torch.from_numpy(m).float().unsqueeze(0)
 
         with torch.no_grad():
             logits, weights = self.actor((q_t, kv_t, m_t))
@@ -175,10 +174,10 @@ class TransformerPolicy(nn.Module):
 
     def evaluate(self, obs, actions):
         q, kv, m = obs
-        q = torch.from_numpy(q).float()
-        kv = torch.from_numpy(kv).float()
-        m = torch.from_numpy(m).float()
-        actions = torch.from_numpy(actions).long()
+        q = torch.as_tensor(q).float()
+        kv = torch.as_tensor(kv).float().unsqueeze(0)
+        m = torch.as_tensor(m).float().unsqueeze(0)
+        actions = torch.as_tensor(actions).long()
 
         logits, weights = self.actor((q, kv, m))
         log_probs = torch.log_softmax(logits, dim=-1)
