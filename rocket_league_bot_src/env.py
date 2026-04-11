@@ -322,7 +322,7 @@ class ProcessIterationLogger:
         else:
             obs, info = result, {}
 
-        state = info.get("state")
+        state = getattr(self.env, 'state', None)
         if state is not None:
             for agent, car in state.cars.items():
                 self._prev_touches[agent] = int(car.ball_touches)
@@ -388,7 +388,7 @@ class ProcessIterationLogger:
 
         self.iteration_steps += 1
         self.ep_steps += 1
-        state = info.get("state")
+        state = getattr(self.env, 'state', None)
         blue_rewards: list[float] = []
         orange_rewards: list[float] = []
         if isinstance(reward, (list, tuple, np.ndarray)) and hasattr(
@@ -462,7 +462,8 @@ class ProcessIterationLogger:
                 elif int(state.scoring_team) == 1:
                     self.ep_orange_goal_step = self.ep_steps
 
-        if terminated or truncated:
+        terminated_any = any(terminated.values()) if isinstance(terminated, dict) else bool(terminated)
+        if terminated_any or truncated:
             self.iteration_episodes += 1
             self.iteration_return += self.ep_return
             self.iteration_orange_return += self.ep_orange_return
@@ -500,6 +501,9 @@ class ProcessIterationLogger:
                     self.iteration_orange_median_t_goal.append(self.ep_orange_goal_step)
 
             self._reset_episode_stats()
+            if state is not None:
+                for agent, car in state.cars.items():
+                    self._prev_touches[agent] = int(car.ball_touches)
 
         if self.iteration_steps >= self.iteration_ts:
             self._report_and_reset_iteration()
