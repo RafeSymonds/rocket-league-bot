@@ -136,7 +136,6 @@ class TransformerPPO:
 
         logits, _ = self.policy((q_t, kv_t, m_t))
         probs = F.softmax(logits, dim=-1)
-        # print(f"DEBUG: probs shape: {probs.shape}, actions_t shape: {actions_t.shape}")
         dist = torch.distributions.Categorical(probs)
 
         log_probs = torch.log(probs + 1e-8)
@@ -151,11 +150,12 @@ class TransformerPPO:
         return action_log_probs, values, entropy
 
     def update(self, rollouts: RolloutData):
+        device = next(self.policy.parameters()).device
         observations = rollouts.observations
-        actions = torch.from_numpy(rollouts.actions).long()
-        old_log_probs = torch.from_numpy(rollouts.log_probs).float()
-        returns = torch.from_numpy(rollouts.returns).float()
-        advantages = torch.from_numpy(rollouts.advantages).float()
+        actions = torch.as_tensor(rollouts.actions).long().to(device)
+        old_log_probs = torch.as_tensor(rollouts.log_probs).float().to(device)
+        returns = torch.as_tensor(rollouts.returns).float().to(device)
+        advantages = torch.as_tensor(rollouts.advantages).float().to(device)
 
         advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
@@ -352,7 +352,7 @@ def collect_rollout(env, policy: TransformerPPO, n_steps: int, device: str):
 
             action_np = action.cpu().numpy()
             observations.append((q, kv, m))
-            actions.append(action_np)
+            actions.append(action.item())
             log_probs.append(chosen_log_prob.item())
             values.append(value)
 
