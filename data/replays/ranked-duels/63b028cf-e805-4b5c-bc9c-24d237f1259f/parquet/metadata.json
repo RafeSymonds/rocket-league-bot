@@ -1,0 +1,96 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "Nath \u0d60",
+      "unique_id": "9bf99dfb84d14645b85c2dc5c299b4fc"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 304,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 1359,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 2525,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 3241,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 3767,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 4251,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 4897,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 5717,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 6639,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 7196,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 7886,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 8331,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 9163,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 10103,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 10633,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 11188,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "Coconut",
+      "unique_id": "76561198162286169"
+    },
+    {
+      "name": "dribbs",
+      "unique_id": "76561198157937319"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 3275,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 4285,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 5812,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 6802,
+        "player_name": "Coconut",
+        "is_orange": true
+      },
+      {
+        "frame": 7349,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 9087,
+        "player_name": "Coconut",
+        "is_orange": true
+      },
+      {
+        "frame": 9822,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 10787,
+        "player_name": "Coconut",
+        "is_orange": true
+      }
+    ]
+  }
+}

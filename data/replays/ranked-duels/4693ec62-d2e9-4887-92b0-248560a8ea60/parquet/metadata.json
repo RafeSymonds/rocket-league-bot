@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "\u00c8leets",
+      "unique_id": "766a3d1d0adb4a3ebb9b342e4c6595a5"
+    },
+    {
+      "name": "LO-Momo",
+      "unique_id": "302142ac72a54ca6a9b70c172e3aa91d"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 360,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 781,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 3143,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 3688,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 4530,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 5384,
+        "player_name": "LO-Momo",
+        "is_orange": false
+      },
+      {
+        "frame": 5747,
+        "player_name": "LO-Momo",
+        "is_orange": false
+      },
+      {
+        "frame": 6147,
+        "player_name": "LO-Momo",
+        "is_orange": false
+      },
+      {
+        "frame": 6726,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      }
+    ]
+  }
+}

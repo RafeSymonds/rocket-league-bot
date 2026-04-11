@@ -1,0 +1,86 @@
+{
+  "players": [
+    {
+      "name": "Swizx.",
+      "unique_id": "76561198180446441"
+    },
+    {
+      "name": "TravisScott301",
+      "unique_id": "e39eaa3b5d2543908d6d9d1b263da6ce"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 739,
+        "player_name": "TravisScott301",
+        "is_orange": true
+      },
+      {
+        "frame": 2211,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 2579,
+        "player_name": "TravisScott301",
+        "is_orange": true
+      },
+      {
+        "frame": 2996,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 4505,
+        "player_name": "TravisScott301",
+        "is_orange": true
+      },
+      {
+        "frame": 4913,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 5862,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 6261,
+        "player_name": "TravisScott301",
+        "is_orange": true
+      },
+      {
+        "frame": 6674,
+        "player_name": "TravisScott301",
+        "is_orange": true
+      },
+      {
+        "frame": 7332,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 8229,
+        "player_name": "TravisScott301",
+        "is_orange": true
+      },
+      {
+        "frame": 9291,
+        "player_name": "TravisScott301",
+        "is_orange": true
+      },
+      {
+        "frame": 10579,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 11621,
+        "player_name": "TravisScott301",
+        "is_orange": true
+      }
+    ]
+  }
+}

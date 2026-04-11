@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "Mr Giyu!!!",
+      "unique_id": "76561198784847286"
+    },
+    {
+      "name": "F\u03bfrky",
+      "unique_id": "be892719368a4ed7bc26d4f4e1d6de00"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1403,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      },
+      {
+        "frame": 1959,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      },
+      {
+        "frame": 2457,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      },
+      {
+        "frame": 3026,
+        "player_name": "Mr Giyu!!!",
+        "is_orange": false
+      },
+      {
+        "frame": 4672,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      },
+      {
+        "frame": 6089,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      },
+      {
+        "frame": 6513,
+        "player_name": "Mr Giyu!!!",
+        "is_orange": false
+      },
+      {
+        "frame": 7469,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      }
+    ]
+  }
+}

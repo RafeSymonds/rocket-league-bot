@@ -1,0 +1,96 @@
+{
+  "players": [
+    {
+      "name": "snxwyy",
+      "unique_id": "76561198157118548"
+    },
+    {
+      "name": "TED-99",
+      "unique_id": "e8b79720172b4810b7a5a8e00620d205"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 500,
+        "player_name": "TED-99",
+        "is_orange": true
+      },
+      {
+        "frame": 1584,
+        "player_name": "TED-99",
+        "is_orange": true
+      },
+      {
+        "frame": 2065,
+        "player_name": "TED-99",
+        "is_orange": true
+      },
+      {
+        "frame": 2871,
+        "player_name": "TED-99",
+        "is_orange": true
+      },
+      {
+        "frame": 3948,
+        "player_name": "snxwyy",
+        "is_orange": false
+      },
+      {
+        "frame": 4410,
+        "player_name": "TED-99",
+        "is_orange": true
+      },
+      {
+        "frame": 4917,
+        "player_name": "TED-99",
+        "is_orange": true
+      },
+      {
+        "frame": 5387,
+        "player_name": "TED-99",
+        "is_orange": true
+      },
+      {
+        "frame": 5760,
+        "player_name": "snxwyy",
+        "is_orange": false
+      },
+      {
+        "frame": 6584,
+        "player_name": "TED-99",
+        "is_orange": true
+      },
+      {
+        "frame": 7338,
+        "player_name": "TED-99",
+        "is_orange": true
+      },
+      {
+        "frame": 8265,
+        "player_name": "snxwyy",
+        "is_orange": false
+      },
+      {
+        "frame": 8993,
+        "player_name": "snxwyy",
+        "is_orange": false
+      },
+      {
+        "frame": 9620,
+        "player_name": "TED-99",
+        "is_orange": true
+      },
+      {
+        "frame": 10156,
+        "player_name": "TED-99",
+        "is_orange": true
+      },
+      {
+        "frame": 10640,
+        "player_name": "TED-99",
+        "is_orange": true
+      }
+    ]
+  }
+}

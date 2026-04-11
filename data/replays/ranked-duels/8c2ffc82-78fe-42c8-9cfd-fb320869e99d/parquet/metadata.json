@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "ViitiN.",
+      "unique_id": "76561199548185495"
+    },
+    {
+      "name": "wisty",
+      "unique_id": "76561198937066432"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 477,
+        "player_name": "ViitiN.",
+        "is_orange": true
+      },
+      {
+        "frame": 2334,
+        "player_name": "ViitiN.",
+        "is_orange": true
+      },
+      {
+        "frame": 2665,
+        "player_name": "wisty",
+        "is_orange": false
+      },
+      {
+        "frame": 4460,
+        "player_name": "ViitiN.",
+        "is_orange": true
+      },
+      {
+        "frame": 4929,
+        "player_name": "wisty",
+        "is_orange": false
+      },
+      {
+        "frame": 5500,
+        "player_name": "wisty",
+        "is_orange": false
+      },
+      {
+        "frame": 6234,
+        "player_name": "wisty",
+        "is_orange": false
+      },
+      {
+        "frame": 9020,
+        "player_name": "ViitiN.",
+        "is_orange": true
+      },
+      {
+        "frame": 10469,
+        "player_name": "ViitiN.",
+        "is_orange": true
+      },
+      {
+        "frame": 11217,
+        "player_name": "ViitiN.",
+        "is_orange": true
+      },
+      {
+        "frame": 11772,
+        "player_name": "wisty",
+        "is_orange": false
+      }
+    ]
+  }
+}

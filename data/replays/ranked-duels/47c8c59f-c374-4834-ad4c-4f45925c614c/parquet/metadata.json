@@ -1,0 +1,41 @@
+{
+  "players": [
+    {
+      "name": ".",
+      "unique_id": "76561199040090584"
+    },
+    {
+      "name": "e",
+      "unique_id": "76561198827640192"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 561,
+        "player_name": "e",
+        "is_orange": true
+      },
+      {
+        "frame": 1854,
+        "player_name": "e",
+        "is_orange": true
+      },
+      {
+        "frame": 2742,
+        "player_name": "e",
+        "is_orange": true
+      },
+      {
+        "frame": 3625,
+        "player_name": "e",
+        "is_orange": true
+      },
+      {
+        "frame": 4639,
+        "player_name": "e",
+        "is_orange": true
+      }
+    ]
+  }
+}

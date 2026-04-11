@@ -1,0 +1,842 @@
+{
+  "hits": [
+    {
+      "frame_number": 178,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 180,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 251,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 315,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 395,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 456,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 745,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 746,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 878,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 941,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 961,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 970,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 991,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1000,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1010,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1023,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1031,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1363,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1364,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 1366,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1462,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 1463,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1559,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1606,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 1690,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1716,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 1723,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1799,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1856,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 1888,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1921,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1947,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1969,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 1977,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2032,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2064,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2120,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2183,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 2236,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2318,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2326,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2338,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2350,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2365,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2389,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2445,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2513,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 2594,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2689,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 2736,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2836,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2899,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 2978,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 3062,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 3208,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 3294,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 3401,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 3558,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 3838,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 3839,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 3925,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 4240,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 4306,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 4631,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 4633,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 4719,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 4799,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 4842,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 4882,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 4944,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 5078,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5177,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5241,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5286,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 5432,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5449,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5483,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5487,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5511,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5536,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5559,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5590,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5605,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5638,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 5639,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5641,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 5645,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5664,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5676,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5688,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 5690,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5692,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 5727,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 5747,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 5749,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5789,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5809,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5826,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5869,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5872,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 5939,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5958,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5978,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 5990,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6003,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6019,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6026,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6035,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6042,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6063,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6064,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6126,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6142,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6273,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6334,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 6362,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 6428,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 6448,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6478,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6495,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6516,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6541,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6585,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6616,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6722,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6741,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6807,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 6859,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 6964,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7046,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7079,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7136,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7166,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7240,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 7290,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7349,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 7485,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7578,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7599,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7656,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7681,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7702,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7715,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 7756,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7769,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7853,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7859,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7870,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7898,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7906,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 7931,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 8013,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 8077,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 8190,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 8308,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 8358,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 8429,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 8535,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 8624,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 8642,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 8708,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 8771,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 8869,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 8963,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 8981,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 9041,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 9121,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 9192,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 9362,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 9375,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 9381,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 9382,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 9448,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 9583,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 9645,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 9744,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 9760,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 9771,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 9849,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 9941,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 9979,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10023,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10044,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 10046,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10134,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10163,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10182,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10225,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10228,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 10313,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10317,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10477,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10496,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10509,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10596,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10609,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10627,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10642,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10648,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 10934,
+      "player_unique_id": "76561198162286169"
+    },
+    {
+      "frame_number": 10935,
+      "player_unique_id": "76561198300908943"
+    },
+    {
+      "frame_number": 11026,
+      "player_unique_id": "76561198162286169"
+    }
+  ],
+  "gameplay_periods": [
+    {
+      "start_frame": 119,
+      "goal_frame": 478
+    },
+    {
+      "start_frame": 688,
+      "goal_frame": 1079
+    },
+    {
+      "start_frame": 1288,
+      "goal_frame": 3563
+    },
+    {
+      "start_frame": 3772,
+      "goal_frame": 3965
+    },
+    {
+      "start_frame": 4174,
+      "goal_frame": 4363
+    },
+    {
+      "start_frame": 4573,
+      "goal_frame": 10667
+    },
+    {
+      "start_frame": 10876,
+      "goal_frame": 11053
+    }
+  ]
+}

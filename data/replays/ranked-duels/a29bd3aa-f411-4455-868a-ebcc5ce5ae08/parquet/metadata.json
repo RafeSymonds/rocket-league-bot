@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "Fast.",
+      "unique_id": "76561198837994442"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1889,
+        "player_name": "Fast.",
+        "is_orange": true
+      },
+      {
+        "frame": 2273,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 3154,
+        "player_name": "Fast.",
+        "is_orange": true
+      },
+      {
+        "frame": 4993,
+        "player_name": "Fast.",
+        "is_orange": true
+      },
+      {
+        "frame": 5859,
+        "player_name": "Fast.",
+        "is_orange": true
+      },
+      {
+        "frame": 7720,
+        "player_name": "Fast.",
+        "is_orange": true
+      },
+      {
+        "frame": 8111,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 8636,
+        "player_name": "Fast.",
+        "is_orange": true
+      },
+      {
+        "frame": 9153,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      }
+    ]
+  }
+}

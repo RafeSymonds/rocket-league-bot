@@ -1,0 +1,101 @@
+{
+  "players": [
+    {
+      "name": "TvK .",
+      "unique_id": "cc12140e91a747dabb8d31e1e64dd1cb"
+    },
+    {
+      "name": ".",
+      "unique_id": "76561199888386741"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 318,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 643,
+        "player_name": "TvK .",
+        "is_orange": false
+      },
+      {
+        "frame": 1107,
+        "player_name": "TvK .",
+        "is_orange": false
+      },
+      {
+        "frame": 3127,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 3908,
+        "player_name": "TvK .",
+        "is_orange": false
+      },
+      {
+        "frame": 4724,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 5410,
+        "player_name": "TvK .",
+        "is_orange": false
+      },
+      {
+        "frame": 6303,
+        "player_name": "TvK .",
+        "is_orange": false
+      },
+      {
+        "frame": 8052,
+        "player_name": "TvK .",
+        "is_orange": false
+      },
+      {
+        "frame": 8827,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 9207,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 10118,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 10689,
+        "player_name": "TvK .",
+        "is_orange": false
+      },
+      {
+        "frame": 11294,
+        "player_name": "TvK .",
+        "is_orange": false
+      },
+      {
+        "frame": 12094,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 12916,
+        "player_name": "TvK .",
+        "is_orange": false
+      },
+      {
+        "frame": 13372,
+        "player_name": ".",
+        "is_orange": true
+      }
+    ]
+  }
+}

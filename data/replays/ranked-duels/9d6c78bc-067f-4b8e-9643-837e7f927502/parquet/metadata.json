@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "Abdullah",
+      "unique_id": "76561199037779944"
+    },
+    {
+      "name": "DrKnown",
+      "unique_id": "76561198283318718"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1715,
+        "player_name": "Abdullah",
+        "is_orange": false
+      },
+      {
+        "frame": 3260,
+        "player_name": "DrKnown",
+        "is_orange": true
+      },
+      {
+        "frame": 3934,
+        "player_name": "Abdullah",
+        "is_orange": false
+      },
+      {
+        "frame": 5138,
+        "player_name": "Abdullah",
+        "is_orange": false
+      },
+      {
+        "frame": 5607,
+        "player_name": "Abdullah",
+        "is_orange": false
+      },
+      {
+        "frame": 6393,
+        "player_name": "Abdullah",
+        "is_orange": false
+      },
+      {
+        "frame": 6989,
+        "player_name": "Abdullah",
+        "is_orange": false
+      },
+      {
+        "frame": 9367,
+        "player_name": "DrKnown",
+        "is_orange": true
+      }
+    ]
+  }
+}

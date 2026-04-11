@@ -1,0 +1,101 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "ops",
+      "unique_id": "76561198129528178"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1620,
+        "player_name": "ops",
+        "is_orange": true
+      },
+      {
+        "frame": 4571,
+        "player_name": "ops",
+        "is_orange": true
+      },
+      {
+        "frame": 6373,
+        "player_name": "ops",
+        "is_orange": true
+      },
+      {
+        "frame": 8934,
+        "player_name": "ops",
+        "is_orange": true
+      },
+      {
+        "frame": 14555,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 16589,
+        "player_name": "ops",
+        "is_orange": true
+      },
+      {
+        "frame": 17788,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 19732,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 22438,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 23824,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 25712,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 27109,
+        "player_name": "ops",
+        "is_orange": true
+      },
+      {
+        "frame": 29011,
+        "player_name": "ops",
+        "is_orange": true
+      },
+      {
+        "frame": 30293,
+        "player_name": "ops",
+        "is_orange": true
+      },
+      {
+        "frame": 32606,
+        "player_name": "ops",
+        "is_orange": true
+      },
+      {
+        "frame": 34514,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 37361,
+        "player_name": "ops",
+        "is_orange": true
+      }
+    ]
+  }
+}

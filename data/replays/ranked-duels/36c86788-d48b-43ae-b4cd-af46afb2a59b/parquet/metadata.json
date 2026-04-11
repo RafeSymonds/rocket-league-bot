@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "Ash",
+      "unique_id": "76561199076206546"
+    },
+    {
+      "name": "oCanRL",
+      "unique_id": "af020bf742b7434b98ef56443b874377"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 2356,
+        "player_name": "Ash",
+        "is_orange": true
+      },
+      {
+        "frame": 2752,
+        "player_name": "oCanRL",
+        "is_orange": false
+      },
+      {
+        "frame": 4590,
+        "player_name": "oCanRL",
+        "is_orange": false
+      },
+      {
+        "frame": 5796,
+        "player_name": "Ash",
+        "is_orange": true
+      },
+      {
+        "frame": 7515,
+        "player_name": "Ash",
+        "is_orange": true
+      },
+      {
+        "frame": 8502,
+        "player_name": "Ash",
+        "is_orange": true
+      },
+      {
+        "frame": 9229,
+        "player_name": "Ash",
+        "is_orange": true
+      },
+      {
+        "frame": 9780,
+        "player_name": "oCanRL",
+        "is_orange": false
+      },
+      {
+        "frame": 10875,
+        "player_name": "oCanRL",
+        "is_orange": false
+      },
+      {
+        "frame": 11373,
+        "player_name": "oCanRL",
+        "is_orange": false
+      },
+      {
+        "frame": 12211,
+        "player_name": "oCanRL",
+        "is_orange": false
+      }
+    ]
+  }
+}

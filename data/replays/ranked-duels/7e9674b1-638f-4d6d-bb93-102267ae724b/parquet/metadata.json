@@ -1,0 +1,96 @@
+{
+  "players": [
+    {
+      "name": "aZapatos",
+      "unique_id": "76561199068141849"
+    },
+    {
+      "name": "F\u03bfrky",
+      "unique_id": "be892719368a4ed7bc26d4f4e1d6de00"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 2020,
+        "player_name": "aZapatos",
+        "is_orange": false
+      },
+      {
+        "frame": 2436,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      },
+      {
+        "frame": 3749,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      },
+      {
+        "frame": 4575,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      },
+      {
+        "frame": 5007,
+        "player_name": "aZapatos",
+        "is_orange": false
+      },
+      {
+        "frame": 5594,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      },
+      {
+        "frame": 6181,
+        "player_name": "aZapatos",
+        "is_orange": false
+      },
+      {
+        "frame": 7234,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      },
+      {
+        "frame": 8977,
+        "player_name": "aZapatos",
+        "is_orange": false
+      },
+      {
+        "frame": 9907,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      },
+      {
+        "frame": 10565,
+        "player_name": "aZapatos",
+        "is_orange": false
+      },
+      {
+        "frame": 11123,
+        "player_name": "aZapatos",
+        "is_orange": false
+      },
+      {
+        "frame": 11621,
+        "player_name": "aZapatos",
+        "is_orange": false
+      },
+      {
+        "frame": 12373,
+        "player_name": "aZapatos",
+        "is_orange": false
+      },
+      {
+        "frame": 12752,
+        "player_name": "F\u03bfrky",
+        "is_orange": true
+      },
+      {
+        "frame": 13401,
+        "player_name": "aZapatos",
+        "is_orange": false
+      }
+    ]
+  }
+}

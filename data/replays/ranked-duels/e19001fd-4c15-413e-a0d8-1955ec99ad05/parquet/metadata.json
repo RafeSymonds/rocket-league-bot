@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "mrtn",
+      "unique_id": "76561199084382801"
+    },
+    {
+      "name": "Fast.",
+      "unique_id": "76561198837994442"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 959,
+        "player_name": "Fast.",
+        "is_orange": false
+      },
+      {
+        "frame": 2230,
+        "player_name": "Fast.",
+        "is_orange": false
+      },
+      {
+        "frame": 2634,
+        "player_name": "Fast.",
+        "is_orange": false
+      },
+      {
+        "frame": 3335,
+        "player_name": "Fast.",
+        "is_orange": false
+      },
+      {
+        "frame": 3914,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 5801,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 6214,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 6717,
+        "player_name": "Fast.",
+        "is_orange": false
+      },
+      {
+        "frame": 7031,
+        "player_name": "Fast.",
+        "is_orange": false
+      },
+      {
+        "frame": 8197,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 9239,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 11535,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 13009,
+        "player_name": "mrtn",
+        "is_orange": true
+      }
+    ]
+  }
+}

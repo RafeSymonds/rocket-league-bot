@@ -1,0 +1,41 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "CheetahThrilla",
+      "unique_id": "5f93eac548c846d6976124f1c3c5a15c"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 2301,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 3473,
+        "player_name": "CheetahThrilla",
+        "is_orange": false
+      },
+      {
+        "frame": 4267,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 8263,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 9454,
+        "player_name": "Mec",
+        "is_orange": true
+      }
+    ]
+  }
+}

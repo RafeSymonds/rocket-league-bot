@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": "novaa",
+      "unique_id": "76561198900359312"
+    },
+    {
+      "name": "Breezi",
+      "unique_id": "76561198325635263"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 385,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 946,
+        "player_name": "Breezi",
+        "is_orange": false
+      },
+      {
+        "frame": 1730,
+        "player_name": "Breezi",
+        "is_orange": false
+      },
+      {
+        "frame": 2225,
+        "player_name": "Breezi",
+        "is_orange": false
+      },
+      {
+        "frame": 2903,
+        "player_name": "Breezi",
+        "is_orange": false
+      },
+      {
+        "frame": 3742,
+        "player_name": "Breezi",
+        "is_orange": false
+      },
+      {
+        "frame": 4121,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 4912,
+        "player_name": "Breezi",
+        "is_orange": false
+      },
+      {
+        "frame": 5775,
+        "player_name": "Breezi",
+        "is_orange": false
+      },
+      {
+        "frame": 7230,
+        "player_name": "Breezi",
+        "is_orange": false
+      },
+      {
+        "frame": 8354,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 8932,
+        "player_name": "Breezi",
+        "is_orange": false
+      },
+      {
+        "frame": 9906,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 10951,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 12057,
+        "player_name": "novaa",
+        "is_orange": true
+      }
+    ]
+  }
+}

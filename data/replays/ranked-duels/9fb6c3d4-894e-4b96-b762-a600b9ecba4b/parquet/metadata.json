@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "squishywafflesz",
+      "unique_id": "6a3b5b4f4a4947d89319c8dded90954f"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 474,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 2520,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 3661,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 4538,
+        "player_name": "squishywafflesz",
+        "is_orange": false
+      },
+      {
+        "frame": 5003,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 5924,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 6911,
+        "player_name": "squishywafflesz",
+        "is_orange": false
+      },
+      {
+        "frame": 7307,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 7902,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 8782,
+        "player_name": "squishywafflesz",
+        "is_orange": false
+      },
+      {
+        "frame": 9435,
+        "player_name": "squishywafflesz",
+        "is_orange": false
+      },
+      {
+        "frame": 9991,
+        "player_name": "squishywafflesz",
+        "is_orange": false
+      },
+      {
+        "frame": 10417,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 10975,
+        "player_name": "squishywafflesz",
+        "is_orange": false
+      },
+      {
+        "frame": 11774,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      }
+    ]
+  }
+}

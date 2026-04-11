@@ -1,0 +1,51 @@
+{
+  "players": [
+    {
+      "name": "Ash",
+      "unique_id": "76561199076206546"
+    },
+    {
+      "name": "M i i z z y",
+      "unique_id": "522cbf11916f4f1389777c7be51a737b"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 800,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 1181,
+        "player_name": "M i i z z y",
+        "is_orange": true
+      },
+      {
+        "frame": 1998,
+        "player_name": "M i i z z y",
+        "is_orange": true
+      },
+      {
+        "frame": 4179,
+        "player_name": "M i i z z y",
+        "is_orange": true
+      },
+      {
+        "frame": 5397,
+        "player_name": "M i i z z y",
+        "is_orange": true
+      },
+      {
+        "frame": 6591,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 9067,
+        "player_name": "M i i z z y",
+        "is_orange": true
+      }
+    ]
+  }
+}

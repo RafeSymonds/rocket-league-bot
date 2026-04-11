@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "Nath \u0d60",
+      "unique_id": "9bf99dfb84d14645b85c2dc5c299b4fc"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 418,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 964,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 1443,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 1970,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 2325,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 3301,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 3806,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 5132,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 5661,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 6073,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      }
+    ]
+  }
+}

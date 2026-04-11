@@ -1,0 +1,106 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "VTLD MaNiiaK",
+      "unique_id": "adf64609aa474172a2ee225edad1343d"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 2848,
+        "player_name": "VTLD MaNiiaK",
+        "is_orange": false
+      },
+      {
+        "frame": 4867,
+        "player_name": "VTLD MaNiiaK",
+        "is_orange": false
+      },
+      {
+        "frame": 10051,
+        "player_name": "VTLD MaNiiaK",
+        "is_orange": false
+      },
+      {
+        "frame": 11147,
+        "player_name": "VTLD MaNiiaK",
+        "is_orange": false
+      },
+      {
+        "frame": 12696,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 13698,
+        "player_name": "VTLD MaNiiaK",
+        "is_orange": false
+      },
+      {
+        "frame": 15468,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 16936,
+        "player_name": "VTLD MaNiiaK",
+        "is_orange": false
+      },
+      {
+        "frame": 18480,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 20314,
+        "player_name": "VTLD MaNiiaK",
+        "is_orange": false
+      },
+      {
+        "frame": 21436,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 23500,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 25623,
+        "player_name": "VTLD MaNiiaK",
+        "is_orange": false
+      },
+      {
+        "frame": 26737,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 28578,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 31825,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 33048,
+        "player_name": "VTLD MaNiiaK",
+        "is_orange": false
+      },
+      {
+        "frame": 37112,
+        "player_name": "VTLD MaNiiaK",
+        "is_orange": false
+      }
+    ]
+  }
+}

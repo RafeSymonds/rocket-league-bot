@@ -1,0 +1,111 @@
+{
+  "players": [
+    {
+      "name": "ViitiN.",
+      "unique_id": "76561199548185495"
+    },
+    {
+      "name": "swiftt.",
+      "unique_id": "76561198984563626"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 467,
+        "player_name": "swiftt.",
+        "is_orange": true
+      },
+      {
+        "frame": 1363,
+        "player_name": "ViitiN.",
+        "is_orange": false
+      },
+      {
+        "frame": 2203,
+        "player_name": "swiftt.",
+        "is_orange": true
+      },
+      {
+        "frame": 2736,
+        "player_name": "swiftt.",
+        "is_orange": true
+      },
+      {
+        "frame": 3608,
+        "player_name": "ViitiN.",
+        "is_orange": false
+      },
+      {
+        "frame": 4195,
+        "player_name": "ViitiN.",
+        "is_orange": false
+      },
+      {
+        "frame": 4853,
+        "player_name": "ViitiN.",
+        "is_orange": false
+      },
+      {
+        "frame": 6586,
+        "player_name": "swiftt.",
+        "is_orange": true
+      },
+      {
+        "frame": 6913,
+        "player_name": "ViitiN.",
+        "is_orange": false
+      },
+      {
+        "frame": 7812,
+        "player_name": "ViitiN.",
+        "is_orange": false
+      },
+      {
+        "frame": 8630,
+        "player_name": "ViitiN.",
+        "is_orange": false
+      },
+      {
+        "frame": 8998,
+        "player_name": "swiftt.",
+        "is_orange": true
+      },
+      {
+        "frame": 9569,
+        "player_name": "swiftt.",
+        "is_orange": true
+      },
+      {
+        "frame": 10149,
+        "player_name": "ViitiN.",
+        "is_orange": false
+      },
+      {
+        "frame": 10980,
+        "player_name": "swiftt.",
+        "is_orange": true
+      },
+      {
+        "frame": 12318,
+        "player_name": "swiftt.",
+        "is_orange": true
+      },
+      {
+        "frame": 13403,
+        "player_name": "ViitiN.",
+        "is_orange": false
+      },
+      {
+        "frame": 13850,
+        "player_name": "swiftt.",
+        "is_orange": true
+      },
+      {
+        "frame": 14756,
+        "player_name": "ViitiN.",
+        "is_orange": false
+      }
+    ]
+  }
+}

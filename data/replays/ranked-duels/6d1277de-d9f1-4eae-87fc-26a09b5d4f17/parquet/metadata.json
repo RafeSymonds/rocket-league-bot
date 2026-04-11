@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "mimillo",
+      "unique_id": "76561198988821854"
+    },
+    {
+      "name": "M8 Mawkzy",
+      "unique_id": "322a07b5878d4e85ac2b96d92caaa06b"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 324,
+        "player_name": "M8 Mawkzy",
+        "is_orange": true
+      },
+      {
+        "frame": 1335,
+        "player_name": "M8 Mawkzy",
+        "is_orange": true
+      },
+      {
+        "frame": 1822,
+        "player_name": "M8 Mawkzy",
+        "is_orange": true
+      },
+      {
+        "frame": 2657,
+        "player_name": "M8 Mawkzy",
+        "is_orange": true
+      },
+      {
+        "frame": 3289,
+        "player_name": "M8 Mawkzy",
+        "is_orange": true
+      },
+      {
+        "frame": 3872,
+        "player_name": "mimillo",
+        "is_orange": false
+      },
+      {
+        "frame": 5368,
+        "player_name": "M8 Mawkzy",
+        "is_orange": true
+      },
+      {
+        "frame": 5890,
+        "player_name": "M8 Mawkzy",
+        "is_orange": true
+      }
+    ]
+  }
+}

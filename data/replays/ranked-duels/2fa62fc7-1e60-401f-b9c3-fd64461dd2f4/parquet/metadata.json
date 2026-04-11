@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "Tricky",
+      "unique_id": "76561199013490288"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1010,
+        "player_name": "Tricky",
+        "is_orange": false
+      },
+      {
+        "frame": 2197,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 3921,
+        "player_name": "Tricky",
+        "is_orange": false
+      },
+      {
+        "frame": 5097,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 5958,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 6735,
+        "player_name": "Tricky",
+        "is_orange": false
+      },
+      {
+        "frame": 7317,
+        "player_name": "Tricky",
+        "is_orange": false
+      },
+      {
+        "frame": 7854,
+        "player_name": "Tricky",
+        "is_orange": false
+      },
+      {
+        "frame": 9205,
+        "player_name": "Tricky",
+        "is_orange": false
+      }
+    ]
+  }
+}

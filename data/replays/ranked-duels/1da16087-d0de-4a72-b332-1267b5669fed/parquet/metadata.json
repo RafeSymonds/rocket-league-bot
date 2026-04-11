@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "Kehvn",
+      "unique_id": "76561198878331891"
+    },
+    {
+      "name": "Fast.",
+      "unique_id": "76561198837994442"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 840,
+        "player_name": "Kehvn",
+        "is_orange": true
+      },
+      {
+        "frame": 1626,
+        "player_name": "Kehvn",
+        "is_orange": true
+      },
+      {
+        "frame": 2550,
+        "player_name": "Fast.",
+        "is_orange": false
+      },
+      {
+        "frame": 3344,
+        "player_name": "Fast.",
+        "is_orange": false
+      },
+      {
+        "frame": 3947,
+        "player_name": "Kehvn",
+        "is_orange": true
+      },
+      {
+        "frame": 5206,
+        "player_name": "Kehvn",
+        "is_orange": true
+      },
+      {
+        "frame": 6737,
+        "player_name": "Kehvn",
+        "is_orange": true
+      },
+      {
+        "frame": 7732,
+        "player_name": "Kehvn",
+        "is_orange": true
+      },
+      {
+        "frame": 9666,
+        "player_name": "Kehvn",
+        "is_orange": true
+      },
+      {
+        "frame": 10260,
+        "player_name": "Fast.",
+        "is_orange": false
+      },
+      {
+        "frame": 11150,
+        "player_name": "Kehvn",
+        "is_orange": true
+      }
+    ]
+  }
+}

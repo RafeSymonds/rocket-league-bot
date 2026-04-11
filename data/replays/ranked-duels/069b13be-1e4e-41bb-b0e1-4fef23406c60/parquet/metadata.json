@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "WONKRU",
+      "unique_id": "76561198144389858"
+    },
+    {
+      "name": "Ash",
+      "unique_id": "76561199076206546"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 606,
+        "player_name": "Ash",
+        "is_orange": true
+      },
+      {
+        "frame": 1260,
+        "player_name": "Ash",
+        "is_orange": true
+      },
+      {
+        "frame": 3526,
+        "player_name": "WONKRU",
+        "is_orange": false
+      },
+      {
+        "frame": 7184,
+        "player_name": "WONKRU",
+        "is_orange": false
+      },
+      {
+        "frame": 7984,
+        "player_name": "WONKRU",
+        "is_orange": false
+      },
+      {
+        "frame": 8501,
+        "player_name": "Ash",
+        "is_orange": true
+      },
+      {
+        "frame": 9113,
+        "player_name": "Ash",
+        "is_orange": true
+      },
+      {
+        "frame": 9567,
+        "player_name": "WONKRU",
+        "is_orange": false
+      },
+      {
+        "frame": 10124,
+        "player_name": "Ash",
+        "is_orange": true
+      },
+      {
+        "frame": 10632,
+        "player_name": "WONKRU",
+        "is_orange": false
+      },
+      {
+        "frame": 11974,
+        "player_name": "WONKRU",
+        "is_orange": false
+      }
+    ]
+  }
+}

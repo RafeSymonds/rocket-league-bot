@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "magnus",
+      "unique_id": "76561198100519440"
+    },
+    {
+      "name": "MakeItBounceOnMe",
+      "unique_id": "345ae74c8dd14b07bc1bf2ecd7305f12"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 2601,
+        "player_name": "magnus",
+        "is_orange": false
+      },
+      {
+        "frame": 3035,
+        "player_name": "MakeItBounceOnMe",
+        "is_orange": true
+      },
+      {
+        "frame": 3453,
+        "player_name": "MakeItBounceOnMe",
+        "is_orange": true
+      },
+      {
+        "frame": 4434,
+        "player_name": "magnus",
+        "is_orange": false
+      },
+      {
+        "frame": 6688,
+        "player_name": "magnus",
+        "is_orange": false
+      },
+      {
+        "frame": 9508,
+        "player_name": "magnus",
+        "is_orange": false
+      },
+      {
+        "frame": 10241,
+        "player_name": "MakeItBounceOnMe",
+        "is_orange": true
+      },
+      {
+        "frame": 10682,
+        "player_name": "MakeItBounceOnMe",
+        "is_orange": true
+      },
+      {
+        "frame": 11408,
+        "player_name": "magnus",
+        "is_orange": false
+      }
+    ]
+  }
+}

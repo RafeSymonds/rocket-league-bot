@@ -1,0 +1,106 @@
+{
+  "players": [
+    {
+      "name": "SSL rewards game, be nice!",
+      "unique_id": "76561198784847286"
+    },
+    {
+      "name": "Ma09098",
+      "unique_id": "6a6acefc07d6423195c605cb8ffa7dda"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 556,
+        "player_name": "SSL rewards game, be nice!",
+        "is_orange": true
+      },
+      {
+        "frame": 1221,
+        "player_name": "Ma09098",
+        "is_orange": false
+      },
+      {
+        "frame": 1924,
+        "player_name": "SSL rewards game, be nice!",
+        "is_orange": true
+      },
+      {
+        "frame": 2603,
+        "player_name": "Ma09098",
+        "is_orange": false
+      },
+      {
+        "frame": 3223,
+        "player_name": "Ma09098",
+        "is_orange": false
+      },
+      {
+        "frame": 3644,
+        "player_name": "Ma09098",
+        "is_orange": false
+      },
+      {
+        "frame": 4138,
+        "player_name": "Ma09098",
+        "is_orange": false
+      },
+      {
+        "frame": 4654,
+        "player_name": "SSL rewards game, be nice!",
+        "is_orange": true
+      },
+      {
+        "frame": 5033,
+        "player_name": "SSL rewards game, be nice!",
+        "is_orange": true
+      },
+      {
+        "frame": 5688,
+        "player_name": "Ma09098",
+        "is_orange": false
+      },
+      {
+        "frame": 6107,
+        "player_name": "SSL rewards game, be nice!",
+        "is_orange": true
+      },
+      {
+        "frame": 6597,
+        "player_name": "Ma09098",
+        "is_orange": false
+      },
+      {
+        "frame": 7274,
+        "player_name": "Ma09098",
+        "is_orange": false
+      },
+      {
+        "frame": 7859,
+        "player_name": "SSL rewards game, be nice!",
+        "is_orange": true
+      },
+      {
+        "frame": 8618,
+        "player_name": "SSL rewards game, be nice!",
+        "is_orange": true
+      },
+      {
+        "frame": 9377,
+        "player_name": "Ma09098",
+        "is_orange": false
+      },
+      {
+        "frame": 10115,
+        "player_name": "SSL rewards game, be nice!",
+        "is_orange": true
+      },
+      {
+        "frame": 10745,
+        "player_name": "Ma09098",
+        "is_orange": false
+      }
+    ]
+  }
+}

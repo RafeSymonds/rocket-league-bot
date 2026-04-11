@@ -1,0 +1,41 @@
+{
+  "players": [
+    {
+      "name": "flickzy",
+      "unique_id": "76561199040090584"
+    },
+    {
+      "name": "DrKnown",
+      "unique_id": "76561198283318718"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 381,
+        "player_name": "DrKnown",
+        "is_orange": true
+      },
+      {
+        "frame": 1126,
+        "player_name": "DrKnown",
+        "is_orange": true
+      },
+      {
+        "frame": 2006,
+        "player_name": "DrKnown",
+        "is_orange": true
+      },
+      {
+        "frame": 2423,
+        "player_name": "DrKnown",
+        "is_orange": true
+      },
+      {
+        "frame": 4439,
+        "player_name": "DrKnown",
+        "is_orange": true
+      }
+    ]
+  }
+}

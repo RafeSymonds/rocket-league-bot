@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "Rebm0b.",
+      "unique_id": "a64790c299d245daa9e727b05f9fa6c5"
+    },
+    {
+      "name": "Raddah",
+      "unique_id": "76561199088973155"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 771,
+        "player_name": "Raddah",
+        "is_orange": false
+      },
+      {
+        "frame": 1405,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 2772,
+        "player_name": "Raddah",
+        "is_orange": false
+      },
+      {
+        "frame": 3920,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 4795,
+        "player_name": "Raddah",
+        "is_orange": false
+      },
+      {
+        "frame": 6287,
+        "player_name": "Raddah",
+        "is_orange": false
+      },
+      {
+        "frame": 6992,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 7333,
+        "player_name": "Raddah",
+        "is_orange": false
+      },
+      {
+        "frame": 8702,
+        "player_name": "Raddah",
+        "is_orange": false
+      },
+      {
+        "frame": 9680,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 11375,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      }
+    ]
+  }
+}

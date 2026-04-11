@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "Rebm0b.",
+      "unique_id": "a64790c299d245daa9e727b05f9fa6c5"
+    },
+    {
+      "name": "Mira LFT",
+      "unique_id": "76561199065280922"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 472,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 1143,
+        "player_name": "Mira LFT",
+        "is_orange": true
+      },
+      {
+        "frame": 3032,
+        "player_name": "Mira LFT",
+        "is_orange": true
+      },
+      {
+        "frame": 4121,
+        "player_name": "Mira LFT",
+        "is_orange": true
+      },
+      {
+        "frame": 4809,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 6469,
+        "player_name": "Mira LFT",
+        "is_orange": true
+      },
+      {
+        "frame": 7606,
+        "player_name": "Mira LFT",
+        "is_orange": true
+      },
+      {
+        "frame": 8771,
+        "player_name": "Mira LFT",
+        "is_orange": true
+      }
+    ]
+  }
+}

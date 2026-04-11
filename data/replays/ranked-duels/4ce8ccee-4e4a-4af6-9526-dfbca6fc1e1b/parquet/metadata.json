@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "bluudbath.",
+      "unique_id": "204314c63a5c4796a55a19d9e4646506"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 764,
+        "player_name": "bluudbath.",
+        "is_orange": false
+      },
+      {
+        "frame": 7196,
+        "player_name": "bluudbath.",
+        "is_orange": false
+      },
+      {
+        "frame": 8643,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 10148,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 13011,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 15925,
+        "player_name": "bluudbath.",
+        "is_orange": false
+      },
+      {
+        "frame": 16912,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 24139,
+        "player_name": "bluudbath.",
+        "is_orange": false
+      },
+      {
+        "frame": 30024,
+        "player_name": "Mec",
+        "is_orange": true
+      }
+    ]
+  }
+}

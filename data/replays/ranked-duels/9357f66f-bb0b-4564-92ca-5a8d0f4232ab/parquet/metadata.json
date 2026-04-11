@@ -1,0 +1,46 @@
+{
+  "players": [
+    {
+      "name": "Swizx.",
+      "unique_id": "76561198180446441"
+    },
+    {
+      "name": "T",
+      "unique_id": "76561199014043052"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1581,
+        "player_name": "T",
+        "is_orange": false
+      },
+      {
+        "frame": 2220,
+        "player_name": "Swizx.",
+        "is_orange": true
+      },
+      {
+        "frame": 2858,
+        "player_name": "T",
+        "is_orange": false
+      },
+      {
+        "frame": 3725,
+        "player_name": "Swizx.",
+        "is_orange": true
+      },
+      {
+        "frame": 7151,
+        "player_name": "Swizx.",
+        "is_orange": true
+      },
+      {
+        "frame": 8605,
+        "player_name": "T",
+        "is_orange": false
+      }
+    ]
+  }
+}

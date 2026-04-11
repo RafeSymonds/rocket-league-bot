@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "novaa",
+      "unique_id": "76561198900359312"
+    },
+    {
+      "name": "t r _",
+      "unique_id": "76561198110938033"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 713,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 1427,
+        "player_name": "t r _",
+        "is_orange": false
+      },
+      {
+        "frame": 3335,
+        "player_name": "t r _",
+        "is_orange": false
+      },
+      {
+        "frame": 4651,
+        "player_name": "t r _",
+        "is_orange": false
+      },
+      {
+        "frame": 5261,
+        "player_name": "t r _",
+        "is_orange": false
+      },
+      {
+        "frame": 5892,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 6707,
+        "player_name": "t r _",
+        "is_orange": false
+      },
+      {
+        "frame": 7456,
+        "player_name": "t r _",
+        "is_orange": false
+      },
+      {
+        "frame": 8483,
+        "player_name": "t r _",
+        "is_orange": false
+      },
+      {
+        "frame": 9020,
+        "player_name": "t r _",
+        "is_orange": false
+      }
+    ]
+  }
+}

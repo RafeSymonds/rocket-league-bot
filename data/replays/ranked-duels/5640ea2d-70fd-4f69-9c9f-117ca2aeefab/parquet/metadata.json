@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "ApparentlyBlack7",
+      "unique_id": "053e95deb5f54033ab288a45fc075f66"
+    },
+    {
+      "name": "The Final Boss Shadi",
+      "unique_id": "76561198085638483"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1258,
+        "player_name": "The Final Boss Shadi",
+        "is_orange": false
+      },
+      {
+        "frame": 1910,
+        "player_name": "ApparentlyBlack7",
+        "is_orange": true
+      },
+      {
+        "frame": 3006,
+        "player_name": "ApparentlyBlack7",
+        "is_orange": true
+      },
+      {
+        "frame": 4482,
+        "player_name": "ApparentlyBlack7",
+        "is_orange": true
+      },
+      {
+        "frame": 4789,
+        "player_name": "The Final Boss Shadi",
+        "is_orange": false
+      },
+      {
+        "frame": 6331,
+        "player_name": "ApparentlyBlack7",
+        "is_orange": true
+      },
+      {
+        "frame": 6858,
+        "player_name": "ApparentlyBlack7",
+        "is_orange": true
+      },
+      {
+        "frame": 7207,
+        "player_name": "The Final Boss Shadi",
+        "is_orange": false
+      },
+      {
+        "frame": 7752,
+        "player_name": "The Final Boss Shadi",
+        "is_orange": false
+      },
+      {
+        "frame": 8053,
+        "player_name": "The Final Boss Shadi",
+        "is_orange": false
+      },
+      {
+        "frame": 8358,
+        "player_name": "The Final Boss Shadi",
+        "is_orange": false
+      },
+      {
+        "frame": 11310,
+        "player_name": "ApparentlyBlack7",
+        "is_orange": true
+      },
+      {
+        "frame": 12000,
+        "player_name": "ApparentlyBlack7",
+        "is_orange": true
+      }
+    ]
+  }
+}

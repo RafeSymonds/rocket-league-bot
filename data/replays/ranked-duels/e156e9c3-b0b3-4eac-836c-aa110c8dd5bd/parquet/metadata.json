@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "Arsenal\u271f",
+      "unique_id": "76561198368482029"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 614,
+        "player_name": "Arsenal\u271f",
+        "is_orange": true
+      },
+      {
+        "frame": 3173,
+        "player_name": "plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 3668,
+        "player_name": "plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 5550,
+        "player_name": "Arsenal\u271f",
+        "is_orange": true
+      },
+      {
+        "frame": 6169,
+        "player_name": "plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 6629,
+        "player_name": "Arsenal\u271f",
+        "is_orange": true
+      },
+      {
+        "frame": 7403,
+        "player_name": "plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 8141,
+        "player_name": "plexi",
+        "is_orange": false
+      }
+    ]
+  }
+}

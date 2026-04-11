@@ -1,0 +1,26 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "cam",
+      "unique_id": "76561199029556479"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 746,
+        "player_name": "cam",
+        "is_orange": false
+      },
+      {
+        "frame": 5172,
+        "player_name": "Mec",
+        "is_orange": true
+      }
+    ]
+  }
+}

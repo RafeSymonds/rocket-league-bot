@@ -1,0 +1,111 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "RL SSL COMING",
+      "unique_id": "6c1c075e093345b1afca71eadc521f68"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 308,
+        "player_name": "RL SSL COMING",
+        "is_orange": false
+      },
+      {
+        "frame": 972,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 2444,
+        "player_name": "RL SSL COMING",
+        "is_orange": false
+      },
+      {
+        "frame": 3024,
+        "player_name": "RL SSL COMING",
+        "is_orange": false
+      },
+      {
+        "frame": 3386,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 4188,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 4697,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 6238,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 6775,
+        "player_name": "RL SSL COMING",
+        "is_orange": false
+      },
+      {
+        "frame": 7252,
+        "player_name": "RL SSL COMING",
+        "is_orange": false
+      },
+      {
+        "frame": 7615,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 8069,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 8520,
+        "player_name": "RL SSL COMING",
+        "is_orange": false
+      },
+      {
+        "frame": 9037,
+        "player_name": "RL SSL COMING",
+        "is_orange": false
+      },
+      {
+        "frame": 9641,
+        "player_name": "RL SSL COMING",
+        "is_orange": false
+      },
+      {
+        "frame": 10422,
+        "player_name": "RL SSL COMING",
+        "is_orange": false
+      },
+      {
+        "frame": 10808,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 11572,
+        "player_name": "RL SSL COMING",
+        "is_orange": false
+      },
+      {
+        "frame": 12703,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      }
+    ]
+  }
+}

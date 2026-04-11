@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": ".",
+      "unique_id": "76561199040090584"
+    },
+    {
+      "name": "Mizu",
+      "unique_id": "76561198083385049"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1424,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 1966,
+        "player_name": "Mizu",
+        "is_orange": true
+      },
+      {
+        "frame": 2545,
+        "player_name": "Mizu",
+        "is_orange": true
+      },
+      {
+        "frame": 3303,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 5372,
+        "player_name": "Mizu",
+        "is_orange": true
+      },
+      {
+        "frame": 6343,
+        "player_name": "Mizu",
+        "is_orange": true
+      },
+      {
+        "frame": 6910,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 7639,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 8024,
+        "player_name": "Mizu",
+        "is_orange": true
+      },
+      {
+        "frame": 8913,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 9552,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 10139,
+        "player_name": "Mizu",
+        "is_orange": true
+      },
+      {
+        "frame": 12363,
+        "player_name": "Mizu",
+        "is_orange": true
+      },
+      {
+        "frame": 12760,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 13518,
+        "player_name": ".",
+        "is_orange": false
+      }
+    ]
+  }
+}

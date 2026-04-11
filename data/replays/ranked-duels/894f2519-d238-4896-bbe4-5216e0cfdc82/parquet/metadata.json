@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "Saud",
+      "unique_id": "76561198131059947"
+    },
+    {
+      "name": "Alxx",
+      "unique_id": "76561198356566425"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 371,
+        "player_name": "Saud",
+        "is_orange": true
+      },
+      {
+        "frame": 1139,
+        "player_name": "Saud",
+        "is_orange": true
+      },
+      {
+        "frame": 3285,
+        "player_name": "Alxx",
+        "is_orange": false
+      },
+      {
+        "frame": 4781,
+        "player_name": "Saud",
+        "is_orange": true
+      },
+      {
+        "frame": 5203,
+        "player_name": "Alxx",
+        "is_orange": false
+      },
+      {
+        "frame": 6426,
+        "player_name": "Saud",
+        "is_orange": true
+      },
+      {
+        "frame": 7039,
+        "player_name": "Alxx",
+        "is_orange": false
+      },
+      {
+        "frame": 7871,
+        "player_name": "Alxx",
+        "is_orange": false
+      },
+      {
+        "frame": 8397,
+        "player_name": "Saud",
+        "is_orange": true
+      },
+      {
+        "frame": 10561,
+        "player_name": "Saud",
+        "is_orange": true
+      }
+    ]
+  }
+}

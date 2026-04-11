@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "Rebm0b.",
+      "unique_id": "a64790c299d245daa9e727b05f9fa6c5"
+    },
+    {
+      "name": "shadi",
+      "unique_id": "76561198085638483"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 750,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 1165,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 3031,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 3898,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 5109,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 6175,
+        "player_name": "shadi",
+        "is_orange": false
+      },
+      {
+        "frame": 6607,
+        "player_name": "shadi",
+        "is_orange": false
+      },
+      {
+        "frame": 8727,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      }
+    ]
+  }
+}

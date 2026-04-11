@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "reekkan",
+      "unique_id": "76561198398393348"
+    },
+    {
+      "name": "spood",
+      "unique_id": "76561198168073427"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 664,
+        "player_name": "spood",
+        "is_orange": true
+      },
+      {
+        "frame": 2861,
+        "player_name": "reekkan",
+        "is_orange": false
+      },
+      {
+        "frame": 3315,
+        "player_name": "reekkan",
+        "is_orange": false
+      },
+      {
+        "frame": 3826,
+        "player_name": "spood",
+        "is_orange": true
+      },
+      {
+        "frame": 4497,
+        "player_name": "reekkan",
+        "is_orange": false
+      },
+      {
+        "frame": 5563,
+        "player_name": "reekkan",
+        "is_orange": false
+      },
+      {
+        "frame": 6333,
+        "player_name": "spood",
+        "is_orange": true
+      },
+      {
+        "frame": 8294,
+        "player_name": "reekkan",
+        "is_orange": false
+      },
+      {
+        "frame": 8990,
+        "player_name": "reekkan",
+        "is_orange": false
+      },
+      {
+        "frame": 11278,
+        "player_name": "reekkan",
+        "is_orange": false
+      }
+    ]
+  }
+}

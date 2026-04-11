@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "magnus",
+      "unique_id": "76561198100519440"
+    },
+    {
+      "name": "el risu",
+      "unique_id": "1780ca652aa6423787ea6c71bcd9b785"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 178,
+        "player_name": "el risu",
+        "is_orange": false
+      },
+      {
+        "frame": 417,
+        "player_name": "el risu",
+        "is_orange": false
+      },
+      {
+        "frame": 3085,
+        "player_name": "el risu",
+        "is_orange": false
+      },
+      {
+        "frame": 3720,
+        "player_name": "el risu",
+        "is_orange": false
+      },
+      {
+        "frame": 5660,
+        "player_name": "magnus",
+        "is_orange": true
+      },
+      {
+        "frame": 6973,
+        "player_name": "el risu",
+        "is_orange": false
+      },
+      {
+        "frame": 8700,
+        "player_name": "magnus",
+        "is_orange": true
+      },
+      {
+        "frame": 9175,
+        "player_name": "el risu",
+        "is_orange": false
+      },
+      {
+        "frame": 10431,
+        "player_name": "magnus",
+        "is_orange": true
+      }
+    ]
+  }
+}

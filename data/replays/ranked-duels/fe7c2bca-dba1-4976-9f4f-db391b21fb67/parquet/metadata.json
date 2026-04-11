@@ -1,0 +1,111 @@
+{
+  "players": [
+    {
+      "name": "snxwyy",
+      "unique_id": "76561198157118548"
+    },
+    {
+      "name": "reyyn_jtm",
+      "unique_id": "33e6b8f055f64fdba47693cb22b6a810"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 300,
+        "player_name": "snxwyy",
+        "is_orange": false
+      },
+      {
+        "frame": 1011,
+        "player_name": "snxwyy",
+        "is_orange": false
+      },
+      {
+        "frame": 1846,
+        "player_name": "reyyn_jtm",
+        "is_orange": true
+      },
+      {
+        "frame": 2340,
+        "player_name": "reyyn_jtm",
+        "is_orange": true
+      },
+      {
+        "frame": 3054,
+        "player_name": "snxwyy",
+        "is_orange": false
+      },
+      {
+        "frame": 4006,
+        "player_name": "reyyn_jtm",
+        "is_orange": true
+      },
+      {
+        "frame": 4849,
+        "player_name": "snxwyy",
+        "is_orange": false
+      },
+      {
+        "frame": 5568,
+        "player_name": "snxwyy",
+        "is_orange": false
+      },
+      {
+        "frame": 6528,
+        "player_name": "reyyn_jtm",
+        "is_orange": true
+      },
+      {
+        "frame": 7313,
+        "player_name": "reyyn_jtm",
+        "is_orange": true
+      },
+      {
+        "frame": 8165,
+        "player_name": "reyyn_jtm",
+        "is_orange": true
+      },
+      {
+        "frame": 8785,
+        "player_name": "snxwyy",
+        "is_orange": false
+      },
+      {
+        "frame": 9233,
+        "player_name": "reyyn_jtm",
+        "is_orange": true
+      },
+      {
+        "frame": 9665,
+        "player_name": "reyyn_jtm",
+        "is_orange": true
+      },
+      {
+        "frame": 10136,
+        "player_name": "reyyn_jtm",
+        "is_orange": true
+      },
+      {
+        "frame": 10825,
+        "player_name": "snxwyy",
+        "is_orange": false
+      },
+      {
+        "frame": 11327,
+        "player_name": "reyyn_jtm",
+        "is_orange": true
+      },
+      {
+        "frame": 12149,
+        "player_name": "reyyn_jtm",
+        "is_orange": true
+      },
+      {
+        "frame": 13430,
+        "player_name": "reyyn_jtm",
+        "is_orange": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "players": [
+    {
+      "name": "Rebm0b.",
+      "unique_id": "a64790c299d245daa9e727b05f9fa6c5"
+    },
+    {
+      "name": "Mozzarella",
+      "unique_id": "76561197999475675"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1148,
+        "player_name": "Mozzarella",
+        "is_orange": true
+      },
+      {
+        "frame": 2263,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 3202,
+        "player_name": "Mozzarella",
+        "is_orange": true
+      },
+      {
+        "frame": 3946,
+        "player_name": "Mozzarella",
+        "is_orange": true
+      },
+      {
+        "frame": 6961,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 7487,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 8691,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      }
+    ]
+  }
+}

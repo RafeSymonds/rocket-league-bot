@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "xsync",
+      "unique_id": "76561198384004482"
+    },
+    {
+      "name": "tufyo",
+      "unique_id": "76561197961069931"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 670,
+        "player_name": "xsync",
+        "is_orange": false
+      },
+      {
+        "frame": 1126,
+        "player_name": "xsync",
+        "is_orange": false
+      },
+      {
+        "frame": 1528,
+        "player_name": "xsync",
+        "is_orange": false
+      },
+      {
+        "frame": 2559,
+        "player_name": "tufyo",
+        "is_orange": true
+      },
+      {
+        "frame": 3440,
+        "player_name": "tufyo",
+        "is_orange": true
+      },
+      {
+        "frame": 4065,
+        "player_name": "tufyo",
+        "is_orange": true
+      },
+      {
+        "frame": 5190,
+        "player_name": "xsync",
+        "is_orange": false
+      },
+      {
+        "frame": 6692,
+        "player_name": "tufyo",
+        "is_orange": true
+      },
+      {
+        "frame": 7095,
+        "player_name": "xsync",
+        "is_orange": false
+      },
+      {
+        "frame": 7557,
+        "player_name": "xsync",
+        "is_orange": false
+      },
+      {
+        "frame": 8338,
+        "player_name": "xsync",
+        "is_orange": false
+      }
+    ]
+  }
+}

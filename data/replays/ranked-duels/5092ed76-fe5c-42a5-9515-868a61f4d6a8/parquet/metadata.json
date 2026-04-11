@@ -1,0 +1,96 @@
+{
+  "players": [
+    {
+      "name": "Rebm0b.",
+      "unique_id": "a64790c299d245daa9e727b05f9fa6c5"
+    },
+    {
+      "name": "Retals",
+      "unique_id": "76561198353975600"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 856,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 1658,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 2072,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 2879,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 3365,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 4091,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 5631,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 6605,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 7432,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 7986,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 8921,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 9654,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 10706,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 11924,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 12791,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 13384,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      }
+    ]
+  }
+}

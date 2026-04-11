@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "Xelty",
+      "unique_id": "76561199024531486"
+    },
+    {
+      "name": "flickzy",
+      "unique_id": "76561199040090584"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1425,
+        "player_name": "flickzy",
+        "is_orange": false
+      },
+      {
+        "frame": 3338,
+        "player_name": "Xelty",
+        "is_orange": true
+      },
+      {
+        "frame": 4366,
+        "player_name": "Xelty",
+        "is_orange": true
+      },
+      {
+        "frame": 5135,
+        "player_name": "Xelty",
+        "is_orange": true
+      },
+      {
+        "frame": 5687,
+        "player_name": "flickzy",
+        "is_orange": false
+      },
+      {
+        "frame": 7682,
+        "player_name": "flickzy",
+        "is_orange": false
+      },
+      {
+        "frame": 8691,
+        "player_name": "flickzy",
+        "is_orange": false
+      },
+      {
+        "frame": 9301,
+        "player_name": "flickzy",
+        "is_orange": false
+      },
+      {
+        "frame": 10098,
+        "player_name": "Xelty",
+        "is_orange": true
+      },
+      {
+        "frame": 10821,
+        "player_name": "Xelty",
+        "is_orange": true
+      },
+      {
+        "frame": 11536,
+        "player_name": "flickzy",
+        "is_orange": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "players": [
+    {
+      "name": "mrtn",
+      "unique_id": "76561199084382801"
+    },
+    {
+      "name": "Mile.",
+      "unique_id": "76561198452541120"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 487,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 921,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 1864,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 2356,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 3020,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 3653,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 4296,
+        "player_name": "mrtn",
+        "is_orange": false
+      }
+    ]
+  }
+}

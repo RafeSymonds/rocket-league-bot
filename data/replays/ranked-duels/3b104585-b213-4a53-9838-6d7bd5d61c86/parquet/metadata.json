@@ -1,0 +1,101 @@
+{
+  "players": [
+    {
+      "name": "Gramma",
+      "unique_id": "76561198353671897"
+    },
+    {
+      "name": "Wigacetilond",
+      "unique_id": "b42522fb3aab45bfacffb9f4b0caf15a"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1487,
+        "player_name": "Wigacetilond",
+        "is_orange": true
+      },
+      {
+        "frame": 2012,
+        "player_name": "Gramma",
+        "is_orange": false
+      },
+      {
+        "frame": 2518,
+        "player_name": "Wigacetilond",
+        "is_orange": true
+      },
+      {
+        "frame": 2983,
+        "player_name": "Gramma",
+        "is_orange": false
+      },
+      {
+        "frame": 3769,
+        "player_name": "Gramma",
+        "is_orange": false
+      },
+      {
+        "frame": 4135,
+        "player_name": "Wigacetilond",
+        "is_orange": true
+      },
+      {
+        "frame": 4570,
+        "player_name": "Wigacetilond",
+        "is_orange": true
+      },
+      {
+        "frame": 5238,
+        "player_name": "Gramma",
+        "is_orange": false
+      },
+      {
+        "frame": 6550,
+        "player_name": "Gramma",
+        "is_orange": false
+      },
+      {
+        "frame": 7765,
+        "player_name": "Gramma",
+        "is_orange": false
+      },
+      {
+        "frame": 8578,
+        "player_name": "Gramma",
+        "is_orange": false
+      },
+      {
+        "frame": 9522,
+        "player_name": "Gramma",
+        "is_orange": false
+      },
+      {
+        "frame": 9914,
+        "player_name": "Wigacetilond",
+        "is_orange": true
+      },
+      {
+        "frame": 10610,
+        "player_name": "Wigacetilond",
+        "is_orange": true
+      },
+      {
+        "frame": 11987,
+        "player_name": "Gramma",
+        "is_orange": false
+      },
+      {
+        "frame": 12313,
+        "player_name": "Gramma",
+        "is_orange": false
+      },
+      {
+        "frame": 13470,
+        "player_name": "Gramma",
+        "is_orange": false
+      }
+    ]
+  }
+}

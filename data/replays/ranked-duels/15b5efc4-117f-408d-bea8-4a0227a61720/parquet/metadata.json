@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "kapp",
+      "unique_id": "76561199071166770"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1972,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 3087,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 4859,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 6371,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 7431,
+        "player_name": "kapp",
+        "is_orange": false
+      },
+      {
+        "frame": 9994,
+        "player_name": "kapp",
+        "is_orange": false
+      },
+      {
+        "frame": 12113,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 14482,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 16950,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 19108,
+        "player_name": "Mec",
+        "is_orange": true
+      }
+    ]
+  }
+}

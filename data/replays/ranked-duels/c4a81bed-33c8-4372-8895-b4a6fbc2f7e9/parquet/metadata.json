@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "Coconut",
+      "unique_id": "76561198162286169"
+    },
+    {
+      "name": "ssel raeF",
+      "unique_id": "4efafae028654c8b9f6f63cfcf84e4a9"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 754,
+        "player_name": "Coconut",
+        "is_orange": true
+      },
+      {
+        "frame": 1191,
+        "player_name": "Coconut",
+        "is_orange": true
+      },
+      {
+        "frame": 2389,
+        "player_name": "ssel raeF",
+        "is_orange": false
+      },
+      {
+        "frame": 3101,
+        "player_name": "ssel raeF",
+        "is_orange": false
+      },
+      {
+        "frame": 4211,
+        "player_name": "Coconut",
+        "is_orange": true
+      },
+      {
+        "frame": 5391,
+        "player_name": "ssel raeF",
+        "is_orange": false
+      },
+      {
+        "frame": 6378,
+        "player_name": "ssel raeF",
+        "is_orange": false
+      },
+      {
+        "frame": 7543,
+        "player_name": "ssel raeF",
+        "is_orange": false
+      },
+      {
+        "frame": 8316,
+        "player_name": "ssel raeF",
+        "is_orange": false
+      },
+      {
+        "frame": 11440,
+        "player_name": "Coconut",
+        "is_orange": true
+      }
+    ]
+  }
+}

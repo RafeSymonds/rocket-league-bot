@@ -1,0 +1,31 @@
+{
+  "players": [
+    {
+      "name": "sedou",
+      "unique_id": "76561198261764796"
+    },
+    {
+      "name": "3rb14",
+      "unique_id": "559e6ecd2e134a56932e4009096f40c4"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 783,
+        "player_name": "3rb14",
+        "is_orange": false
+      },
+      {
+        "frame": 1257,
+        "player_name": "3rb14",
+        "is_orange": false
+      },
+      {
+        "frame": 1706,
+        "player_name": "3rb14",
+        "is_orange": false
+      }
+    ]
+  }
+}

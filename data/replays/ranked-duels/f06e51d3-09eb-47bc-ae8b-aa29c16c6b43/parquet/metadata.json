@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "\u00c8leets",
+      "unique_id": "766a3d1d0adb4a3ebb9b342e4c6595a5"
+    },
+    {
+      "name": "Riftslayer.MV3",
+      "unique_id": "05743b278c71414298f68d80e3362c87"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 906,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 1524,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 2145,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 3147,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 3580,
+        "player_name": "Riftslayer.MV3",
+        "is_orange": true
+      },
+      {
+        "frame": 4540,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 4994,
+        "player_name": "Riftslayer.MV3",
+        "is_orange": true
+      },
+      {
+        "frame": 6086,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      }
+    ]
+  }
+}

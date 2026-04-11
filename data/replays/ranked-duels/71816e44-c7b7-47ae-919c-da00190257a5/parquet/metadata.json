@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "ExoTiiK",
+      "unique_id": "76561198258466111"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1533,
+        "player_name": "ExoTiiK",
+        "is_orange": true
+      },
+      {
+        "frame": 5532,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 11256,
+        "player_name": "ExoTiiK",
+        "is_orange": true
+      },
+      {
+        "frame": 13017,
+        "player_name": "ExoTiiK",
+        "is_orange": true
+      },
+      {
+        "frame": 16639,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 18364,
+        "player_name": "ExoTiiK",
+        "is_orange": true
+      },
+      {
+        "frame": 23538,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 27878,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 32189,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 34608,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 35969,
+        "player_name": "davoof",
+        "is_orange": false
+      }
+    ]
+  }
+}

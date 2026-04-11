@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "snxwyy",
+      "unique_id": "76561198157118548"
+    },
+    {
+      "name": "Bymasvfx",
+      "unique_id": "7a51d2c5dd3d4ab18da7ec5f49a2ae7e"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 867,
+        "player_name": "Bymasvfx",
+        "is_orange": false
+      },
+      {
+        "frame": 2021,
+        "player_name": "Bymasvfx",
+        "is_orange": false
+      },
+      {
+        "frame": 4773,
+        "player_name": "Bymasvfx",
+        "is_orange": false
+      },
+      {
+        "frame": 5569,
+        "player_name": "Bymasvfx",
+        "is_orange": false
+      },
+      {
+        "frame": 6271,
+        "player_name": "snxwyy",
+        "is_orange": true
+      },
+      {
+        "frame": 6971,
+        "player_name": "Bymasvfx",
+        "is_orange": false
+      },
+      {
+        "frame": 7871,
+        "player_name": "Bymasvfx",
+        "is_orange": false
+      },
+      {
+        "frame": 8585,
+        "player_name": "snxwyy",
+        "is_orange": true
+      },
+      {
+        "frame": 9029,
+        "player_name": "Bymasvfx",
+        "is_orange": false
+      },
+      {
+        "frame": 10024,
+        "player_name": "snxwyy",
+        "is_orange": true
+      }
+    ]
+  }
+}

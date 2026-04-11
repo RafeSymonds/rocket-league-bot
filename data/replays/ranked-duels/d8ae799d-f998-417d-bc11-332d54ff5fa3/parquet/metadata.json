@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": ".",
+      "unique_id": "76561199076206546"
+    },
+    {
+      "name": "jaypz.",
+      "unique_id": "76561198827640192"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 234,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 638,
+        "player_name": "jaypz.",
+        "is_orange": false
+      },
+      {
+        "frame": 2394,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 2822,
+        "player_name": "jaypz.",
+        "is_orange": false
+      },
+      {
+        "frame": 3475,
+        "player_name": "jaypz.",
+        "is_orange": false
+      },
+      {
+        "frame": 4273,
+        "player_name": "jaypz.",
+        "is_orange": false
+      },
+      {
+        "frame": 4934,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 5485,
+        "player_name": "jaypz.",
+        "is_orange": false
+      },
+      {
+        "frame": 6775,
+        "player_name": "jaypz.",
+        "is_orange": false
+      },
+      {
+        "frame": 10032,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 10796,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 11455,
+        "player_name": "jaypz.",
+        "is_orange": false
+      },
+      {
+        "frame": 12006,
+        "player_name": ".",
+        "is_orange": true
+      }
+    ]
+  }
+}

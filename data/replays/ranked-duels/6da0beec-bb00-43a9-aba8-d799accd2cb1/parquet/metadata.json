@@ -1,0 +1,46 @@
+{
+  "players": [
+    {
+      "name": "Apples",
+      "unique_id": "76561199088053903"
+    },
+    {
+      "name": "Mir.gg",
+      "unique_id": "60454fd4d1534832862f64519e863732"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 857,
+        "player_name": "Apples",
+        "is_orange": true
+      },
+      {
+        "frame": 1539,
+        "player_name": "Apples",
+        "is_orange": true
+      },
+      {
+        "frame": 2439,
+        "player_name": "Mir.gg",
+        "is_orange": false
+      },
+      {
+        "frame": 3803,
+        "player_name": "Apples",
+        "is_orange": true
+      },
+      {
+        "frame": 6531,
+        "player_name": "Apples",
+        "is_orange": true
+      },
+      {
+        "frame": 7439,
+        "player_name": "Apples",
+        "is_orange": true
+      }
+    ]
+  }
+}

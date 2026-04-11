@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "\u00c8leets",
+      "unique_id": "766a3d1d0adb4a3ebb9b342e4c6595a5"
+    },
+    {
+      "name": "kapp",
+      "unique_id": "76561199071166770"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 316,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 1291,
+        "player_name": "kapp",
+        "is_orange": false
+      },
+      {
+        "frame": 1799,
+        "player_name": "kapp",
+        "is_orange": false
+      },
+      {
+        "frame": 2265,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 2883,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 5460,
+        "player_name": "kapp",
+        "is_orange": false
+      },
+      {
+        "frame": 6257,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 7861,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 8428,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 8898,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      }
+    ]
+  }
+}

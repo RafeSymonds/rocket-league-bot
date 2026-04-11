@@ -1,0 +1,51 @@
+{
+  "players": [
+    {
+      "name": "Saud",
+      "unique_id": "76561198131059947"
+    },
+    {
+      "name": "Rl_sam4",
+      "unique_id": "b23887841b54467c9d4b9cb7679ea6ca"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 297,
+        "player_name": "Rl_sam4",
+        "is_orange": false
+      },
+      {
+        "frame": 881,
+        "player_name": "Saud",
+        "is_orange": true
+      },
+      {
+        "frame": 1954,
+        "player_name": "Saud",
+        "is_orange": true
+      },
+      {
+        "frame": 2785,
+        "player_name": "Saud",
+        "is_orange": true
+      },
+      {
+        "frame": 3358,
+        "player_name": "Saud",
+        "is_orange": true
+      },
+      {
+        "frame": 3937,
+        "player_name": "Rl_sam4",
+        "is_orange": false
+      },
+      {
+        "frame": 4654,
+        "player_name": "Saud",
+        "is_orange": true
+      }
+    ]
+  }
+}

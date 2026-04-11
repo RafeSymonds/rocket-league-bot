@@ -1,0 +1,51 @@
+{
+  "players": [
+    {
+      "name": "crazycat",
+      "unique_id": "76561198312939013"
+    },
+    {
+      "name": "I'm basically mawkzy",
+      "unique_id": "76561198085666064"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 838,
+        "player_name": "I'm basically mawkzy",
+        "is_orange": true
+      },
+      {
+        "frame": 1359,
+        "player_name": "I'm basically mawkzy",
+        "is_orange": true
+      },
+      {
+        "frame": 2108,
+        "player_name": "I'm basically mawkzy",
+        "is_orange": true
+      },
+      {
+        "frame": 2682,
+        "player_name": "I'm basically mawkzy",
+        "is_orange": true
+      },
+      {
+        "frame": 3122,
+        "player_name": "I'm basically mawkzy",
+        "is_orange": true
+      },
+      {
+        "frame": 3557,
+        "player_name": "I'm basically mawkzy",
+        "is_orange": true
+      },
+      {
+        "frame": 4866,
+        "player_name": "I'm basically mawkzy",
+        "is_orange": true
+      }
+    ]
+  }
+}

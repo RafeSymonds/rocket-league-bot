@@ -1,0 +1,86 @@
+{
+  "players": [
+    {
+      "name": "dribbs",
+      "unique_id": "76561198157937319"
+    },
+    {
+      "name": "Haapt",
+      "unique_id": "76561199068116864"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 586,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 1637,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 2342,
+        "player_name": "Haapt",
+        "is_orange": false
+      },
+      {
+        "frame": 3128,
+        "player_name": "Haapt",
+        "is_orange": false
+      },
+      {
+        "frame": 5628,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 6035,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 6553,
+        "player_name": "Haapt",
+        "is_orange": false
+      },
+      {
+        "frame": 7688,
+        "player_name": "Haapt",
+        "is_orange": false
+      },
+      {
+        "frame": 8331,
+        "player_name": "Haapt",
+        "is_orange": false
+      },
+      {
+        "frame": 8808,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 9352,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 10048,
+        "player_name": "Haapt",
+        "is_orange": false
+      },
+      {
+        "frame": 10934,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 12044,
+        "player_name": "Haapt",
+        "is_orange": false
+      }
+    ]
+  }
+}

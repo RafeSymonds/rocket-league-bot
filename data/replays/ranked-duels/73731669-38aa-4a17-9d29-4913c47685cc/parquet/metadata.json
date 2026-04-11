@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "ttvJaxxrl",
+      "unique_id": "76561198825631196"
+    },
+    {
+      "name": "F\u03bfrky",
+      "unique_id": "be892719368a4ed7bc26d4f4e1d6de00"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 770,
+        "player_name": "ttvJaxxrl",
+        "is_orange": true
+      },
+      {
+        "frame": 1642,
+        "player_name": "F\u03bfrky",
+        "is_orange": false
+      },
+      {
+        "frame": 4408,
+        "player_name": "ttvJaxxrl",
+        "is_orange": true
+      },
+      {
+        "frame": 6273,
+        "player_name": "F\u03bfrky",
+        "is_orange": false
+      },
+      {
+        "frame": 6961,
+        "player_name": "ttvJaxxrl",
+        "is_orange": true
+      },
+      {
+        "frame": 7781,
+        "player_name": "ttvJaxxrl",
+        "is_orange": true
+      },
+      {
+        "frame": 9133,
+        "player_name": "F\u03bfrky",
+        "is_orange": false
+      },
+      {
+        "frame": 9743,
+        "player_name": "ttvJaxxrl",
+        "is_orange": true
+      },
+      {
+        "frame": 10094,
+        "player_name": "ttvJaxxrl",
+        "is_orange": true
+      },
+      {
+        "frame": 10548,
+        "player_name": "ttvJaxxrl",
+        "is_orange": true
+      }
+    ]
+  }
+}

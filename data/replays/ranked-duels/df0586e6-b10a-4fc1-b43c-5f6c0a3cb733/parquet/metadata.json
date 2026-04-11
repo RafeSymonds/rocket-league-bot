@@ -1,0 +1,96 @@
+{
+  "players": [
+    {
+      "name": "Rebm0b.",
+      "unique_id": "a64790c299d245daa9e727b05f9fa6c5"
+    },
+    {
+      "name": "Royales",
+      "unique_id": "76561198343007470"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 653,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 1644,
+        "player_name": "Royales",
+        "is_orange": true
+      },
+      {
+        "frame": 2326,
+        "player_name": "Royales",
+        "is_orange": true
+      },
+      {
+        "frame": 2813,
+        "player_name": "Royales",
+        "is_orange": true
+      },
+      {
+        "frame": 3848,
+        "player_name": "Royales",
+        "is_orange": true
+      },
+      {
+        "frame": 4475,
+        "player_name": "Royales",
+        "is_orange": true
+      },
+      {
+        "frame": 4991,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 5615,
+        "player_name": "Royales",
+        "is_orange": true
+      },
+      {
+        "frame": 6067,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 7073,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 7666,
+        "player_name": "Royales",
+        "is_orange": true
+      },
+      {
+        "frame": 8161,
+        "player_name": "Royales",
+        "is_orange": true
+      },
+      {
+        "frame": 10112,
+        "player_name": "Royales",
+        "is_orange": true
+      },
+      {
+        "frame": 10520,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 11179,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 12307,
+        "player_name": "Royales",
+        "is_orange": true
+      }
+    ]
+  }
+}

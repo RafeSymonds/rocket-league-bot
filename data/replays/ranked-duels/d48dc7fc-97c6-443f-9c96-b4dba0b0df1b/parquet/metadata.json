@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "Coconut",
+      "unique_id": "76561198162286169"
+    },
+    {
+      "name": "Sleighjayy",
+      "unique_id": "76561198105072499"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 564,
+        "player_name": "Sleighjayy",
+        "is_orange": false
+      },
+      {
+        "frame": 2105,
+        "player_name": "Sleighjayy",
+        "is_orange": false
+      },
+      {
+        "frame": 3152,
+        "player_name": "Sleighjayy",
+        "is_orange": false
+      },
+      {
+        "frame": 4344,
+        "player_name": "Sleighjayy",
+        "is_orange": false
+      },
+      {
+        "frame": 5008,
+        "player_name": "Sleighjayy",
+        "is_orange": false
+      },
+      {
+        "frame": 5679,
+        "player_name": "Coconut",
+        "is_orange": true
+      },
+      {
+        "frame": 7013,
+        "player_name": "Sleighjayy",
+        "is_orange": false
+      },
+      {
+        "frame": 7821,
+        "player_name": "Sleighjayy",
+        "is_orange": false
+      },
+      {
+        "frame": 10371,
+        "player_name": "Sleighjayy",
+        "is_orange": false
+      }
+    ]
+  }
+}

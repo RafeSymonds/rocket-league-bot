@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "sedou",
+      "unique_id": "76561198261764796"
+    },
+    {
+      "name": "AlxXmas",
+      "unique_id": "76561198356566425"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 2809,
+        "player_name": "sedou",
+        "is_orange": true
+      },
+      {
+        "frame": 3625,
+        "player_name": "sedou",
+        "is_orange": true
+      },
+      {
+        "frame": 5225,
+        "player_name": "sedou",
+        "is_orange": true
+      },
+      {
+        "frame": 6578,
+        "player_name": "AlxXmas",
+        "is_orange": false
+      },
+      {
+        "frame": 6976,
+        "player_name": "AlxXmas",
+        "is_orange": false
+      },
+      {
+        "frame": 8382,
+        "player_name": "sedou",
+        "is_orange": true
+      },
+      {
+        "frame": 8998,
+        "player_name": "AlxXmas",
+        "is_orange": false
+      },
+      {
+        "frame": 10082,
+        "player_name": "AlxXmas",
+        "is_orange": false
+      },
+      {
+        "frame": 15187,
+        "player_name": "AlxXmas",
+        "is_orange": false
+      }
+    ]
+  }
+}

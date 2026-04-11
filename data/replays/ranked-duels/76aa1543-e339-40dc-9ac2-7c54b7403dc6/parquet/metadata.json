@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "KnightYuh",
+      "unique_id": "76561198999887273"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 730,
+        "player_name": "KnightYuh",
+        "is_orange": true
+      },
+      {
+        "frame": 9455,
+        "player_name": "KnightYuh",
+        "is_orange": true
+      },
+      {
+        "frame": 12018,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 13630,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 17827,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 21725,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 23638,
+        "player_name": "KnightYuh",
+        "is_orange": true
+      },
+      {
+        "frame": 26317,
+        "player_name": "Mec",
+        "is_orange": false
+      }
+    ]
+  }
+}

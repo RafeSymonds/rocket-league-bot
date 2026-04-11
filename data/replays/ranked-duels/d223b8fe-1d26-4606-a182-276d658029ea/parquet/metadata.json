@@ -1,0 +1,31 @@
+{
+  "players": [
+    {
+      "name": "TvK .",
+      "unique_id": "cc12140e91a747dabb8d31e1e64dd1cb"
+    },
+    {
+      "name": ".",
+      "unique_id": "76561199888386741"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1218,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 1678,
+        "player_name": "TvK .",
+        "is_orange": false
+      },
+      {
+        "frame": 3014,
+        "player_name": ".",
+        "is_orange": true
+      }
+    ]
+  }
+}

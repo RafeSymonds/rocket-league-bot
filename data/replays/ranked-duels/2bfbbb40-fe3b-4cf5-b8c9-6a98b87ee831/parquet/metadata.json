@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "veerz",
+      "unique_id": "76561199873499355"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 4025,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 9664,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 16076,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 18692,
+        "player_name": "veerz",
+        "is_orange": false
+      },
+      {
+        "frame": 19763,
+        "player_name": "veerz",
+        "is_orange": false
+      },
+      {
+        "frame": 21563,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 23957,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 25055,
+        "player_name": "davoof",
+        "is_orange": true
+      }
+    ]
+  }
+}

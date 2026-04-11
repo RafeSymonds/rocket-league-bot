@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "Ivan.",
+      "unique_id": "76561198805757995"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1082,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 5372,
+        "player_name": "Ivan.",
+        "is_orange": false
+      },
+      {
+        "frame": 7708,
+        "player_name": "Ivan.",
+        "is_orange": false
+      },
+      {
+        "frame": 9399,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 10355,
+        "player_name": "Ivan.",
+        "is_orange": false
+      },
+      {
+        "frame": 11999,
+        "player_name": "Ivan.",
+        "is_orange": false
+      },
+      {
+        "frame": 13236,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 14867,
+        "player_name": "Ivan.",
+        "is_orange": false
+      },
+      {
+        "frame": 16371,
+        "player_name": "Ivan.",
+        "is_orange": false
+      },
+      {
+        "frame": 18583,
+        "player_name": "Ivan.",
+        "is_orange": false
+      },
+      {
+        "frame": 19505,
+        "player_name": "Ivan.",
+        "is_orange": false
+      },
+      {
+        "frame": 22175,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 23996,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 26641,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 27734,
+        "player_name": "Ivan.",
+        "is_orange": false
+      }
+    ]
+  }
+}

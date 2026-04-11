@@ -1,0 +1,51 @@
+{
+  "players": [
+    {
+      "name": "Coconut",
+      "unique_id": "76561198162286169"
+    },
+    {
+      "name": "Sign me for the win :}",
+      "unique_id": "76561198300908943"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 478,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 1079,
+        "player_name": "Sign me for the win :}",
+        "is_orange": true
+      },
+      {
+        "frame": 3563,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 3965,
+        "player_name": "Sign me for the win :}",
+        "is_orange": true
+      },
+      {
+        "frame": 4363,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 10667,
+        "player_name": "Sign me for the win :}",
+        "is_orange": true
+      },
+      {
+        "frame": 11053,
+        "player_name": "Coconut",
+        "is_orange": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "Jup",
+      "unique_id": "76561198286120378"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 2950,
+        "player_name": "Jup",
+        "is_orange": true
+      },
+      {
+        "frame": 4370,
+        "player_name": "Jup",
+        "is_orange": true
+      },
+      {
+        "frame": 7462,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 10911,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 13603,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 15028,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 18151,
+        "player_name": "Jup",
+        "is_orange": true
+      },
+      {
+        "frame": 21630,
+        "player_name": "Jup",
+        "is_orange": true
+      },
+      {
+        "frame": 23724,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 26197,
+        "player_name": "Jup",
+        "is_orange": true
+      },
+      {
+        "frame": 28977,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 30328,
+        "player_name": "Jup",
+        "is_orange": true
+      },
+      {
+        "frame": 31881,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 38285,
+        "player_name": "Jup",
+        "is_orange": true
+      },
+      {
+        "frame": 41176,
+        "player_name": "Jup",
+        "is_orange": true
+      }
+    ]
+  }
+}

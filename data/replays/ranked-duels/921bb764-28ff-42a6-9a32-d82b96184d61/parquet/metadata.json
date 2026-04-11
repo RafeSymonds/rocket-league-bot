@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "Shinmarubs",
+      "unique_id": "7ccbc018c0ce4f33b93a1b3c520823b1"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1374,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 2831,
+        "player_name": "Shinmarubs",
+        "is_orange": false
+      },
+      {
+        "frame": 5214,
+        "player_name": "Shinmarubs",
+        "is_orange": false
+      },
+      {
+        "frame": 6821,
+        "player_name": "Shinmarubs",
+        "is_orange": false
+      },
+      {
+        "frame": 9775,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 10972,
+        "player_name": "Shinmarubs",
+        "is_orange": false
+      },
+      {
+        "frame": 12524,
+        "player_name": "Shinmarubs",
+        "is_orange": false
+      },
+      {
+        "frame": 14998,
+        "player_name": "Shinmarubs",
+        "is_orange": false
+      }
+    ]
+  }
+}

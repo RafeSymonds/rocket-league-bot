@@ -1,0 +1,114 @@
+{
+  "hits": [
+    {
+      "frame_number": 146,
+      "player_unique_id": "76561198261764796"
+    },
+    {
+      "frame_number": 224,
+      "player_unique_id": "76561198261764796"
+    },
+    {
+      "frame_number": 515,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 517,
+      "player_unique_id": "76561198261764796"
+    },
+    {
+      "frame_number": 1184,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 1271,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 1327,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 1498,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 1796,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 1797,
+      "player_unique_id": "76561198261764796"
+    },
+    {
+      "frame_number": 2185,
+      "player_unique_id": "76561198261764796"
+    },
+    {
+      "frame_number": 2464,
+      "player_unique_id": "76561198261764796"
+    },
+    {
+      "frame_number": 2529,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 2583,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 2618,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 2636,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 2772,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 2834,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 3051,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 3619,
+      "player_unique_id": "76561198261764796"
+    },
+    {
+      "frame_number": 3968,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 4667,
+      "player_unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    },
+    {
+      "frame_number": 4669,
+      "player_unique_id": "76561198261764796"
+    }
+  ],
+  "gameplay_periods": [
+    {
+      "start_frame": 92,
+      "goal_frame": 254
+    },
+    {
+      "start_frame": 453,
+      "goal_frame": 1524
+    },
+    {
+      "start_frame": 1723,
+      "goal_frame": 4425
+    },
+    {
+      "start_frame": 4610,
+      "goal_frame": null
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "players": [
+    {
+      "name": "dribbs",
+      "unique_id": "76561198157937319"
+    },
+    {
+      "name": "TheWildPotatoes",
+      "unique_id": "473591b739354c268b4f88bdc9878f28"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 637,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 1023,
+        "player_name": "TheWildPotatoes",
+        "is_orange": true
+      },
+      {
+        "frame": 1768,
+        "player_name": "TheWildPotatoes",
+        "is_orange": true
+      },
+      {
+        "frame": 2359,
+        "player_name": "TheWildPotatoes",
+        "is_orange": true
+      },
+      {
+        "frame": 3470,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 3996,
+        "player_name": "TheWildPotatoes",
+        "is_orange": true
+      },
+      {
+        "frame": 4642,
+        "player_name": "TheWildPotatoes",
+        "is_orange": true
+      },
+      {
+        "frame": 5325,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 6987,
+        "player_name": "TheWildPotatoes",
+        "is_orange": true
+      },
+      {
+        "frame": 7394,
+        "player_name": "TheWildPotatoes",
+        "is_orange": true
+      },
+      {
+        "frame": 7909,
+        "player_name": "TheWildPotatoes",
+        "is_orange": true
+      },
+      {
+        "frame": 8424,
+        "player_name": "TheWildPotatoes",
+        "is_orange": true
+      }
+    ]
+  }
+}

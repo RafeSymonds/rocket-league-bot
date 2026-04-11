@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "mrtn",
+      "unique_id": "76561199084382801"
+    },
+    {
+      "name": "cam",
+      "unique_id": "76561199029556479"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 3191,
+        "player_name": "cam",
+        "is_orange": true
+      },
+      {
+        "frame": 5043,
+        "player_name": "cam",
+        "is_orange": true
+      },
+      {
+        "frame": 5808,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 6197,
+        "player_name": "cam",
+        "is_orange": true
+      },
+      {
+        "frame": 7072,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 7894,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 8756,
+        "player_name": "cam",
+        "is_orange": true
+      },
+      {
+        "frame": 9444,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 10342,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 10753,
+        "player_name": "cam",
+        "is_orange": true
+      },
+      {
+        "frame": 12169,
+        "player_name": "cam",
+        "is_orange": true
+      }
+    ]
+  }
+}

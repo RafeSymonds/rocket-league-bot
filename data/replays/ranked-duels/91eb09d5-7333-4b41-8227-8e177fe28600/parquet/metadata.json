@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "Swizx.",
+      "unique_id": "76561198180446441"
+    },
+    {
+      "name": "Nush",
+      "unique_id": "76561199170815325"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 950,
+        "player_name": "Nush",
+        "is_orange": true
+      },
+      {
+        "frame": 1770,
+        "player_name": "Nush",
+        "is_orange": true
+      },
+      {
+        "frame": 2555,
+        "player_name": "Nush",
+        "is_orange": true
+      },
+      {
+        "frame": 3669,
+        "player_name": "Nush",
+        "is_orange": true
+      },
+      {
+        "frame": 4259,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 5089,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 5611,
+        "player_name": "Nush",
+        "is_orange": true
+      },
+      {
+        "frame": 6253,
+        "player_name": "Nush",
+        "is_orange": true
+      },
+      {
+        "frame": 6742,
+        "player_name": "Nush",
+        "is_orange": true
+      },
+      {
+        "frame": 7158,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 8323,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 9743,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 11206,
+        "player_name": "Nush",
+        "is_orange": true
+      }
+    ]
+  }
+}

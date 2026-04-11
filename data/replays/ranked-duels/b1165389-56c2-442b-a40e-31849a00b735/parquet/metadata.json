@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "Ash",
+      "unique_id": "76561199076206546"
+    },
+    {
+      "name": "tigeer",
+      "unique_id": "76561198983878930"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 371,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 1823,
+        "player_name": "tigeer",
+        "is_orange": true
+      },
+      {
+        "frame": 2215,
+        "player_name": "tigeer",
+        "is_orange": true
+      },
+      {
+        "frame": 2681,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 4026,
+        "player_name": "tigeer",
+        "is_orange": true
+      },
+      {
+        "frame": 4664,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 5253,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 7091,
+        "player_name": "tigeer",
+        "is_orange": true
+      },
+      {
+        "frame": 8398,
+        "player_name": "tigeer",
+        "is_orange": true
+      },
+      {
+        "frame": 9002,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 9694,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 11487,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 12202,
+        "player_name": "tigeer",
+        "is_orange": true
+      }
+    ]
+  }
+}

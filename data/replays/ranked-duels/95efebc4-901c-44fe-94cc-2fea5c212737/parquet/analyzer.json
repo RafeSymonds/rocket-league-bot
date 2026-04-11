@@ -1,0 +1,38 @@
+{
+  "hits": [
+    {
+      "frame_number": 430,
+      "player_unique_id": "d4c488bfd3b040118364faa607439e19"
+    },
+    {
+      "frame_number": 639,
+      "player_unique_id": "76561199070361459"
+    },
+    {
+      "frame_number": 1451,
+      "player_unique_id": "76561199070361459"
+    },
+    {
+      "frame_number": 1454,
+      "player_unique_id": "d4c488bfd3b040118364faa607439e19"
+    },
+    {
+      "frame_number": 1455,
+      "player_unique_id": "76561199070361459"
+    },
+    {
+      "frame_number": 1457,
+      "player_unique_id": "d4c488bfd3b040118364faa607439e19"
+    }
+  ],
+  "gameplay_periods": [
+    {
+      "start_frame": 290,
+      "goal_frame": 787
+    },
+    {
+      "start_frame": 1295,
+      "goal_frame": null
+    }
+  ]
+}

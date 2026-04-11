@@ -1,0 +1,31 @@
+{
+  "players": [
+    {
+      "name": "Saud",
+      "unique_id": "76561198131059947"
+    },
+    {
+      "name": "dsc dBKShhWjb8",
+      "unique_id": "0311d2f2c3c04c0ebe3be4c31a5b1ee4"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 311,
+        "player_name": "Saud",
+        "is_orange": false
+      },
+      {
+        "frame": 790,
+        "player_name": "dsc dBKShhWjb8",
+        "is_orange": true
+      },
+      {
+        "frame": 1929,
+        "player_name": "dsc dBKShhWjb8",
+        "is_orange": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "Nym0",
+      "unique_id": "76561199012906224"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 2712,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 3837,
+        "player_name": "Nym0",
+        "is_orange": false
+      },
+      {
+        "frame": 6475,
+        "player_name": "Nym0",
+        "is_orange": false
+      },
+      {
+        "frame": 7650,
+        "player_name": "Nym0",
+        "is_orange": false
+      },
+      {
+        "frame": 10754,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 12530,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 13875,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 16099,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 18533,
+        "player_name": "Nym0",
+        "is_orange": false
+      },
+      {
+        "frame": 19697,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 21148,
+        "player_name": "Nym0",
+        "is_orange": false
+      },
+      {
+        "frame": 27622,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 31300,
+        "player_name": "Nym0",
+        "is_orange": false
+      }
+    ]
+  }
+}

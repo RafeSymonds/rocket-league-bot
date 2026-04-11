@@ -1,0 +1,21 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "Merenelaniel",
+      "unique_id": "d4c488bfd3b040118364faa607439e19"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 787,
+        "player_name": "Mec",
+        "is_orange": true
+      }
+    ]
+  }
+}

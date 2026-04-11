@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "Mr Giyu!!!",
+      "unique_id": "76561198784847286"
+    },
+    {
+      "name": "R3NRL",
+      "unique_id": "6fdd8d5b00054431b63b3c056d61b240"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1680,
+        "player_name": "R3NRL",
+        "is_orange": true
+      },
+      {
+        "frame": 3112,
+        "player_name": "R3NRL",
+        "is_orange": true
+      },
+      {
+        "frame": 3458,
+        "player_name": "Mr Giyu!!!",
+        "is_orange": false
+      },
+      {
+        "frame": 5223,
+        "player_name": "Mr Giyu!!!",
+        "is_orange": false
+      },
+      {
+        "frame": 6807,
+        "player_name": "Mr Giyu!!!",
+        "is_orange": false
+      },
+      {
+        "frame": 7190,
+        "player_name": "Mr Giyu!!!",
+        "is_orange": false
+      },
+      {
+        "frame": 7570,
+        "player_name": "R3NRL",
+        "is_orange": true
+      },
+      {
+        "frame": 8826,
+        "player_name": "Mr Giyu!!!",
+        "is_orange": false
+      },
+      {
+        "frame": 9326,
+        "player_name": "Mr Giyu!!!",
+        "is_orange": false
+      },
+      {
+        "frame": 9699,
+        "player_name": "R3NRL",
+        "is_orange": true
+      }
+    ]
+  }
+}

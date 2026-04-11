@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "M6R",
+      "unique_id": "76561199062774301"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1374,
+        "player_name": "M6R",
+        "is_orange": false
+      },
+      {
+        "frame": 4999,
+        "player_name": "M6R",
+        "is_orange": false
+      },
+      {
+        "frame": 9200,
+        "player_name": "M6R",
+        "is_orange": false
+      },
+      {
+        "frame": 13409,
+        "player_name": "M6R",
+        "is_orange": false
+      },
+      {
+        "frame": 14451,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 17519,
+        "player_name": "M6R",
+        "is_orange": false
+      },
+      {
+        "frame": 18867,
+        "player_name": "M6R",
+        "is_orange": false
+      },
+      {
+        "frame": 19787,
+        "player_name": "davoof",
+        "is_orange": true
+      }
+    ]
+  }
+}

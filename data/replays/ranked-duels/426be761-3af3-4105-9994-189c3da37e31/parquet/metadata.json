@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "faded",
+      "unique_id": "76561198091136418"
+    },
+    {
+      "name": "ihatethisgame.67",
+      "unique_id": "457703426e984c30a12c9b499f76c873"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1867,
+        "player_name": "ihatethisgame.67",
+        "is_orange": false
+      },
+      {
+        "frame": 2272,
+        "player_name": "ihatethisgame.67",
+        "is_orange": false
+      },
+      {
+        "frame": 3746,
+        "player_name": "faded",
+        "is_orange": true
+      },
+      {
+        "frame": 4782,
+        "player_name": "ihatethisgame.67",
+        "is_orange": false
+      },
+      {
+        "frame": 6143,
+        "player_name": "faded",
+        "is_orange": true
+      },
+      {
+        "frame": 7217,
+        "player_name": "ihatethisgame.67",
+        "is_orange": false
+      },
+      {
+        "frame": 7597,
+        "player_name": "faded",
+        "is_orange": true
+      },
+      {
+        "frame": 8000,
+        "player_name": "faded",
+        "is_orange": true
+      },
+      {
+        "frame": 9969,
+        "player_name": "faded",
+        "is_orange": true
+      },
+      {
+        "frame": 10471,
+        "player_name": "faded",
+        "is_orange": true
+      },
+      {
+        "frame": 11969,
+        "player_name": "ihatethisgame.67",
+        "is_orange": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "kratozz",
+      "unique_id": "76561198135516985"
+    },
+    {
+      "name": "xsync",
+      "unique_id": "76561198384004482"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 396,
+        "player_name": "xsync",
+        "is_orange": true
+      },
+      {
+        "frame": 1229,
+        "player_name": "kratozz",
+        "is_orange": false
+      },
+      {
+        "frame": 1774,
+        "player_name": "xsync",
+        "is_orange": true
+      },
+      {
+        "frame": 2332,
+        "player_name": "xsync",
+        "is_orange": true
+      },
+      {
+        "frame": 3864,
+        "player_name": "xsync",
+        "is_orange": true
+      },
+      {
+        "frame": 4580,
+        "player_name": "kratozz",
+        "is_orange": false
+      },
+      {
+        "frame": 5184,
+        "player_name": "xsync",
+        "is_orange": true
+      },
+      {
+        "frame": 6030,
+        "player_name": "xsync",
+        "is_orange": true
+      },
+      {
+        "frame": 6451,
+        "player_name": "xsync",
+        "is_orange": true
+      }
+    ]
+  }
+}

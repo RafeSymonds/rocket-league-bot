@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": ".",
+      "unique_id": "76561198180446441"
+    },
+    {
+      "name": "AL-HASLAS",
+      "unique_id": "76561198411812122"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 389,
+        "player_name": "AL-HASLAS",
+        "is_orange": false
+      },
+      {
+        "frame": 1318,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 2044,
+        "player_name": "AL-HASLAS",
+        "is_orange": false
+      },
+      {
+        "frame": 2614,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 4249,
+        "player_name": "AL-HASLAS",
+        "is_orange": false
+      },
+      {
+        "frame": 4932,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 5936,
+        "player_name": "AL-HASLAS",
+        "is_orange": false
+      },
+      {
+        "frame": 6611,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 7824,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 8969,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 10482,
+        "player_name": ".",
+        "is_orange": true
+      }
+    ]
+  }
+}

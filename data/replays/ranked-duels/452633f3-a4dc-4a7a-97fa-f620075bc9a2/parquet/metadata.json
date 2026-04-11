@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "Mech",
+      "unique_id": "76561199038935432"
+    },
+    {
+      "name": "AJ",
+      "unique_id": "76561198105072499"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 485,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 1843,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 2358,
+        "player_name": "AJ",
+        "is_orange": false
+      },
+      {
+        "frame": 2869,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 3551,
+        "player_name": "AJ",
+        "is_orange": false
+      },
+      {
+        "frame": 4078,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 4696,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 6138,
+        "player_name": "Mech",
+        "is_orange": true
+      }
+    ]
+  }
+}

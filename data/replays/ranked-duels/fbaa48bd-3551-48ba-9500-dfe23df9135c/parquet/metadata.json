@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "Swizx.",
+      "unique_id": "76561198180446441"
+    },
+    {
+      "name": "TTV\\shadirll",
+      "unique_id": "76561198085638483"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 443,
+        "player_name": "TTV\\shadirll",
+        "is_orange": true
+      },
+      {
+        "frame": 1812,
+        "player_name": "TTV\\shadirll",
+        "is_orange": true
+      },
+      {
+        "frame": 2366,
+        "player_name": "TTV\\shadirll",
+        "is_orange": true
+      },
+      {
+        "frame": 3549,
+        "player_name": "TTV\\shadirll",
+        "is_orange": true
+      },
+      {
+        "frame": 4011,
+        "player_name": "TTV\\shadirll",
+        "is_orange": true
+      },
+      {
+        "frame": 4577,
+        "player_name": "TTV\\shadirll",
+        "is_orange": true
+      },
+      {
+        "frame": 5382,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 6241,
+        "player_name": "TTV\\shadirll",
+        "is_orange": true
+      },
+      {
+        "frame": 6709,
+        "player_name": "Swizx.",
+        "is_orange": false
+      }
+    ]
+  }
+}

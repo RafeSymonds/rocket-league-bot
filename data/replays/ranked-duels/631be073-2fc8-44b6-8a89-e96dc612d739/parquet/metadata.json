@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "T",
+      "unique_id": "76561199014043052"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1864,
+        "player_name": "T",
+        "is_orange": true
+      },
+      {
+        "frame": 4318,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 13402,
+        "player_name": "T",
+        "is_orange": true
+      },
+      {
+        "frame": 15036,
+        "player_name": "T",
+        "is_orange": true
+      },
+      {
+        "frame": 17342,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 19590,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 21551,
+        "player_name": "T",
+        "is_orange": true
+      },
+      {
+        "frame": 23296,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 25900,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 29449,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 31586,
+        "player_name": "davoof",
+        "is_orange": false
+      }
+    ]
+  }
+}

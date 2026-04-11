@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": "snxwyy",
+      "unique_id": "76561198157118548"
+    },
+    {
+      "name": "Saud",
+      "unique_id": "76561198131059947"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 389,
+        "player_name": "snxwyy",
+        "is_orange": true
+      },
+      {
+        "frame": 940,
+        "player_name": "Saud",
+        "is_orange": false
+      },
+      {
+        "frame": 2703,
+        "player_name": "snxwyy",
+        "is_orange": true
+      },
+      {
+        "frame": 3275,
+        "player_name": "Saud",
+        "is_orange": false
+      },
+      {
+        "frame": 4395,
+        "player_name": "snxwyy",
+        "is_orange": true
+      },
+      {
+        "frame": 4859,
+        "player_name": "Saud",
+        "is_orange": false
+      },
+      {
+        "frame": 5366,
+        "player_name": "snxwyy",
+        "is_orange": true
+      },
+      {
+        "frame": 6678,
+        "player_name": "Saud",
+        "is_orange": false
+      },
+      {
+        "frame": 7845,
+        "player_name": "snxwyy",
+        "is_orange": true
+      },
+      {
+        "frame": 8370,
+        "player_name": "Saud",
+        "is_orange": false
+      },
+      {
+        "frame": 9347,
+        "player_name": "snxwyy",
+        "is_orange": true
+      },
+      {
+        "frame": 10281,
+        "player_name": "snxwyy",
+        "is_orange": true
+      },
+      {
+        "frame": 10892,
+        "player_name": "Saud",
+        "is_orange": false
+      },
+      {
+        "frame": 11442,
+        "player_name": "Saud",
+        "is_orange": false
+      },
+      {
+        "frame": 13346,
+        "player_name": "Saud",
+        "is_orange": false
+      }
+    ]
+  }
+}

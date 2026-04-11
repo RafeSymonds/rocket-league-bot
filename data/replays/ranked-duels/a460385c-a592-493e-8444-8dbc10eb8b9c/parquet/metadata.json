@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "dribbs",
+      "unique_id": "76561198157937319"
+    },
+    {
+      "name": "\u00c8leets",
+      "unique_id": "766a3d1d0adb4a3ebb9b342e4c6595a5"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 863,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 2892,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 3541,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 4137,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 5631,
+        "player_name": "dribbs",
+        "is_orange": false
+      },
+      {
+        "frame": 6515,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 9353,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 10784,
+        "player_name": "dribbs",
+        "is_orange": false
+      }
+    ]
+  }
+}

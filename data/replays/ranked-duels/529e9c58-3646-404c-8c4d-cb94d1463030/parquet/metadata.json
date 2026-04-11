@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "\u00c8leets",
+      "unique_id": "766a3d1d0adb4a3ebb9b342e4c6595a5"
+    },
+    {
+      "name": "Lev",
+      "unique_id": "76561198866552233"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 419,
+        "player_name": "Lev",
+        "is_orange": true
+      },
+      {
+        "frame": 1096,
+        "player_name": "Lev",
+        "is_orange": true
+      },
+      {
+        "frame": 1502,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 2852,
+        "player_name": "Lev",
+        "is_orange": true
+      },
+      {
+        "frame": 3628,
+        "player_name": "Lev",
+        "is_orange": true
+      },
+      {
+        "frame": 4213,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 5984,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 6726,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 7517,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 8520,
+        "player_name": "Lev",
+        "is_orange": true
+      },
+      {
+        "frame": 9750,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 11037,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 12357,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      }
+    ]
+  }
+}

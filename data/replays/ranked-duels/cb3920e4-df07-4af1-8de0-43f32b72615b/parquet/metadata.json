@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": "mrtn",
+      "unique_id": "76561199084382801"
+    },
+    {
+      "name": "Mile.",
+      "unique_id": "76561198452541120"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 954,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 1475,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 1842,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 2721,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 3461,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 3838,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 4740,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 5367,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 6339,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 6730,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 7566,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 8101,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 8961,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 9612,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 10377,
+        "player_name": "Mile.",
+        "is_orange": true
+      }
+    ]
+  }
+}

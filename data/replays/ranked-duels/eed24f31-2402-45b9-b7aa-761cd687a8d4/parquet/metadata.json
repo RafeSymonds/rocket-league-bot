@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "Nath \u0d60",
+      "unique_id": "9bf99dfb84d14645b85c2dc5c299b4fc"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 448,
+        "player_name": "Nath \u0d60",
+        "is_orange": true
+      },
+      {
+        "frame": 1500,
+        "player_name": "Nath \u0d60",
+        "is_orange": true
+      },
+      {
+        "frame": 2157,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 3180,
+        "player_name": "Nath \u0d60",
+        "is_orange": true
+      },
+      {
+        "frame": 3728,
+        "player_name": "Nath \u0d60",
+        "is_orange": true
+      },
+      {
+        "frame": 4234,
+        "player_name": "Nath \u0d60",
+        "is_orange": true
+      },
+      {
+        "frame": 5000,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 5403,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 5943,
+        "player_name": "Nath \u0d60",
+        "is_orange": true
+      },
+      {
+        "frame": 6326,
+        "player_name": "Nath \u0d60",
+        "is_orange": true
+      },
+      {
+        "frame": 7734,
+        "player_name": "Nath \u0d60",
+        "is_orange": true
+      },
+      {
+        "frame": 8757,
+        "player_name": "Nath \u0d60",
+        "is_orange": true
+      },
+      {
+        "frame": 9528,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      }
+    ]
+  }
+}

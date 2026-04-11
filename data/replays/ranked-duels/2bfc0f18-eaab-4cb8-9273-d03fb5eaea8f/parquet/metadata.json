@@ -1,0 +1,86 @@
+{
+  "players": [
+    {
+      "name": "LionBlaze",
+      "unique_id": "76561198214307065"
+    },
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1127,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 2487,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 3857,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 5792,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 6766,
+        "player_name": "LionBlaze",
+        "is_orange": true
+      },
+      {
+        "frame": 7903,
+        "player_name": "LionBlaze",
+        "is_orange": true
+      },
+      {
+        "frame": 9023,
+        "player_name": "LionBlaze",
+        "is_orange": true
+      },
+      {
+        "frame": 10787,
+        "player_name": "LionBlaze",
+        "is_orange": true
+      },
+      {
+        "frame": 13205,
+        "player_name": "LionBlaze",
+        "is_orange": true
+      },
+      {
+        "frame": 17422,
+        "player_name": "LionBlaze",
+        "is_orange": true
+      },
+      {
+        "frame": 19146,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 20750,
+        "player_name": "LionBlaze",
+        "is_orange": true
+      },
+      {
+        "frame": 26484,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 27950,
+        "player_name": "LionBlaze",
+        "is_orange": true
+      }
+    ]
+  }
+}

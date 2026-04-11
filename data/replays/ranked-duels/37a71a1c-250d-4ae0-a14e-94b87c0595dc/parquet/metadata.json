@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "mimillo",
+      "unique_id": "76561198988821854"
+    },
+    {
+      "name": "empyrer",
+      "unique_id": "3f4953a3066f43fda472da656435f301"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 414,
+        "player_name": "empyrer",
+        "is_orange": true
+      },
+      {
+        "frame": 1301,
+        "player_name": "mimillo",
+        "is_orange": false
+      },
+      {
+        "frame": 2202,
+        "player_name": "mimillo",
+        "is_orange": false
+      },
+      {
+        "frame": 2706,
+        "player_name": "empyrer",
+        "is_orange": true
+      },
+      {
+        "frame": 3368,
+        "player_name": "empyrer",
+        "is_orange": true
+      },
+      {
+        "frame": 4326,
+        "player_name": "empyrer",
+        "is_orange": true
+      },
+      {
+        "frame": 5425,
+        "player_name": "empyrer",
+        "is_orange": true
+      },
+      {
+        "frame": 5943,
+        "player_name": "empyrer",
+        "is_orange": true
+      },
+      {
+        "frame": 6408,
+        "player_name": "empyrer",
+        "is_orange": true
+      },
+      {
+        "frame": 6942,
+        "player_name": "empyrer",
+        "is_orange": true
+      },
+      {
+        "frame": 7450,
+        "player_name": "empyrer",
+        "is_orange": true
+      }
+    ]
+  }
+}

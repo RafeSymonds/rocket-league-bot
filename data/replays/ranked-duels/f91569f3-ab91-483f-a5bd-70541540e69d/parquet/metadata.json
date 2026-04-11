@@ -1,0 +1,51 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "Flitz",
+      "unique_id": "76561198796708378"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 292,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 2322,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 3476,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 4312,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 5768,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 6332,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 7501,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      }
+    ]
+  }
+}

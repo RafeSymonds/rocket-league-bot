@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": ".",
+      "unique_id": "76561199022975910"
+    },
+    {
+      "name": "Nadr",
+      "unique_id": "76561198276440201"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1171,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 1843,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 2489,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 4241,
+        "player_name": "Nadr",
+        "is_orange": true
+      },
+      {
+        "frame": 4800,
+        "player_name": "Nadr",
+        "is_orange": true
+      },
+      {
+        "frame": 5265,
+        "player_name": "Nadr",
+        "is_orange": true
+      },
+      {
+        "frame": 6919,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 7897,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 8351,
+        "player_name": "Nadr",
+        "is_orange": true
+      },
+      {
+        "frame": 8835,
+        "player_name": ".",
+        "is_orange": false
+      },
+      {
+        "frame": 9342,
+        "player_name": "Nadr",
+        "is_orange": true
+      },
+      {
+        "frame": 10721,
+        "player_name": "Nadr",
+        "is_orange": true
+      },
+      {
+        "frame": 11964,
+        "player_name": "Nadr",
+        "is_orange": true
+      }
+    ]
+  }
+}

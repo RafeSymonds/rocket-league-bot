@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "mrtn",
+      "unique_id": "76561199084382801"
+    },
+    {
+      "name": "Aki",
+      "unique_id": "76561199577106812"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 979,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 1415,
+        "player_name": "Aki",
+        "is_orange": false
+      },
+      {
+        "frame": 1924,
+        "player_name": "Aki",
+        "is_orange": false
+      },
+      {
+        "frame": 2486,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 3006,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 4068,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 4928,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 5337,
+        "player_name": "Aki",
+        "is_orange": false
+      },
+      {
+        "frame": 5920,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 6321,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 7110,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 8327,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 8875,
+        "player_name": "mrtn",
+        "is_orange": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "reekkan",
+      "unique_id": "76561198398393348"
+    },
+    {
+      "name": "xprt",
+      "unique_id": "76561198974218543"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1153,
+        "player_name": "reekkan",
+        "is_orange": true
+      },
+      {
+        "frame": 3178,
+        "player_name": "xprt",
+        "is_orange": false
+      },
+      {
+        "frame": 4477,
+        "player_name": "reekkan",
+        "is_orange": true
+      },
+      {
+        "frame": 5197,
+        "player_name": "xprt",
+        "is_orange": false
+      },
+      {
+        "frame": 6776,
+        "player_name": "reekkan",
+        "is_orange": true
+      },
+      {
+        "frame": 7401,
+        "player_name": "xprt",
+        "is_orange": false
+      },
+      {
+        "frame": 7826,
+        "player_name": "xprt",
+        "is_orange": false
+      },
+      {
+        "frame": 8368,
+        "player_name": "reekkan",
+        "is_orange": true
+      },
+      {
+        "frame": 9776,
+        "player_name": "reekkan",
+        "is_orange": true
+      },
+      {
+        "frame": 10615,
+        "player_name": "xprt",
+        "is_orange": false
+      },
+      {
+        "frame": 11271,
+        "player_name": "reekkan",
+        "is_orange": true
+      }
+    ]
+  }
+}

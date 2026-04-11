@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "Mystical (RW9 of tiktok)",
+      "unique_id": "76561198366359017"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 4559,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 6587,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 9105,
+        "player_name": "Mystical (RW9 of tiktok)",
+        "is_orange": true
+      },
+      {
+        "frame": 11305,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 13359,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 15395,
+        "player_name": "Mystical (RW9 of tiktok)",
+        "is_orange": true
+      },
+      {
+        "frame": 16560,
+        "player_name": "Mystical (RW9 of tiktok)",
+        "is_orange": true
+      },
+      {
+        "frame": 18107,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 19962,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 21499,
+        "player_name": "Mystical (RW9 of tiktok)",
+        "is_orange": true
+      },
+      {
+        "frame": 22811,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 24656,
+        "player_name": "Mystical (RW9 of tiktok)",
+        "is_orange": true
+      },
+      {
+        "frame": 28201,
+        "player_name": "Mec",
+        "is_orange": false
+      }
+    ]
+  }
+}

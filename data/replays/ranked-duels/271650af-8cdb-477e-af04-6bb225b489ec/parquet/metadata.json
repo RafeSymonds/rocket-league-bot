@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "sedou",
+      "unique_id": "76561198261764796"
+    },
+    {
+      "name": "Raddah",
+      "unique_id": "76561199088973155"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 535,
+        "player_name": "sedou",
+        "is_orange": false
+      },
+      {
+        "frame": 1691,
+        "player_name": "sedou",
+        "is_orange": false
+      },
+      {
+        "frame": 2466,
+        "player_name": "Raddah",
+        "is_orange": true
+      },
+      {
+        "frame": 2958,
+        "player_name": "Raddah",
+        "is_orange": true
+      },
+      {
+        "frame": 4197,
+        "player_name": "Raddah",
+        "is_orange": true
+      },
+      {
+        "frame": 4984,
+        "player_name": "Raddah",
+        "is_orange": true
+      },
+      {
+        "frame": 5847,
+        "player_name": "Raddah",
+        "is_orange": true
+      },
+      {
+        "frame": 6420,
+        "player_name": "Raddah",
+        "is_orange": true
+      },
+      {
+        "frame": 8402,
+        "player_name": "Raddah",
+        "is_orange": true
+      }
+    ]
+  }
+}

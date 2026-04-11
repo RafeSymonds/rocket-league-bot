@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "novaa",
+      "unique_id": "76561198900359312"
+    },
+    {
+      "name": "Swizx.",
+      "unique_id": "76561198180446441"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 868,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 2165,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 2740,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 4003,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 4815,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 5681,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 6856,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 7231,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 7875,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 8191,
+        "player_name": "novaa",
+        "is_orange": true
+      },
+      {
+        "frame": 10573,
+        "player_name": "novaa",
+        "is_orange": true
+      }
+    ]
+  }
+}

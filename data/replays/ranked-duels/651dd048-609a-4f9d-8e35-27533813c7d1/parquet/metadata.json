@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "Shark \u2020",
+      "unique_id": "76561199022975910"
+    },
+    {
+      "name": "Shooter8562",
+      "unique_id": "1771a85cc0794e9d840a318d1cbda70d"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 614,
+        "player_name": "Shooter8562",
+        "is_orange": true
+      },
+      {
+        "frame": 1573,
+        "player_name": "Shark \u2020",
+        "is_orange": false
+      },
+      {
+        "frame": 2855,
+        "player_name": "Shooter8562",
+        "is_orange": true
+      },
+      {
+        "frame": 4133,
+        "player_name": "Shooter8562",
+        "is_orange": true
+      },
+      {
+        "frame": 4853,
+        "player_name": "Shark \u2020",
+        "is_orange": false
+      },
+      {
+        "frame": 5421,
+        "player_name": "Shark \u2020",
+        "is_orange": false
+      },
+      {
+        "frame": 6576,
+        "player_name": "Shark \u2020",
+        "is_orange": false
+      },
+      {
+        "frame": 7173,
+        "player_name": "Shooter8562",
+        "is_orange": true
+      },
+      {
+        "frame": 8011,
+        "player_name": "Shooter8562",
+        "is_orange": true
+      },
+      {
+        "frame": 8817,
+        "player_name": "Shooter8562",
+        "is_orange": true
+      },
+      {
+        "frame": 10165,
+        "player_name": "Shooter8562",
+        "is_orange": true
+      },
+      {
+        "frame": 10749,
+        "player_name": "Shark \u2020",
+        "is_orange": false
+      },
+      {
+        "frame": 11226,
+        "player_name": "Shooter8562",
+        "is_orange": true
+      }
+    ]
+  }
+}

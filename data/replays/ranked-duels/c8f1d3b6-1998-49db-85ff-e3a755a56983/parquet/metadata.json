@@ -1,0 +1,96 @@
+{
+  "players": [
+    {
+      "name": "Coconut",
+      "unique_id": "76561198162286169"
+    },
+    {
+      "name": "Nath \u0d60",
+      "unique_id": "9bf99dfb84d14645b85c2dc5c299b4fc"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 729,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 1280,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 2507,
+        "player_name": "Coconut",
+        "is_orange": true
+      },
+      {
+        "frame": 3032,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 3611,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 4121,
+        "player_name": "Coconut",
+        "is_orange": true
+      },
+      {
+        "frame": 5132,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 5649,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 6312,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 6827,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 7959,
+        "player_name": "Coconut",
+        "is_orange": true
+      },
+      {
+        "frame": 9342,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 10141,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 10815,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      },
+      {
+        "frame": 11368,
+        "player_name": "Coconut",
+        "is_orange": true
+      },
+      {
+        "frame": 11975,
+        "player_name": "Nath \u0d60",
+        "is_orange": false
+      }
+    ]
+  }
+}

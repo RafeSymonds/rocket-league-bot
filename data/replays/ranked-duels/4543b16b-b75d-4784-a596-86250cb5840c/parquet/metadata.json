@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": "mrtn",
+      "unique_id": "76561199084382801"
+    },
+    {
+      "name": "SXB",
+      "unique_id": "76561198206238919"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1875,
+        "player_name": "SXB",
+        "is_orange": false
+      },
+      {
+        "frame": 2591,
+        "player_name": "SXB",
+        "is_orange": false
+      },
+      {
+        "frame": 4017,
+        "player_name": "SXB",
+        "is_orange": false
+      },
+      {
+        "frame": 4758,
+        "player_name": "SXB",
+        "is_orange": false
+      },
+      {
+        "frame": 5166,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 5569,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 6446,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 7288,
+        "player_name": "SXB",
+        "is_orange": false
+      },
+      {
+        "frame": 7872,
+        "player_name": "SXB",
+        "is_orange": false
+      },
+      {
+        "frame": 8761,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 9538,
+        "player_name": "SXB",
+        "is_orange": false
+      },
+      {
+        "frame": 10027,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 10574,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 10967,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 13752,
+        "player_name": "SXB",
+        "is_orange": false
+      }
+    ]
+  }
+}

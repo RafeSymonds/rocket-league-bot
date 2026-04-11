@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "AYYJAYY",
+      "unique_id": "76561198105072499"
+    },
+    {
+      "name": "t.tv/piececontrolplexi",
+      "unique_id": "76561199005007831"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 617,
+        "player_name": "AYYJAYY",
+        "is_orange": true
+      },
+      {
+        "frame": 1757,
+        "player_name": "AYYJAYY",
+        "is_orange": true
+      },
+      {
+        "frame": 2129,
+        "player_name": "AYYJAYY",
+        "is_orange": true
+      },
+      {
+        "frame": 2713,
+        "player_name": "t.tv/piececontrolplexi",
+        "is_orange": false
+      },
+      {
+        "frame": 4013,
+        "player_name": "AYYJAYY",
+        "is_orange": true
+      },
+      {
+        "frame": 4398,
+        "player_name": "AYYJAYY",
+        "is_orange": true
+      },
+      {
+        "frame": 5399,
+        "player_name": "AYYJAYY",
+        "is_orange": true
+      },
+      {
+        "frame": 5869,
+        "player_name": "AYYJAYY",
+        "is_orange": true
+      },
+      {
+        "frame": 6622,
+        "player_name": "AYYJAYY",
+        "is_orange": true
+      },
+      {
+        "frame": 7218,
+        "player_name": "AYYJAYY",
+        "is_orange": true
+      }
+    ]
+  }
+}

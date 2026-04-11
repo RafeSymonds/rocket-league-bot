@@ -1,0 +1,101 @@
+{
+  "players": [
+    {
+      "name": "dribbs",
+      "unique_id": "76561198157937319"
+    },
+    {
+      "name": "ilovetaxfraud1",
+      "unique_id": "b6ecb93c4ed046febfdf92a88a25b869"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 328,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 1040,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 1897,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 2278,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 3712,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 4166,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 4796,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 6635,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 7107,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 7510,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 9518,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 11093,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 11901,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 12272,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 12689,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 13189,
+        "player_name": "dribbs",
+        "is_orange": true
+      },
+      {
+        "frame": 13663,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      }
+    ]
+  }
+}

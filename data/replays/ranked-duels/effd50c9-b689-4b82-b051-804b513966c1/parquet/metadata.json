@@ -1,0 +1,76 @@
+{
+  "players": [
+    {
+      "name": "Coconut",
+      "unique_id": "76561198162286169"
+    },
+    {
+      "name": "Orcleamuerin",
+      "unique_id": "c0236ca451ba471b9c010e306ae14cba"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 757,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 2343,
+        "player_name": "Orcleamuerin",
+        "is_orange": true
+      },
+      {
+        "frame": 3082,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 3790,
+        "player_name": "Orcleamuerin",
+        "is_orange": true
+      },
+      {
+        "frame": 4506,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 5199,
+        "player_name": "Orcleamuerin",
+        "is_orange": true
+      },
+      {
+        "frame": 5824,
+        "player_name": "Orcleamuerin",
+        "is_orange": true
+      },
+      {
+        "frame": 6560,
+        "player_name": "Orcleamuerin",
+        "is_orange": true
+      },
+      {
+        "frame": 7003,
+        "player_name": "Orcleamuerin",
+        "is_orange": true
+      },
+      {
+        "frame": 7468,
+        "player_name": "Orcleamuerin",
+        "is_orange": true
+      },
+      {
+        "frame": 8050,
+        "player_name": "Orcleamuerin",
+        "is_orange": true
+      },
+      {
+        "frame": 8624,
+        "player_name": "Orcleamuerin",
+        "is_orange": true
+      }
+    ]
+  }
+}

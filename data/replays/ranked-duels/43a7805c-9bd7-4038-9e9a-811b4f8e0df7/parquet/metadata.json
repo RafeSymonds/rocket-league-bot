@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "??\u3000\u2067\u2067Guz \u2020 \u2020",
+      "unique_id": "76561198895354309"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 951,
+        "player_name": "??\u3000\u2067\u2067Guz \u2020 \u2020",
+        "is_orange": true
+      },
+      {
+        "frame": 1919,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 3279,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 6340,
+        "player_name": "??\u3000\u2067\u2067Guz \u2020 \u2020",
+        "is_orange": true
+      },
+      {
+        "frame": 10048,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 13089,
+        "player_name": "??\u3000\u2067\u2067Guz \u2020 \u2020",
+        "is_orange": true
+      },
+      {
+        "frame": 14651,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 17267,
+        "player_name": "??\u3000\u2067\u2067Guz \u2020 \u2020",
+        "is_orange": true
+      },
+      {
+        "frame": 20089,
+        "player_name": "??\u3000\u2067\u2067Guz \u2020 \u2020",
+        "is_orange": true
+      },
+      {
+        "frame": 21567,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 28952,
+        "player_name": "??\u3000\u2067\u2067Guz \u2020 \u2020",
+        "is_orange": true
+      }
+    ]
+  }
+}

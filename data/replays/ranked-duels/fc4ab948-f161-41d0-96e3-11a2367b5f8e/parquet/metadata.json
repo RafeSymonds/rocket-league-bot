@@ -1,0 +1,86 @@
+{
+  "players": [
+    {
+      "name": "Mech",
+      "unique_id": "76561199038935432"
+    },
+    {
+      "name": "Retals",
+      "unique_id": "76561198353975600"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 860,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 1528,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 2443,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 3408,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 4418,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 4936,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 7086,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 7682,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 8599,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 9008,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 9731,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 10524,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 11637,
+        "player_name": "Retals",
+        "is_orange": false
+      },
+      {
+        "frame": 12747,
+        "player_name": "Mech",
+        "is_orange": true
+      }
+    ]
+  }
+}

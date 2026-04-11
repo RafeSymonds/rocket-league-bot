@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "candy",
+      "unique_id": "76561198966287407"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 992,
+        "player_name": "candy",
+        "is_orange": true
+      },
+      {
+        "frame": 1978,
+        "player_name": "candy",
+        "is_orange": true
+      },
+      {
+        "frame": 3102,
+        "player_name": "candy",
+        "is_orange": true
+      },
+      {
+        "frame": 5527,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 6892,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 10809,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 13203,
+        "player_name": "candy",
+        "is_orange": true
+      },
+      {
+        "frame": 15398,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 17208,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 18125,
+        "player_name": "candy",
+        "is_orange": true
+      },
+      {
+        "frame": 19431,
+        "player_name": "candy",
+        "is_orange": true
+      },
+      {
+        "frame": 21457,
+        "player_name": "candy",
+        "is_orange": true
+      },
+      {
+        "frame": 24542,
+        "player_name": "candy",
+        "is_orange": true
+      },
+      {
+        "frame": 27410,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 30722,
+        "player_name": "Mec",
+        "is_orange": false
+      }
+    ]
+  }
+}

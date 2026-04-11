@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": ".",
+      "unique_id": "76561199883974359"
+    },
+    {
+      "name": "mawkzy",
+      "unique_id": "6ea3d3d4f992494dacd7f757ff4e2b1a"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 457,
+        "player_name": "mawkzy",
+        "is_orange": false
+      },
+      {
+        "frame": 1247,
+        "player_name": "mawkzy",
+        "is_orange": false
+      },
+      {
+        "frame": 2476,
+        "player_name": "mawkzy",
+        "is_orange": false
+      },
+      {
+        "frame": 4073,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 4737,
+        "player_name": "mawkzy",
+        "is_orange": false
+      },
+      {
+        "frame": 5279,
+        "player_name": "mawkzy",
+        "is_orange": false
+      },
+      {
+        "frame": 6684,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 7542,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 7969,
+        "player_name": "mawkzy",
+        "is_orange": false
+      },
+      {
+        "frame": 10042,
+        "player_name": ".",
+        "is_orange": true
+      }
+    ]
+  }
+}

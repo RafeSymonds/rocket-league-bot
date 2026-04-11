@@ -1,0 +1,46 @@
+{
+  "players": [
+    {
+      "name": "t.tv/piececontrolplexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "veneno\u00bf",
+      "unique_id": "76561198085666064"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 467,
+        "player_name": "veneno\u00bf",
+        "is_orange": true
+      },
+      {
+        "frame": 895,
+        "player_name": "t.tv/piececontrolplexi",
+        "is_orange": false
+      },
+      {
+        "frame": 1971,
+        "player_name": "t.tv/piececontrolplexi",
+        "is_orange": false
+      },
+      {
+        "frame": 3425,
+        "player_name": "t.tv/piececontrolplexi",
+        "is_orange": false
+      },
+      {
+        "frame": 4140,
+        "player_name": "veneno\u00bf",
+        "is_orange": true
+      },
+      {
+        "frame": 9200,
+        "player_name": "t.tv/piececontrolplexi",
+        "is_orange": false
+      }
+    ]
+  }
+}

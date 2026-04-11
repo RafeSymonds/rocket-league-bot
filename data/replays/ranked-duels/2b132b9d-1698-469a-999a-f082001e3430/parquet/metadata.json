@@ -1,0 +1,141 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "SkylineRL1",
+      "unique_id": "213a594177374b5ea8f2d897f700d767"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 607,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 2156,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 3747,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      },
+      {
+        "frame": 5182,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      },
+      {
+        "frame": 6284,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      },
+      {
+        "frame": 9265,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 14118,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 15180,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      },
+      {
+        "frame": 17065,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 18459,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 19525,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      },
+      {
+        "frame": 20624,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      },
+      {
+        "frame": 23365,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 24468,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      },
+      {
+        "frame": 25544,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 27064,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 28524,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      },
+      {
+        "frame": 30407,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 31802,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 33087,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      },
+      {
+        "frame": 34134,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 35601,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      },
+      {
+        "frame": 37025,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      },
+      {
+        "frame": 39562,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      },
+      {
+        "frame": 41198,
+        "player_name": "SkylineRL1",
+        "is_orange": true
+      }
+    ]
+  }
+}

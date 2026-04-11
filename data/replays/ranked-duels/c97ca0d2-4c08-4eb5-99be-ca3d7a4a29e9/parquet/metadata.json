@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "S5-Cosmic",
+      "unique_id": "76561199085323383"
+    },
+    {
+      "name": "Rebm0b.",
+      "unique_id": "a64790c299d245daa9e727b05f9fa6c5"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 895,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 1796,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 2502,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 3406,
+        "player_name": "S5-Cosmic",
+        "is_orange": true
+      },
+      {
+        "frame": 3805,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 4767,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 6110,
+        "player_name": "S5-Cosmic",
+        "is_orange": true
+      },
+      {
+        "frame": 9185,
+        "player_name": "S5-Cosmic",
+        "is_orange": true
+      },
+      {
+        "frame": 9948,
+        "player_name": "S5-Cosmic",
+        "is_orange": true
+      },
+      {
+        "frame": 10357,
+        "player_name": "S5-Cosmic",
+        "is_orange": true
+      },
+      {
+        "frame": 10931,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      }
+    ]
+  }
+}

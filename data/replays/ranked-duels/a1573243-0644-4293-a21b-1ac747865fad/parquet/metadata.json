@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "Swizx.",
+      "unique_id": "76561198180446441"
+    },
+    {
+      "name": "ps4 controller prime (broken)",
+      "unique_id": "76561198091136418"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1335,
+        "player_name": "ps4 controller prime (broken)",
+        "is_orange": true
+      },
+      {
+        "frame": 1823,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 4488,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 5231,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 6167,
+        "player_name": "ps4 controller prime (broken)",
+        "is_orange": true
+      },
+      {
+        "frame": 6556,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 7291,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 7988,
+        "player_name": "ps4 controller prime (broken)",
+        "is_orange": true
+      },
+      {
+        "frame": 8962,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 9939,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 11082,
+        "player_name": "ps4 controller prime (broken)",
+        "is_orange": true
+      },
+      {
+        "frame": 11755,
+        "player_name": "ps4 controller prime (broken)",
+        "is_orange": true
+      },
+      {
+        "frame": 12337,
+        "player_name": "ps4 controller prime (broken)",
+        "is_orange": true
+      }
+    ]
+  }
+}

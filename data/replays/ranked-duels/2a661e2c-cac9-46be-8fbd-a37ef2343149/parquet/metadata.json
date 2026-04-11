@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "S5-Cosmic",
+      "unique_id": "76561199085323383"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1359,
+        "player_name": "S5-Cosmic",
+        "is_orange": false
+      },
+      {
+        "frame": 2710,
+        "player_name": "S5-Cosmic",
+        "is_orange": false
+      },
+      {
+        "frame": 3313,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 3691,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 4221,
+        "player_name": "S5-Cosmic",
+        "is_orange": false
+      },
+      {
+        "frame": 4817,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 6049,
+        "player_name": "S5-Cosmic",
+        "is_orange": false
+      },
+      {
+        "frame": 6895,
+        "player_name": "S5-Cosmic",
+        "is_orange": false
+      },
+      {
+        "frame": 8483,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 9688,
+        "player_name": "S5-Cosmic",
+        "is_orange": false
+      },
+      {
+        "frame": 10194,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 10573,
+        "player_name": "S5-Cosmic",
+        "is_orange": false
+      },
+      {
+        "frame": 11482,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "players": [
+    {
+      "name": "Swizx.",
+      "unique_id": "76561198180446441"
+    },
+    {
+      "name": "Nexus_pizizi",
+      "unique_id": "764da6f7ee904ac68eded5bcf6cb79e8"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 755,
+        "player_name": "Nexus_pizizi",
+        "is_orange": true
+      },
+      {
+        "frame": 1457,
+        "player_name": "Nexus_pizizi",
+        "is_orange": true
+      },
+      {
+        "frame": 3375,
+        "player_name": "Nexus_pizizi",
+        "is_orange": true
+      },
+      {
+        "frame": 4056,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 4676,
+        "player_name": "Nexus_pizizi",
+        "is_orange": true
+      },
+      {
+        "frame": 5211,
+        "player_name": "Nexus_pizizi",
+        "is_orange": true
+      },
+      {
+        "frame": 5933,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 7134,
+        "player_name": "Nexus_pizizi",
+        "is_orange": true
+      },
+      {
+        "frame": 8274,
+        "player_name": "Nexus_pizizi",
+        "is_orange": true
+      },
+      {
+        "frame": 9339,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 10933,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 11738,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 12110,
+        "player_name": "Nexus_pizizi",
+        "is_orange": true
+      },
+      {
+        "frame": 12680,
+        "player_name": "Nexus_pizizi",
+        "is_orange": true
+      }
+    ]
+  }
+}

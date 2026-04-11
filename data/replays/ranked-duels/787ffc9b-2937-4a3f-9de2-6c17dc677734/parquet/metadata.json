@@ -1,0 +1,116 @@
+{
+  "players": [
+    {
+      "name": "p\u00b5\u2020GEON.^\u2606",
+      "unique_id": "76561198847270364"
+    },
+    {
+      "name": "squishywafflesz",
+      "unique_id": "6a3b5b4f4a4947d89319c8dded90954f"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 708,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 1023,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 1892,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 2352,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 2885,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 4290,
+        "player_name": "p\u00b5\u2020GEON.^\u2606",
+        "is_orange": false
+      },
+      {
+        "frame": 5081,
+        "player_name": "p\u00b5\u2020GEON.^\u2606",
+        "is_orange": false
+      },
+      {
+        "frame": 6048,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 6665,
+        "player_name": "p\u00b5\u2020GEON.^\u2606",
+        "is_orange": false
+      },
+      {
+        "frame": 7639,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 8261,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 8710,
+        "player_name": "p\u00b5\u2020GEON.^\u2606",
+        "is_orange": false
+      },
+      {
+        "frame": 9416,
+        "player_name": "p\u00b5\u2020GEON.^\u2606",
+        "is_orange": false
+      },
+      {
+        "frame": 9908,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 10288,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 10769,
+        "player_name": "p\u00b5\u2020GEON.^\u2606",
+        "is_orange": false
+      },
+      {
+        "frame": 11631,
+        "player_name": "p\u00b5\u2020GEON.^\u2606",
+        "is_orange": false
+      },
+      {
+        "frame": 12025,
+        "player_name": "p\u00b5\u2020GEON.^\u2606",
+        "is_orange": false
+      },
+      {
+        "frame": 12410,
+        "player_name": "p\u00b5\u2020GEON.^\u2606",
+        "is_orange": false
+      },
+      {
+        "frame": 12778,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      }
+    ]
+  }
+}

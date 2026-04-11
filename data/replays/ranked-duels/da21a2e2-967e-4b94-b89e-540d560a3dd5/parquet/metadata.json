@@ -1,0 +1,51 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "reyyn",
+      "unique_id": "76561198140346624"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 841,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 1303,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 2965,
+        "player_name": "reyyn",
+        "is_orange": false
+      },
+      {
+        "frame": 4899,
+        "player_name": "reyyn",
+        "is_orange": false
+      },
+      {
+        "frame": 5779,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 6143,
+        "player_name": "reyyn",
+        "is_orange": false
+      },
+      {
+        "frame": 9005,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      }
+    ]
+  }
+}

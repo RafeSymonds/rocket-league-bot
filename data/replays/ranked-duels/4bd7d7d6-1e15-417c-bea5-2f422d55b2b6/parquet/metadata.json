@@ -1,0 +1,101 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "Hyderr",
+      "unique_id": "76561198301226130"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1983,
+        "player_name": "Hyderr",
+        "is_orange": true
+      },
+      {
+        "frame": 3865,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 6081,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 7408,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 12184,
+        "player_name": "Hyderr",
+        "is_orange": true
+      },
+      {
+        "frame": 13751,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 15803,
+        "player_name": "Hyderr",
+        "is_orange": true
+      },
+      {
+        "frame": 18101,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 21549,
+        "player_name": "Hyderr",
+        "is_orange": true
+      },
+      {
+        "frame": 22770,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 27289,
+        "player_name": "Hyderr",
+        "is_orange": true
+      },
+      {
+        "frame": 29211,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 31949,
+        "player_name": "Hyderr",
+        "is_orange": true
+      },
+      {
+        "frame": 33661,
+        "player_name": "Hyderr",
+        "is_orange": true
+      },
+      {
+        "frame": 34898,
+        "player_name": "Hyderr",
+        "is_orange": true
+      },
+      {
+        "frame": 38529,
+        "player_name": "Hyderr",
+        "is_orange": true
+      },
+      {
+        "frame": 40320,
+        "player_name": "davoof",
+        "is_orange": false
+      }
+    ]
+  }
+}

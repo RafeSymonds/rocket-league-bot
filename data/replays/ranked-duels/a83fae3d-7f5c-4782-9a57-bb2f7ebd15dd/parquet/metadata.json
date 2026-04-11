@@ -1,0 +1,76 @@
+{
+  "players": [
+    {
+      "name": "mrtn",
+      "unique_id": "76561199084382801"
+    },
+    {
+      "name": "actimel",
+      "unique_id": "76561198049431762"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1129,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 2437,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 3094,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 5080,
+        "player_name": "actimel",
+        "is_orange": true
+      },
+      {
+        "frame": 5411,
+        "player_name": "actimel",
+        "is_orange": true
+      },
+      {
+        "frame": 5808,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 6572,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 7818,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 8688,
+        "player_name": "actimel",
+        "is_orange": true
+      },
+      {
+        "frame": 9469,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 11270,
+        "player_name": "actimel",
+        "is_orange": true
+      },
+      {
+        "frame": 11884,
+        "player_name": "actimel",
+        "is_orange": true
+      }
+    ]
+  }
+}

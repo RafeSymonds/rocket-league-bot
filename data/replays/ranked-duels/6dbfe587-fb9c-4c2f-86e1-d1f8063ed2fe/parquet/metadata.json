@@ -1,0 +1,86 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "riverz.",
+      "unique_id": "76561199873499355"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 300,
+        "player_name": "riverz.",
+        "is_orange": true
+      },
+      {
+        "frame": 1060,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 1917,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 3011,
+        "player_name": "riverz.",
+        "is_orange": true
+      },
+      {
+        "frame": 3463,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 4374,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 5117,
+        "player_name": "riverz.",
+        "is_orange": true
+      },
+      {
+        "frame": 6224,
+        "player_name": "riverz.",
+        "is_orange": true
+      },
+      {
+        "frame": 6843,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 7338,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 7711,
+        "player_name": "riverz.",
+        "is_orange": true
+      },
+      {
+        "frame": 9075,
+        "player_name": "riverz.",
+        "is_orange": true
+      },
+      {
+        "frame": 9480,
+        "player_name": "riverz.",
+        "is_orange": true
+      },
+      {
+        "frame": 10604,
+        "player_name": "riverz.",
+        "is_orange": true
+      }
+    ]
+  }
+}

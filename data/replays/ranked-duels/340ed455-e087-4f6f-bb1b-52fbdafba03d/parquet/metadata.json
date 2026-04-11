@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "sedou",
+      "unique_id": "76561198261764796"
+    },
+    {
+      "name": "Drafty-S",
+      "unique_id": "76561199819974709"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 487,
+        "player_name": "sedou",
+        "is_orange": true
+      },
+      {
+        "frame": 1080,
+        "player_name": "Drafty-S",
+        "is_orange": false
+      },
+      {
+        "frame": 1751,
+        "player_name": "sedou",
+        "is_orange": true
+      },
+      {
+        "frame": 2157,
+        "player_name": "Drafty-S",
+        "is_orange": false
+      },
+      {
+        "frame": 4242,
+        "player_name": "Drafty-S",
+        "is_orange": false
+      },
+      {
+        "frame": 5633,
+        "player_name": "Drafty-S",
+        "is_orange": false
+      },
+      {
+        "frame": 6721,
+        "player_name": "sedou",
+        "is_orange": true
+      },
+      {
+        "frame": 7564,
+        "player_name": "sedou",
+        "is_orange": true
+      },
+      {
+        "frame": 9110,
+        "player_name": "Drafty-S",
+        "is_orange": false
+      },
+      {
+        "frame": 11146,
+        "player_name": "sedou",
+        "is_orange": true
+      },
+      {
+        "frame": 12928,
+        "player_name": "Drafty-S",
+        "is_orange": false
+      }
+    ]
+  }
+}

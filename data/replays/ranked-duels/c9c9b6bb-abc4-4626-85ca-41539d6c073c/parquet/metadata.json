@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "reekkan",
+      "unique_id": "76561198398393348"
+    },
+    {
+      "name": "Will",
+      "unique_id": "76561198107659783"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 322,
+        "player_name": "reekkan",
+        "is_orange": true
+      },
+      {
+        "frame": 1119,
+        "player_name": "Will",
+        "is_orange": false
+      },
+      {
+        "frame": 2020,
+        "player_name": "Will",
+        "is_orange": false
+      },
+      {
+        "frame": 3261,
+        "player_name": "Will",
+        "is_orange": false
+      },
+      {
+        "frame": 4034,
+        "player_name": "Will",
+        "is_orange": false
+      },
+      {
+        "frame": 4780,
+        "player_name": "Will",
+        "is_orange": false
+      },
+      {
+        "frame": 5769,
+        "player_name": "reekkan",
+        "is_orange": true
+      },
+      {
+        "frame": 7872,
+        "player_name": "Will",
+        "is_orange": false
+      }
+    ]
+  }
+}

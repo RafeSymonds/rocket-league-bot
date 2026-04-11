@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "cam",
+      "unique_id": "76561199029556479"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1170,
+        "player_name": "cam",
+        "is_orange": true
+      },
+      {
+        "frame": 2543,
+        "player_name": "cam",
+        "is_orange": true
+      },
+      {
+        "frame": 7469,
+        "player_name": "cam",
+        "is_orange": true
+      },
+      {
+        "frame": 11748,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 15406,
+        "player_name": "cam",
+        "is_orange": true
+      },
+      {
+        "frame": 19817,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 21230,
+        "player_name": "cam",
+        "is_orange": true
+      },
+      {
+        "frame": 22832,
+        "player_name": "Mec",
+        "is_orange": false
+      }
+    ]
+  }
+}

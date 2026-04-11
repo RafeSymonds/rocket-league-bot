@@ -1,0 +1,96 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "yanD\u30c4",
+      "unique_id": "41e42e0477004f60a9f272cf534d540c"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 948,
+        "player_name": "yanD\u30c4",
+        "is_orange": false
+      },
+      {
+        "frame": 1399,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 3212,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 3652,
+        "player_name": "yanD\u30c4",
+        "is_orange": false
+      },
+      {
+        "frame": 4168,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 4627,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 5121,
+        "player_name": "yanD\u30c4",
+        "is_orange": false
+      },
+      {
+        "frame": 5631,
+        "player_name": "yanD\u30c4",
+        "is_orange": false
+      },
+      {
+        "frame": 6092,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 6433,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 7179,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 7719,
+        "player_name": "yanD\u30c4",
+        "is_orange": false
+      },
+      {
+        "frame": 9565,
+        "player_name": "yanD\u30c4",
+        "is_orange": false
+      },
+      {
+        "frame": 10878,
+        "player_name": "yanD\u30c4",
+        "is_orange": false
+      },
+      {
+        "frame": 11265,
+        "player_name": "yanD\u30c4",
+        "is_orange": false
+      },
+      {
+        "frame": 12062,
+        "player_name": "yanD\u30c4",
+        "is_orange": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "players": [
+    {
+      "name": "\u00c8leets",
+      "unique_id": "766a3d1d0adb4a3ebb9b342e4c6595a5"
+    },
+    {
+      "name": "fade.",
+      "unique_id": "76561198080456345"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 695,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 1271,
+        "player_name": "fade.",
+        "is_orange": false
+      },
+      {
+        "frame": 2639,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 3764,
+        "player_name": "fade.",
+        "is_orange": false
+      },
+      {
+        "frame": 4210,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 5350,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 6687,
+        "player_name": "fade.",
+        "is_orange": false
+      },
+      {
+        "frame": 7614,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 8121,
+        "player_name": "fade.",
+        "is_orange": false
+      },
+      {
+        "frame": 8602,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 9012,
+        "player_name": "fade.",
+        "is_orange": false
+      },
+      {
+        "frame": 9859,
+        "player_name": "fade.",
+        "is_orange": false
+      },
+      {
+        "frame": 10417,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 11053,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 11582,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 12679,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      }
+    ]
+  }
+}

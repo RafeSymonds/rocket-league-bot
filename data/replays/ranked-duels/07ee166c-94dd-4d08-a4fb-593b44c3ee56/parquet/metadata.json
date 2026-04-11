@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "mrtn",
+      "unique_id": "76561199084382801"
+    },
+    {
+      "name": "KnightYuh",
+      "unique_id": "76561198999887273"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 726,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 1475,
+        "player_name": "KnightYuh",
+        "is_orange": false
+      },
+      {
+        "frame": 2269,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 2958,
+        "player_name": "KnightYuh",
+        "is_orange": false
+      },
+      {
+        "frame": 4820,
+        "player_name": "KnightYuh",
+        "is_orange": false
+      },
+      {
+        "frame": 5365,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 7074,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 7782,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 8850,
+        "player_name": "KnightYuh",
+        "is_orange": false
+      },
+      {
+        "frame": 10628,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 11515,
+        "player_name": "KnightYuh",
+        "is_orange": false
+      }
+    ]
+  }
+}

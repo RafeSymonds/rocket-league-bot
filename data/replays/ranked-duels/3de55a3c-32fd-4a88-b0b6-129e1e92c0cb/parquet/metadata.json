@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "Kipperr.",
+      "unique_id": "76561198412805992"
+    },
+    {
+      "name": "ilovetaxfraud1",
+      "unique_id": "b6ecb93c4ed046febfdf92a88a25b869"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 3429,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 3861,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 5289,
+        "player_name": "Kipperr.",
+        "is_orange": true
+      },
+      {
+        "frame": 5869,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 6769,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 7304,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 7903,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      },
+      {
+        "frame": 8348,
+        "player_name": "ilovetaxfraud1",
+        "is_orange": false
+      }
+    ]
+  }
+}

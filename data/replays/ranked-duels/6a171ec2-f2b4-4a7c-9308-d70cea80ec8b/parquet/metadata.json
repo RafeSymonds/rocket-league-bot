@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "WONKRU",
+      "unique_id": "76561198144389858"
+    },
+    {
+      "name": "$@\u20ac",
+      "unique_id": "76561198041089110"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 316,
+        "player_name": "WONKRU",
+        "is_orange": true
+      },
+      {
+        "frame": 750,
+        "player_name": "$@\u20ac",
+        "is_orange": false
+      },
+      {
+        "frame": 2367,
+        "player_name": "$@\u20ac",
+        "is_orange": false
+      },
+      {
+        "frame": 3162,
+        "player_name": "WONKRU",
+        "is_orange": true
+      },
+      {
+        "frame": 5020,
+        "player_name": "WONKRU",
+        "is_orange": true
+      },
+      {
+        "frame": 5759,
+        "player_name": "WONKRU",
+        "is_orange": true
+      },
+      {
+        "frame": 6600,
+        "player_name": "WONKRU",
+        "is_orange": true
+      },
+      {
+        "frame": 7309,
+        "player_name": "$@\u20ac",
+        "is_orange": false
+      },
+      {
+        "frame": 8326,
+        "player_name": "WONKRU",
+        "is_orange": true
+      }
+    ]
+  }
+}

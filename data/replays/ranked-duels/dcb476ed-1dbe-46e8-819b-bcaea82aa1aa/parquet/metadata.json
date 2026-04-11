@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "shadi",
+      "unique_id": "76561198085638483"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 6720,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 7881,
+        "player_name": "shadi",
+        "is_orange": true
+      },
+      {
+        "frame": 12007,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 13439,
+        "player_name": "davoof",
+        "is_orange": false
+      },
+      {
+        "frame": 14916,
+        "player_name": "shadi",
+        "is_orange": true
+      },
+      {
+        "frame": 19090,
+        "player_name": "shadi",
+        "is_orange": true
+      },
+      {
+        "frame": 24765,
+        "player_name": "shadi",
+        "is_orange": true
+      },
+      {
+        "frame": 27338,
+        "player_name": "shadi",
+        "is_orange": true
+      }
+    ]
+  }
+}

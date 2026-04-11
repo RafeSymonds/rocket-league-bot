@@ -1,0 +1,41 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "monk",
+      "unique_id": "76561198159027518"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 2108,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 3298,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 4565,
+        "player_name": "Mec",
+        "is_orange": true
+      },
+      {
+        "frame": 5511,
+        "player_name": "monk",
+        "is_orange": false
+      },
+      {
+        "frame": 7623,
+        "player_name": "Mec",
+        "is_orange": true
+      }
+    ]
+  }
+}

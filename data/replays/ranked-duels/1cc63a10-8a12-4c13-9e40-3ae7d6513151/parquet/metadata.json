@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "Rebm0b.",
+      "unique_id": "a64790c299d245daa9e727b05f9fa6c5"
+    },
+    {
+      "name": "Retals",
+      "unique_id": "76561198353975600"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 841,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 1287,
+        "player_name": "Retals",
+        "is_orange": true
+      },
+      {
+        "frame": 2223,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 4320,
+        "player_name": "Retals",
+        "is_orange": true
+      },
+      {
+        "frame": 4749,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 5355,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 5762,
+        "player_name": "Retals",
+        "is_orange": true
+      },
+      {
+        "frame": 6236,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 7392,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 8321,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 9535,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      }
+    ]
+  }
+}

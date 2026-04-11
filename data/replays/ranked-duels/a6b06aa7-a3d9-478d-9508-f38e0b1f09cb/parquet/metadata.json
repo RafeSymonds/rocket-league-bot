@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": ".",
+      "unique_id": "76561198180446441"
+    },
+    {
+      "name": "Ryuzaki",
+      "unique_id": "76561198067461961"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 2061,
+        "player_name": "Ryuzaki",
+        "is_orange": false
+      },
+      {
+        "frame": 2816,
+        "player_name": "Ryuzaki",
+        "is_orange": false
+      },
+      {
+        "frame": 3408,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 4563,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 5054,
+        "player_name": "Ryuzaki",
+        "is_orange": false
+      },
+      {
+        "frame": 5596,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 6416,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 6994,
+        "player_name": "Ryuzaki",
+        "is_orange": false
+      },
+      {
+        "frame": 8171,
+        "player_name": "Ryuzaki",
+        "is_orange": false
+      },
+      {
+        "frame": 8569,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 9026,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 10538,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 12168,
+        "player_name": "Ryuzaki",
+        "is_orange": false
+      },
+      {
+        "frame": 12796,
+        "player_name": "Ryuzaki",
+        "is_orange": false
+      },
+      {
+        "frame": 13208,
+        "player_name": ".",
+        "is_orange": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "smurfs suck fr",
+      "unique_id": "d7d5ac33c60f4e84ba84a30fe39dfcad"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 352,
+        "player_name": "smurfs suck fr",
+        "is_orange": true
+      },
+      {
+        "frame": 719,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 1087,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 1931,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 2730,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 3442,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 4212,
+        "player_name": "smurfs suck fr",
+        "is_orange": true
+      },
+      {
+        "frame": 5772,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      }
+    ]
+  }
+}

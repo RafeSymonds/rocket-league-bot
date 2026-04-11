@@ -1,0 +1,31 @@
+{
+  "players": [
+    {
+      "name": "snxwyy",
+      "unique_id": "76561198157118548"
+    },
+    {
+      "name": "Joker Goon",
+      "unique_id": "e28ee43641614084900aeae16fab0fca"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 3448,
+        "player_name": "snxwyy",
+        "is_orange": true
+      },
+      {
+        "frame": 5723,
+        "player_name": "snxwyy",
+        "is_orange": true
+      },
+      {
+        "frame": 8084,
+        "player_name": "Joker Goon",
+        "is_orange": false
+      }
+    ]
+  }
+}

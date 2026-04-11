@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "Kehvn",
+      "unique_id": "76561198878331891"
+    },
+    {
+      "name": "prnonyx",
+      "unique_id": "117192a5b81041aaab1758ea521f1bb3"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 825,
+        "player_name": "Kehvn",
+        "is_orange": false
+      },
+      {
+        "frame": 1714,
+        "player_name": "prnonyx",
+        "is_orange": true
+      },
+      {
+        "frame": 3963,
+        "player_name": "Kehvn",
+        "is_orange": false
+      },
+      {
+        "frame": 5766,
+        "player_name": "prnonyx",
+        "is_orange": true
+      },
+      {
+        "frame": 6392,
+        "player_name": "Kehvn",
+        "is_orange": false
+      },
+      {
+        "frame": 7800,
+        "player_name": "prnonyx",
+        "is_orange": true
+      },
+      {
+        "frame": 8192,
+        "player_name": "prnonyx",
+        "is_orange": true
+      },
+      {
+        "frame": 8614,
+        "player_name": "prnonyx",
+        "is_orange": true
+      },
+      {
+        "frame": 9212,
+        "player_name": "Kehvn",
+        "is_orange": false
+      },
+      {
+        "frame": 10756,
+        "player_name": "prnonyx",
+        "is_orange": true
+      }
+    ]
+  }
+}

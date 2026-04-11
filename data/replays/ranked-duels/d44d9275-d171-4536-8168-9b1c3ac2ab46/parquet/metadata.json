@@ -1,0 +1,86 @@
+{
+  "players": [
+    {
+      "name": "novaa",
+      "unique_id": "76561198900359312"
+    },
+    {
+      "name": "Fisal",
+      "unique_id": "76561199012906224"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 290,
+        "player_name": "novaa",
+        "is_orange": false
+      },
+      {
+        "frame": 1766,
+        "player_name": "novaa",
+        "is_orange": false
+      },
+      {
+        "frame": 2602,
+        "player_name": "Fisal",
+        "is_orange": true
+      },
+      {
+        "frame": 3448,
+        "player_name": "Fisal",
+        "is_orange": true
+      },
+      {
+        "frame": 3928,
+        "player_name": "Fisal",
+        "is_orange": true
+      },
+      {
+        "frame": 4370,
+        "player_name": "novaa",
+        "is_orange": false
+      },
+      {
+        "frame": 4920,
+        "player_name": "Fisal",
+        "is_orange": true
+      },
+      {
+        "frame": 5732,
+        "player_name": "novaa",
+        "is_orange": false
+      },
+      {
+        "frame": 6676,
+        "player_name": "Fisal",
+        "is_orange": true
+      },
+      {
+        "frame": 7215,
+        "player_name": "Fisal",
+        "is_orange": true
+      },
+      {
+        "frame": 8067,
+        "player_name": "novaa",
+        "is_orange": false
+      },
+      {
+        "frame": 8690,
+        "player_name": "Fisal",
+        "is_orange": true
+      },
+      {
+        "frame": 10275,
+        "player_name": "Fisal",
+        "is_orange": true
+      },
+      {
+        "frame": 11016,
+        "player_name": "Fisal",
+        "is_orange": true
+      }
+    ]
+  }
+}

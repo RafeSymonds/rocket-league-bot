@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "mrtn",
+      "unique_id": "76561199084382801"
+    },
+    {
+      "name": "juaopaulodellas",
+      "unique_id": "de55f8fd6e324f45a797d9b00b4f9216"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 546,
+        "player_name": "juaopaulodellas",
+        "is_orange": false
+      },
+      {
+        "frame": 1350,
+        "player_name": "juaopaulodellas",
+        "is_orange": false
+      },
+      {
+        "frame": 1870,
+        "player_name": "juaopaulodellas",
+        "is_orange": false
+      },
+      {
+        "frame": 2485,
+        "player_name": "juaopaulodellas",
+        "is_orange": false
+      },
+      {
+        "frame": 2887,
+        "player_name": "juaopaulodellas",
+        "is_orange": false
+      },
+      {
+        "frame": 3976,
+        "player_name": "juaopaulodellas",
+        "is_orange": false
+      },
+      {
+        "frame": 4652,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 5302,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 5880,
+        "player_name": "juaopaulodellas",
+        "is_orange": false
+      }
+    ]
+  }
+}

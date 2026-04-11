@@ -1,0 +1,51 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "Mile.",
+      "unique_id": "76561198452541120"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1229,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 3203,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 5541,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 7094,
+        "player_name": "Mile.",
+        "is_orange": true
+      },
+      {
+        "frame": 13854,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 15863,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 18547,
+        "player_name": "Mile.",
+        "is_orange": true
+      }
+    ]
+  }
+}

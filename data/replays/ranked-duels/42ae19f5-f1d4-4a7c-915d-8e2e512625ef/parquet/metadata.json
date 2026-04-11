@@ -1,0 +1,71 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "9va",
+      "unique_id": "76561198776908025"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 862,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 1926,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 3400,
+        "player_name": "9va",
+        "is_orange": false
+      },
+      {
+        "frame": 4824,
+        "player_name": "9va",
+        "is_orange": false
+      },
+      {
+        "frame": 5165,
+        "player_name": "9va",
+        "is_orange": false
+      },
+      {
+        "frame": 5812,
+        "player_name": "9va",
+        "is_orange": false
+      },
+      {
+        "frame": 6322,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 7859,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 8763,
+        "player_name": "9va",
+        "is_orange": false
+      },
+      {
+        "frame": 9569,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 11699,
+        "player_name": "9va",
+        "is_orange": false
+      }
+    ]
+  }
+}

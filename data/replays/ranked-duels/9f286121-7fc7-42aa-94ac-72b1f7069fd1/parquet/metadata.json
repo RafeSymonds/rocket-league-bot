@@ -1,0 +1,121 @@
+{
+  "players": [
+    {
+      "name": "Ash",
+      "unique_id": "76561199076206546"
+    },
+    {
+      "name": "prozy",
+      "unique_id": "76561198963825117"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 322,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 1169,
+        "player_name": "prozy",
+        "is_orange": true
+      },
+      {
+        "frame": 1637,
+        "player_name": "prozy",
+        "is_orange": true
+      },
+      {
+        "frame": 2133,
+        "player_name": "prozy",
+        "is_orange": true
+      },
+      {
+        "frame": 2607,
+        "player_name": "prozy",
+        "is_orange": true
+      },
+      {
+        "frame": 3157,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 3552,
+        "player_name": "prozy",
+        "is_orange": true
+      },
+      {
+        "frame": 4575,
+        "player_name": "prozy",
+        "is_orange": true
+      },
+      {
+        "frame": 5217,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 6591,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 7309,
+        "player_name": "prozy",
+        "is_orange": true
+      },
+      {
+        "frame": 8674,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 9589,
+        "player_name": "prozy",
+        "is_orange": true
+      },
+      {
+        "frame": 10012,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 11034,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 11460,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 12165,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 13234,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 13599,
+        "player_name": "prozy",
+        "is_orange": true
+      },
+      {
+        "frame": 14506,
+        "player_name": "prozy",
+        "is_orange": true
+      },
+      {
+        "frame": 16446,
+        "player_name": "prozy",
+        "is_orange": true
+      }
+    ]
+  }
+}

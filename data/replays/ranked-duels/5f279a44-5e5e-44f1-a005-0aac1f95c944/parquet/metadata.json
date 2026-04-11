@@ -1,0 +1,31 @@
+{
+  "players": [
+    {
+      "name": "sedou",
+      "unique_id": "76561198261764796"
+    },
+    {
+      "name": "discor.gg \u30cefault",
+      "unique_id": "43b22bf567a24defb27a3b0555788f7b"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 254,
+        "player_name": "sedou",
+        "is_orange": false
+      },
+      {
+        "frame": 1524,
+        "player_name": "discor.gg \u30cefault",
+        "is_orange": true
+      },
+      {
+        "frame": 4425,
+        "player_name": "discor.gg \u30cefault",
+        "is_orange": true
+      }
+    ]
+  }
+}

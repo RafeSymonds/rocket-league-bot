@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "Rebm0b.",
+      "unique_id": "a64790c299d245daa9e727b05f9fa6c5"
+    },
+    {
+      "name": "SHaDi",
+      "unique_id": "76561198085638483"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1423,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 1750,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 2079,
+        "player_name": "SHaDi",
+        "is_orange": true
+      },
+      {
+        "frame": 2580,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 3709,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 4130,
+        "player_name": "SHaDi",
+        "is_orange": true
+      },
+      {
+        "frame": 4605,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 5001,
+        "player_name": "SHaDi",
+        "is_orange": true
+      },
+      {
+        "frame": 5786,
+        "player_name": "SHaDi",
+        "is_orange": true
+      },
+      {
+        "frame": 6870,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 7867,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 9086,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 10635,
+        "player_name": "SHaDi",
+        "is_orange": true
+      }
+    ]
+  }
+}

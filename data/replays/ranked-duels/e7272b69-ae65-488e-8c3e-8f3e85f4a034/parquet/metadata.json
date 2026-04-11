@@ -1,0 +1,31 @@
+{
+  "players": [
+    {
+      "name": "my chooks a bit ardhay adlay",
+      "unique_id": "76561198298607005"
+    },
+    {
+      "name": "Reta.",
+      "unique_id": "76561199046089730"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 2517,
+        "player_name": "Reta.",
+        "is_orange": false
+      },
+      {
+        "frame": 3202,
+        "player_name": "Reta.",
+        "is_orange": false
+      },
+      {
+        "frame": 4104,
+        "player_name": "Reta.",
+        "is_orange": false
+      }
+    ]
+  }
+}

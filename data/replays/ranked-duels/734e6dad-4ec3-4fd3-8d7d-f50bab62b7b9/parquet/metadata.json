@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": "\u00c8leets",
+      "unique_id": "766a3d1d0adb4a3ebb9b342e4c6595a5"
+    },
+    {
+      "name": "Who Decided That?",
+      "unique_id": "76561198085666064"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1365,
+        "player_name": "Who Decided That?",
+        "is_orange": false
+      },
+      {
+        "frame": 2623,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 4173,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 4874,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 5372,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 5871,
+        "player_name": "\u00c8leets",
+        "is_orange": true
+      },
+      {
+        "frame": 6333,
+        "player_name": "Who Decided That?",
+        "is_orange": false
+      },
+      {
+        "frame": 7415,
+        "player_name": "Who Decided That?",
+        "is_orange": false
+      },
+      {
+        "frame": 7927,
+        "player_name": "Who Decided That?",
+        "is_orange": false
+      },
+      {
+        "frame": 8637,
+        "player_name": "Who Decided That?",
+        "is_orange": false
+      },
+      {
+        "frame": 9211,
+        "player_name": "Who Decided That?",
+        "is_orange": false
+      },
+      {
+        "frame": 10069,
+        "player_name": "Who Decided That?",
+        "is_orange": false
+      },
+      {
+        "frame": 10477,
+        "player_name": "Who Decided That?",
+        "is_orange": false
+      },
+      {
+        "frame": 11071,
+        "player_name": "Who Decided That?",
+        "is_orange": false
+      },
+      {
+        "frame": 11860,
+        "player_name": "Who Decided That?",
+        "is_orange": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "players": [
+    {
+      "name": "Mech",
+      "unique_id": "76561199038935432"
+    },
+    {
+      "name": "idyllic Shadi",
+      "unique_id": "76561198085638483"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 632,
+        "player_name": "Mech",
+        "is_orange": false
+      },
+      {
+        "frame": 1377,
+        "player_name": "idyllic Shadi",
+        "is_orange": true
+      },
+      {
+        "frame": 2469,
+        "player_name": "idyllic Shadi",
+        "is_orange": true
+      },
+      {
+        "frame": 3021,
+        "player_name": "Mech",
+        "is_orange": false
+      },
+      {
+        "frame": 4048,
+        "player_name": "Mech",
+        "is_orange": false
+      },
+      {
+        "frame": 4376,
+        "player_name": "idyllic Shadi",
+        "is_orange": true
+      },
+      {
+        "frame": 4893,
+        "player_name": "idyllic Shadi",
+        "is_orange": true
+      },
+      {
+        "frame": 6402,
+        "player_name": "idyllic Shadi",
+        "is_orange": true
+      },
+      {
+        "frame": 7330,
+        "player_name": "idyllic Shadi",
+        "is_orange": true
+      },
+      {
+        "frame": 8440,
+        "player_name": "Mech",
+        "is_orange": false
+      },
+      {
+        "frame": 8826,
+        "player_name": "idyllic Shadi",
+        "is_orange": true
+      },
+      {
+        "frame": 9549,
+        "player_name": "Mech",
+        "is_orange": false
+      },
+      {
+        "frame": 10071,
+        "player_name": "idyllic Shadi",
+        "is_orange": true
+      },
+      {
+        "frame": 10759,
+        "player_name": "Mech",
+        "is_orange": false
+      }
+    ]
+  }
+}

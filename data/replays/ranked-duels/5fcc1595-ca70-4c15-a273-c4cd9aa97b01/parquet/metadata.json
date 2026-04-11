@@ -1,0 +1,76 @@
+{
+  "players": [
+    {
+      "name": "mrtn",
+      "unique_id": "76561199084382801"
+    },
+    {
+      "name": "User-9b52fa145e",
+      "unique_id": "d32292d2151e47a5b07ddf657ff5ac06"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 285,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 1632,
+        "player_name": "User-9b52fa145e",
+        "is_orange": true
+      },
+      {
+        "frame": 2042,
+        "player_name": "User-9b52fa145e",
+        "is_orange": true
+      },
+      {
+        "frame": 2619,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 3205,
+        "player_name": "User-9b52fa145e",
+        "is_orange": true
+      },
+      {
+        "frame": 3546,
+        "player_name": "User-9b52fa145e",
+        "is_orange": true
+      },
+      {
+        "frame": 4222,
+        "player_name": "mrtn",
+        "is_orange": false
+      },
+      {
+        "frame": 4601,
+        "player_name": "User-9b52fa145e",
+        "is_orange": true
+      },
+      {
+        "frame": 5079,
+        "player_name": "User-9b52fa145e",
+        "is_orange": true
+      },
+      {
+        "frame": 5544,
+        "player_name": "User-9b52fa145e",
+        "is_orange": true
+      },
+      {
+        "frame": 6035,
+        "player_name": "User-9b52fa145e",
+        "is_orange": true
+      },
+      {
+        "frame": 6641,
+        "player_name": "User-9b52fa145e",
+        "is_orange": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "players": [
+    {
+      "name": "xsync",
+      "unique_id": "76561198384004482"
+    },
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 599,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 1126,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 1727,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 2286,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 3399,
+        "player_name": "xsync",
+        "is_orange": true
+      },
+      {
+        "frame": 5116,
+        "player_name": "xsync",
+        "is_orange": true
+      },
+      {
+        "frame": 6648,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 7603,
+        "player_name": "xsync",
+        "is_orange": true
+      },
+      {
+        "frame": 9465,
+        "player_name": "xsync",
+        "is_orange": true
+      },
+      {
+        "frame": 10283,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 10675,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 11427,
+        "player_name": "xsync",
+        "is_orange": true
+      }
+    ]
+  }
+}

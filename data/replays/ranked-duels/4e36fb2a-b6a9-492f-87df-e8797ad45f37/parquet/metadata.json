@@ -1,0 +1,36 @@
+{
+  "players": [
+    {
+      "name": "Mr Giyu!!!",
+      "unique_id": "76561198784847286"
+    },
+    {
+      "name": "Malthe.2nd",
+      "unique_id": "7109c5e857734f29b659b73fb9b189b4"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 333,
+        "player_name": "Mr Giyu!!!",
+        "is_orange": true
+      },
+      {
+        "frame": 869,
+        "player_name": "Malthe.2nd",
+        "is_orange": false
+      },
+      {
+        "frame": 1478,
+        "player_name": "Malthe.2nd",
+        "is_orange": false
+      },
+      {
+        "frame": 1814,
+        "player_name": "Malthe.2nd",
+        "is_orange": false
+      }
+    ]
+  }
+}

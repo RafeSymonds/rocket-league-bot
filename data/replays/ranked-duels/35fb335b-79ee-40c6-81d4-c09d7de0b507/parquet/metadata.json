@@ -1,0 +1,106 @@
+{
+  "players": [
+    {
+      "name": "mrtn",
+      "unique_id": "76561199084382801"
+    },
+    {
+      "name": "F\u03bfrky",
+      "unique_id": "be892719368a4ed7bc26d4f4e1d6de00"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1000,
+        "player_name": "F\u03bfrky",
+        "is_orange": false
+      },
+      {
+        "frame": 1429,
+        "player_name": "F\u03bfrky",
+        "is_orange": false
+      },
+      {
+        "frame": 3363,
+        "player_name": "F\u03bfrky",
+        "is_orange": false
+      },
+      {
+        "frame": 3936,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 4481,
+        "player_name": "F\u03bfrky",
+        "is_orange": false
+      },
+      {
+        "frame": 5212,
+        "player_name": "F\u03bfrky",
+        "is_orange": false
+      },
+      {
+        "frame": 5890,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 6406,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 7188,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 7748,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 8128,
+        "player_name": "F\u03bfrky",
+        "is_orange": false
+      },
+      {
+        "frame": 9821,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 10442,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 10973,
+        "player_name": "F\u03bfrky",
+        "is_orange": false
+      },
+      {
+        "frame": 11364,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 11882,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 12349,
+        "player_name": "mrtn",
+        "is_orange": true
+      },
+      {
+        "frame": 13323,
+        "player_name": "mrtn",
+        "is_orange": true
+      }
+    ]
+  }
+}

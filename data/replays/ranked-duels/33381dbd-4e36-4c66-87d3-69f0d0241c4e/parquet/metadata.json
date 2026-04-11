@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "Abdullah",
+      "unique_id": "76561199037779944"
+    },
+    {
+      "name": "AJF Is Back (?)",
+      "unique_id": "76561198333255414"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1201,
+        "player_name": "Abdullah",
+        "is_orange": false
+      },
+      {
+        "frame": 2406,
+        "player_name": "Abdullah",
+        "is_orange": false
+      },
+      {
+        "frame": 3310,
+        "player_name": "Abdullah",
+        "is_orange": false
+      },
+      {
+        "frame": 3850,
+        "player_name": "AJF Is Back (?)",
+        "is_orange": true
+      },
+      {
+        "frame": 4847,
+        "player_name": "Abdullah",
+        "is_orange": false
+      },
+      {
+        "frame": 5300,
+        "player_name": "AJF Is Back (?)",
+        "is_orange": true
+      },
+      {
+        "frame": 6516,
+        "player_name": "Abdullah",
+        "is_orange": false
+      },
+      {
+        "frame": 7034,
+        "player_name": "Abdullah",
+        "is_orange": false
+      },
+      {
+        "frame": 7573,
+        "player_name": "Abdullah",
+        "is_orange": false
+      }
+    ]
+  }
+}

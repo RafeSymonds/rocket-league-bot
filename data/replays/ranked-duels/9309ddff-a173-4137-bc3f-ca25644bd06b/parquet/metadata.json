@@ -1,0 +1,41 @@
+{
+  "players": [
+    {
+      "name": ".",
+      "unique_id": "76561199076206546"
+    },
+    {
+      "name": "\u3006\u3006Ascardia",
+      "unique_id": "0c0019bd32884b7a88814496854e2e65"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 942,
+        "player_name": "\u3006\u3006Ascardia",
+        "is_orange": false
+      },
+      {
+        "frame": 1634,
+        "player_name": "\u3006\u3006Ascardia",
+        "is_orange": false
+      },
+      {
+        "frame": 2096,
+        "player_name": "\u3006\u3006Ascardia",
+        "is_orange": false
+      },
+      {
+        "frame": 2485,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 6090,
+        "player_name": "\u3006\u3006Ascardia",
+        "is_orange": false
+      }
+    ]
+  }
+}

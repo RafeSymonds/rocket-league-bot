@@ -1,0 +1,56 @@
+{
+  "players": [
+    {
+      "name": "Mech",
+      "unique_id": "76561199038935432"
+    },
+    {
+      "name": "Mozzarella",
+      "unique_id": "76561197999475675"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1665,
+        "player_name": "Mozzarella",
+        "is_orange": true
+      },
+      {
+        "frame": 3093,
+        "player_name": "Mech",
+        "is_orange": false
+      },
+      {
+        "frame": 3806,
+        "player_name": "Mech",
+        "is_orange": false
+      },
+      {
+        "frame": 4354,
+        "player_name": "Mech",
+        "is_orange": false
+      },
+      {
+        "frame": 4872,
+        "player_name": "Mozzarella",
+        "is_orange": true
+      },
+      {
+        "frame": 6036,
+        "player_name": "Mozzarella",
+        "is_orange": true
+      },
+      {
+        "frame": 6770,
+        "player_name": "Mech",
+        "is_orange": false
+      },
+      {
+        "frame": 8624,
+        "player_name": "Mech",
+        "is_orange": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "players": [
+    {
+      "name": "billy",
+      "unique_id": "76561198298607005"
+    },
+    {
+      "name": ".",
+      "unique_id": "76561198454679358"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 512,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 2121,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 2661,
+        "player_name": "billy",
+        "is_orange": false
+      },
+      {
+        "frame": 3282,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 4048,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 4608,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 5195,
+        "player_name": "billy",
+        "is_orange": false
+      },
+      {
+        "frame": 5844,
+        "player_name": "billy",
+        "is_orange": false
+      },
+      {
+        "frame": 6627,
+        "player_name": "billy",
+        "is_orange": false
+      },
+      {
+        "frame": 7462,
+        "player_name": "billy",
+        "is_orange": false
+      },
+      {
+        "frame": 8173,
+        "player_name": "billy",
+        "is_orange": false
+      },
+      {
+        "frame": 9139,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 10574,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 11439,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 12119,
+        "player_name": "billy",
+        "is_orange": false
+      },
+      {
+        "frame": 12620,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 13175,
+        "player_name": ".",
+        "is_orange": true
+      },
+      {
+        "frame": 13517,
+        "player_name": ".",
+        "is_orange": true
+      }
+    ]
+  }
+}

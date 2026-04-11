@@ -1,0 +1,101 @@
+{
+  "players": [
+    {
+      "name": "ExoTiiK",
+      "unique_id": "76561198258466111"
+    },
+    {
+      "name": "Rebm0b.",
+      "unique_id": "a64790c299d245daa9e727b05f9fa6c5"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 860,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 1768,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 2624,
+        "player_name": "ExoTiiK",
+        "is_orange": true
+      },
+      {
+        "frame": 3362,
+        "player_name": "ExoTiiK",
+        "is_orange": true
+      },
+      {
+        "frame": 3837,
+        "player_name": "ExoTiiK",
+        "is_orange": true
+      },
+      {
+        "frame": 4232,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 5089,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 6592,
+        "player_name": "ExoTiiK",
+        "is_orange": true
+      },
+      {
+        "frame": 7102,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 7672,
+        "player_name": "ExoTiiK",
+        "is_orange": true
+      },
+      {
+        "frame": 8881,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 9405,
+        "player_name": "ExoTiiK",
+        "is_orange": true
+      },
+      {
+        "frame": 10619,
+        "player_name": "ExoTiiK",
+        "is_orange": true
+      },
+      {
+        "frame": 11386,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 11907,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 12390,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      },
+      {
+        "frame": 13005,
+        "player_name": "Rebm0b.",
+        "is_orange": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "Coconut",
+      "unique_id": "76561198162286169"
+    },
+    {
+      "name": "HotTopic.exe",
+      "unique_id": "e9b64db276a94e4eaae75069a41b72de"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1005,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 2060,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 2996,
+        "player_name": "HotTopic.exe",
+        "is_orange": true
+      },
+      {
+        "frame": 3769,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 5281,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 6239,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 7554,
+        "player_name": "HotTopic.exe",
+        "is_orange": true
+      },
+      {
+        "frame": 8668,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 9188,
+        "player_name": "HotTopic.exe",
+        "is_orange": true
+      },
+      {
+        "frame": 11296,
+        "player_name": "HotTopic.exe",
+        "is_orange": true
+      },
+      {
+        "frame": 11706,
+        "player_name": "HotTopic.exe",
+        "is_orange": true
+      },
+      {
+        "frame": 12217,
+        "player_name": "HotTopic.exe",
+        "is_orange": true
+      },
+      {
+        "frame": 12685,
+        "player_name": "HotTopic.exe",
+        "is_orange": true
+      }
+    ]
+  }
+}

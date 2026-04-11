@@ -1,0 +1,96 @@
+{
+  "players": [
+    {
+      "name": "\u00c8leets",
+      "unique_id": "766a3d1d0adb4a3ebb9b342e4c6595a5"
+    },
+    {
+      "name": "Skillz. \u2020",
+      "unique_id": "76561198176015205"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1094,
+        "player_name": "Skillz. \u2020",
+        "is_orange": true
+      },
+      {
+        "frame": 1684,
+        "player_name": "Skillz. \u2020",
+        "is_orange": true
+      },
+      {
+        "frame": 3010,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 4171,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 4619,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 5493,
+        "player_name": "Skillz. \u2020",
+        "is_orange": true
+      },
+      {
+        "frame": 5888,
+        "player_name": "Skillz. \u2020",
+        "is_orange": true
+      },
+      {
+        "frame": 6746,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 7267,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 8199,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 9423,
+        "player_name": "Skillz. \u2020",
+        "is_orange": true
+      },
+      {
+        "frame": 10222,
+        "player_name": "Skillz. \u2020",
+        "is_orange": true
+      },
+      {
+        "frame": 11166,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 11791,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 12361,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      },
+      {
+        "frame": 12954,
+        "player_name": "\u00c8leets",
+        "is_orange": false
+      }
+    ]
+  }
+}

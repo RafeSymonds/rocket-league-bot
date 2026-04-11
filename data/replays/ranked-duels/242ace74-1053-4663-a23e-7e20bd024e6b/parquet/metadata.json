@@ -1,0 +1,101 @@
+{
+  "players": [
+    {
+      "name": "Renshiro",
+      "unique_id": "76561198879992974"
+    },
+    {
+      "name": "Negative VCON",
+      "unique_id": "ce050e02bea44e138a78126164cbe149"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1099,
+        "player_name": "Renshiro",
+        "is_orange": false
+      },
+      {
+        "frame": 1926,
+        "player_name": "Negative VCON",
+        "is_orange": true
+      },
+      {
+        "frame": 2533,
+        "player_name": "Negative VCON",
+        "is_orange": true
+      },
+      {
+        "frame": 2943,
+        "player_name": "Negative VCON",
+        "is_orange": true
+      },
+      {
+        "frame": 4973,
+        "player_name": "Renshiro",
+        "is_orange": false
+      },
+      {
+        "frame": 5353,
+        "player_name": "Renshiro",
+        "is_orange": false
+      },
+      {
+        "frame": 6254,
+        "player_name": "Negative VCON",
+        "is_orange": true
+      },
+      {
+        "frame": 6904,
+        "player_name": "Renshiro",
+        "is_orange": false
+      },
+      {
+        "frame": 7552,
+        "player_name": "Negative VCON",
+        "is_orange": true
+      },
+      {
+        "frame": 9128,
+        "player_name": "Negative VCON",
+        "is_orange": true
+      },
+      {
+        "frame": 9722,
+        "player_name": "Negative VCON",
+        "is_orange": true
+      },
+      {
+        "frame": 10784,
+        "player_name": "Renshiro",
+        "is_orange": false
+      },
+      {
+        "frame": 11756,
+        "player_name": "Renshiro",
+        "is_orange": false
+      },
+      {
+        "frame": 12160,
+        "player_name": "Negative VCON",
+        "is_orange": true
+      },
+      {
+        "frame": 12900,
+        "player_name": "Renshiro",
+        "is_orange": false
+      },
+      {
+        "frame": 13295,
+        "player_name": "Renshiro",
+        "is_orange": false
+      },
+      {
+        "frame": 14672,
+        "player_name": "Renshiro",
+        "is_orange": false
+      }
+    ]
+  }
+}

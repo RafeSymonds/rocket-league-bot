@@ -1,0 +1,61 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "yanD\u30c4",
+      "unique_id": "41e42e0477004f60a9f272cf534d540c"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 787,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 1174,
+        "player_name": "yanD\u30c4",
+        "is_orange": true
+      },
+      {
+        "frame": 4777,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 5447,
+        "player_name": "yanD\u30c4",
+        "is_orange": true
+      },
+      {
+        "frame": 6135,
+        "player_name": "yanD\u30c4",
+        "is_orange": true
+      },
+      {
+        "frame": 7095,
+        "player_name": "yanD\u30c4",
+        "is_orange": true
+      },
+      {
+        "frame": 8005,
+        "player_name": "yanD\u30c4",
+        "is_orange": true
+      },
+      {
+        "frame": 9176,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 10000,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      }
+    ]
+  }
+}

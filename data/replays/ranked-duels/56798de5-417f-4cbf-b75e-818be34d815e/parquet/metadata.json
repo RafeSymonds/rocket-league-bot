@@ -1,0 +1,36 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "Kehvn",
+      "unique_id": "76561198878331891"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 2203,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 3355,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 4252,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 4732,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      }
+    ]
+  }
+}

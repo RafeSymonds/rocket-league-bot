@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": "WONKRU",
+      "unique_id": "76561198144389858"
+    },
+    {
+      "name": "RADAHN.-",
+      "unique_id": "c0b6fca6dbd64139abfd528bbf906332"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 751,
+        "player_name": "RADAHN.-",
+        "is_orange": false
+      },
+      {
+        "frame": 1355,
+        "player_name": "WONKRU",
+        "is_orange": true
+      },
+      {
+        "frame": 1953,
+        "player_name": "RADAHN.-",
+        "is_orange": false
+      },
+      {
+        "frame": 2897,
+        "player_name": "RADAHN.-",
+        "is_orange": false
+      },
+      {
+        "frame": 3396,
+        "player_name": "WONKRU",
+        "is_orange": true
+      },
+      {
+        "frame": 3828,
+        "player_name": "RADAHN.-",
+        "is_orange": false
+      },
+      {
+        "frame": 4624,
+        "player_name": "WONKRU",
+        "is_orange": true
+      },
+      {
+        "frame": 5009,
+        "player_name": "RADAHN.-",
+        "is_orange": false
+      },
+      {
+        "frame": 5601,
+        "player_name": "WONKRU",
+        "is_orange": true
+      },
+      {
+        "frame": 9068,
+        "player_name": "RADAHN.-",
+        "is_orange": false
+      },
+      {
+        "frame": 10239,
+        "player_name": "RADAHN.-",
+        "is_orange": false
+      },
+      {
+        "frame": 11299,
+        "player_name": "WONKRU",
+        "is_orange": true
+      },
+      {
+        "frame": 11949,
+        "player_name": "WONKRU",
+        "is_orange": true
+      },
+      {
+        "frame": 12357,
+        "player_name": "WONKRU",
+        "is_orange": true
+      },
+      {
+        "frame": 14133,
+        "player_name": "WONKRU",
+        "is_orange": true
+      }
+    ]
+  }
+}

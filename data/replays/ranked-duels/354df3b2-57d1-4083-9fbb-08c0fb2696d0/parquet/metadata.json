@@ -1,0 +1,86 @@
+{
+  "players": [
+    {
+      "name": "Wahvey",
+      "unique_id": "76561199056379402"
+    },
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1744,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 2432,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 3643,
+        "player_name": "Wahvey",
+        "is_orange": false
+      },
+      {
+        "frame": 4279,
+        "player_name": "Wahvey",
+        "is_orange": false
+      },
+      {
+        "frame": 4968,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 5827,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 6213,
+        "player_name": "Wahvey",
+        "is_orange": false
+      },
+      {
+        "frame": 6961,
+        "player_name": "Wahvey",
+        "is_orange": false
+      },
+      {
+        "frame": 7886,
+        "player_name": "Wahvey",
+        "is_orange": false
+      },
+      {
+        "frame": 8291,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 8734,
+        "player_name": "piece control plexi",
+        "is_orange": true
+      },
+      {
+        "frame": 10171,
+        "player_name": "Wahvey",
+        "is_orange": false
+      },
+      {
+        "frame": 10812,
+        "player_name": "Wahvey",
+        "is_orange": false
+      },
+      {
+        "frame": 11228,
+        "player_name": "Wahvey",
+        "is_orange": false
+      }
+    ]
+  }
+}

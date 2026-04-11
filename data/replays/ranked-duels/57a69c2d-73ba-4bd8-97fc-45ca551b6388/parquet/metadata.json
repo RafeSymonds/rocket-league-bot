@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": "Rebm0b.",
+      "unique_id": "a64790c299d245daa9e727b05f9fa6c5"
+    },
+    {
+      "name": "T",
+      "unique_id": "76561199014043052"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 763,
+        "player_name": "T",
+        "is_orange": false
+      },
+      {
+        "frame": 1504,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 2363,
+        "player_name": "T",
+        "is_orange": false
+      },
+      {
+        "frame": 2832,
+        "player_name": "T",
+        "is_orange": false
+      },
+      {
+        "frame": 3226,
+        "player_name": "T",
+        "is_orange": false
+      },
+      {
+        "frame": 3790,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 4985,
+        "player_name": "T",
+        "is_orange": false
+      },
+      {
+        "frame": 6592,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 7180,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 7659,
+        "player_name": "T",
+        "is_orange": false
+      },
+      {
+        "frame": 8998,
+        "player_name": "T",
+        "is_orange": false
+      },
+      {
+        "frame": 9591,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 11737,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 12748,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      },
+      {
+        "frame": 13904,
+        "player_name": "Rebm0b.",
+        "is_orange": true
+      }
+    ]
+  }
+}

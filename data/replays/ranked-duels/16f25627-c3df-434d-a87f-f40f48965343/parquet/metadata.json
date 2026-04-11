@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "Ash",
+      "unique_id": "76561199076206546"
+    },
+    {
+      "name": "edz",
+      "unique_id": "76561198323326634"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 649,
+        "player_name": "edz",
+        "is_orange": true
+      },
+      {
+        "frame": 1853,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 2549,
+        "player_name": "edz",
+        "is_orange": true
+      },
+      {
+        "frame": 3902,
+        "player_name": "edz",
+        "is_orange": true
+      },
+      {
+        "frame": 4428,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 5879,
+        "player_name": "edz",
+        "is_orange": true
+      },
+      {
+        "frame": 6980,
+        "player_name": "edz",
+        "is_orange": true
+      },
+      {
+        "frame": 8404,
+        "player_name": "Ash",
+        "is_orange": false
+      },
+      {
+        "frame": 9098,
+        "player_name": "edz",
+        "is_orange": true
+      },
+      {
+        "frame": 9635,
+        "player_name": "edz",
+        "is_orange": true
+      }
+    ]
+  }
+}

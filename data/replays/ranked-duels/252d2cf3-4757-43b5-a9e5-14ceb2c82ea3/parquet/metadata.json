@@ -1,0 +1,36 @@
+{
+  "players": [
+    {
+      "name": "Coconut",
+      "unique_id": "76561198162286169"
+    },
+    {
+      "name": "stizzy",
+      "unique_id": "984a06e1baa34bd4bc8208a120628674"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1361,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 1688,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 2911,
+        "player_name": "Coconut",
+        "is_orange": false
+      },
+      {
+        "frame": 4533,
+        "player_name": "Coconut",
+        "is_orange": false
+      }
+    ]
+  }
+}

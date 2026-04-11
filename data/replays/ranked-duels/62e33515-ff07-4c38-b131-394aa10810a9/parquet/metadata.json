@@ -1,0 +1,91 @@
+{
+  "players": [
+    {
+      "name": "Swizx.",
+      "unique_id": "76561198180446441"
+    },
+    {
+      "name": "sen-zellsis",
+      "unique_id": "2a06f356319c4f29bb5c361ef563934e"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 402,
+        "player_name": "Swizx.",
+        "is_orange": true
+      },
+      {
+        "frame": 835,
+        "player_name": "sen-zellsis",
+        "is_orange": false
+      },
+      {
+        "frame": 1488,
+        "player_name": "sen-zellsis",
+        "is_orange": false
+      },
+      {
+        "frame": 2048,
+        "player_name": "Swizx.",
+        "is_orange": true
+      },
+      {
+        "frame": 2950,
+        "player_name": "sen-zellsis",
+        "is_orange": false
+      },
+      {
+        "frame": 3852,
+        "player_name": "Swizx.",
+        "is_orange": true
+      },
+      {
+        "frame": 4333,
+        "player_name": "sen-zellsis",
+        "is_orange": false
+      },
+      {
+        "frame": 4867,
+        "player_name": "sen-zellsis",
+        "is_orange": false
+      },
+      {
+        "frame": 5430,
+        "player_name": "sen-zellsis",
+        "is_orange": false
+      },
+      {
+        "frame": 6069,
+        "player_name": "sen-zellsis",
+        "is_orange": false
+      },
+      {
+        "frame": 6735,
+        "player_name": "Swizx.",
+        "is_orange": true
+      },
+      {
+        "frame": 7595,
+        "player_name": "Swizx.",
+        "is_orange": true
+      },
+      {
+        "frame": 8010,
+        "player_name": "sen-zellsis",
+        "is_orange": false
+      },
+      {
+        "frame": 8973,
+        "player_name": "sen-zellsis",
+        "is_orange": false
+      },
+      {
+        "frame": 9892,
+        "player_name": "sen-zellsis",
+        "is_orange": false
+      }
+    ]
+  }
+}

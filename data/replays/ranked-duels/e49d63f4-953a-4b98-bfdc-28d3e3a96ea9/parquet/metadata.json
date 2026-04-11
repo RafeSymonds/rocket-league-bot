@@ -1,0 +1,46 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "PhonkyTown.",
+      "unique_id": "84823473e6754f00a80d21abca2b1877"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1538,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 4926,
+        "player_name": "PhonkyTown.",
+        "is_orange": false
+      },
+      {
+        "frame": 6294,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 7789,
+        "player_name": "PhonkyTown.",
+        "is_orange": false
+      },
+      {
+        "frame": 8881,
+        "player_name": "PhonkyTown.",
+        "is_orange": false
+      },
+      {
+        "frame": 11410,
+        "player_name": "PhonkyTown.",
+        "is_orange": false
+      }
+    ]
+  }
+}

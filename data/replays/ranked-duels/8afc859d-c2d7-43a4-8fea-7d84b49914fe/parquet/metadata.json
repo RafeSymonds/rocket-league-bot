@@ -1,0 +1,86 @@
+{
+  "players": [
+    {
+      "name": "plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "AJ",
+      "unique_id": "76561198105072499"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 737,
+        "player_name": "AJ",
+        "is_orange": true
+      },
+      {
+        "frame": 1330,
+        "player_name": "AJ",
+        "is_orange": true
+      },
+      {
+        "frame": 1910,
+        "player_name": "AJ",
+        "is_orange": true
+      },
+      {
+        "frame": 2930,
+        "player_name": "plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 5440,
+        "player_name": "plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 6067,
+        "player_name": "plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 6988,
+        "player_name": "plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 7837,
+        "player_name": "plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 8467,
+        "player_name": "AJ",
+        "is_orange": true
+      },
+      {
+        "frame": 8897,
+        "player_name": "plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 9621,
+        "player_name": "AJ",
+        "is_orange": true
+      },
+      {
+        "frame": 10320,
+        "player_name": "plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 10904,
+        "player_name": "AJ",
+        "is_orange": true
+      },
+      {
+        "frame": 11666,
+        "player_name": "plexi",
+        "is_orange": false
+      }
+    ]
+  }
+}

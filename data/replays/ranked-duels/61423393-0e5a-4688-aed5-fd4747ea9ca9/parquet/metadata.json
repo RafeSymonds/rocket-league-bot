@@ -1,0 +1,66 @@
+{
+  "players": [
+    {
+      "name": "Swizx.",
+      "unique_id": "76561198180446441"
+    },
+    {
+      "name": "ray",
+      "unique_id": "76561199053726164"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 699,
+        "player_name": "ray",
+        "is_orange": true
+      },
+      {
+        "frame": 1763,
+        "player_name": "ray",
+        "is_orange": true
+      },
+      {
+        "frame": 2660,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 3319,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 4565,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 5281,
+        "player_name": "Swizx.",
+        "is_orange": false
+      },
+      {
+        "frame": 7120,
+        "player_name": "ray",
+        "is_orange": true
+      },
+      {
+        "frame": 7946,
+        "player_name": "ray",
+        "is_orange": true
+      },
+      {
+        "frame": 9073,
+        "player_name": "ray",
+        "is_orange": true
+      },
+      {
+        "frame": 10430,
+        "player_name": "ray",
+        "is_orange": true
+      }
+    ]
+  }
+}

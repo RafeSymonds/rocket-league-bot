@@ -1,0 +1,51 @@
+{
+  "players": [
+    {
+      "name": "Mec",
+      "unique_id": "76561199070361459"
+    },
+    {
+      "name": "Mech",
+      "unique_id": "76561199038935432"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1658,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 3485,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 4969,
+        "player_name": "Mech",
+        "is_orange": true
+      },
+      {
+        "frame": 8813,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 10446,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 11952,
+        "player_name": "Mec",
+        "is_orange": false
+      },
+      {
+        "frame": 15809,
+        "player_name": "Mec",
+        "is_orange": false
+      }
+    ]
+  }
+}

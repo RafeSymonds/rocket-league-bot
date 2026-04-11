@@ -1,0 +1,116 @@
+{
+  "players": [
+    {
+      "name": "davoof",
+      "unique_id": "76561198353740533"
+    },
+    {
+      "name": "subakzyv3",
+      "unique_id": "906112e50fc84ed28095923957162453"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 1948,
+        "player_name": "subakzyv3",
+        "is_orange": false
+      },
+      {
+        "frame": 3959,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 5205,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 8188,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 10412,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 11612,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 14890,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 17903,
+        "player_name": "subakzyv3",
+        "is_orange": false
+      },
+      {
+        "frame": 19752,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 22819,
+        "player_name": "subakzyv3",
+        "is_orange": false
+      },
+      {
+        "frame": 26237,
+        "player_name": "subakzyv3",
+        "is_orange": false
+      },
+      {
+        "frame": 28758,
+        "player_name": "subakzyv3",
+        "is_orange": false
+      },
+      {
+        "frame": 30881,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 32082,
+        "player_name": "subakzyv3",
+        "is_orange": false
+      },
+      {
+        "frame": 33550,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 35168,
+        "player_name": "subakzyv3",
+        "is_orange": false
+      },
+      {
+        "frame": 36353,
+        "player_name": "davoof",
+        "is_orange": true
+      },
+      {
+        "frame": 37741,
+        "player_name": "subakzyv3",
+        "is_orange": false
+      },
+      {
+        "frame": 39855,
+        "player_name": "subakzyv3",
+        "is_orange": false
+      },
+      {
+        "frame": 40937,
+        "player_name": "davoof",
+        "is_orange": true
+      }
+    ]
+  }
+}

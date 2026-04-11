@@ -1,0 +1,81 @@
+{
+  "players": [
+    {
+      "name": "crazycat",
+      "unique_id": "76561198312939013"
+    },
+    {
+      "name": "bolting",
+      "unique_id": "76561198802152674"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 581,
+        "player_name": "bolting",
+        "is_orange": false
+      },
+      {
+        "frame": 983,
+        "player_name": "crazycat",
+        "is_orange": true
+      },
+      {
+        "frame": 1797,
+        "player_name": "bolting",
+        "is_orange": false
+      },
+      {
+        "frame": 2754,
+        "player_name": "bolting",
+        "is_orange": false
+      },
+      {
+        "frame": 3505,
+        "player_name": "crazycat",
+        "is_orange": true
+      },
+      {
+        "frame": 4137,
+        "player_name": "bolting",
+        "is_orange": false
+      },
+      {
+        "frame": 5263,
+        "player_name": "crazycat",
+        "is_orange": true
+      },
+      {
+        "frame": 6128,
+        "player_name": "crazycat",
+        "is_orange": true
+      },
+      {
+        "frame": 6717,
+        "player_name": "bolting",
+        "is_orange": false
+      },
+      {
+        "frame": 7674,
+        "player_name": "bolting",
+        "is_orange": false
+      },
+      {
+        "frame": 8329,
+        "player_name": "bolting",
+        "is_orange": false
+      },
+      {
+        "frame": 8962,
+        "player_name": "crazycat",
+        "is_orange": true
+      },
+      {
+        "frame": 11175,
+        "player_name": "bolting",
+        "is_orange": false
+      }
+    ]
+  }
+}

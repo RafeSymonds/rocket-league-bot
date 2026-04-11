@@ -1,0 +1,106 @@
+{
+  "players": [
+    {
+      "name": "piece control plexi",
+      "unique_id": "76561199005007831"
+    },
+    {
+      "name": "squishywafflesz",
+      "unique_id": "6a3b5b4f4a4947d89319c8dded90954f"
+    }
+  ],
+  "game": {
+    "goals": [
+      {
+        "frame": 816,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 1188,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 1642,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 2316,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 2765,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 3183,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 4018,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 5459,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 5995,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 7006,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 7876,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 8640,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 9256,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 9828,
+        "player_name": "piece control plexi",
+        "is_orange": false
+      },
+      {
+        "frame": 10362,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 10994,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 11478,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      },
+      {
+        "frame": 12594,
+        "player_name": "squishywafflesz",
+        "is_orange": true
+      }
+    ]
+  }
+}
