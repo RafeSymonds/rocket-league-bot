@@ -101,7 +101,7 @@ def main():
     all_episodes = []
     
     for replay_folder in tqdm(replay_folders, desc="Processing replays"):
-        episodes = convert_replay_to_training_data(replay_folder, lookup_table)
+        episodes = convert_replay_to_training_data(replay_folder / "parquet", lookup_table)
         all_episodes.extend(episodes)
     
     print(f"Extracted {len(all_episodes)} gameplay episodes")

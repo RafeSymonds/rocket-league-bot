@@ -168,42 +168,92 @@ def to_rlgym_dfs(parsed_replay: Replay, lookup_table=None):
 
         controls = {}
 
-        player_metas = sorted(parsed_replay.metadata["players"], key=lambda x: int(x["unique_id"]))
+        def safe_int(x):
+            try:
+                return int(x)
+            except ValueError:
+                return hash(x)
+
+        player_metas = sorted(parsed_replay.metadata["players"], key=lambda x: safe_int(x["unique_id"]))
+
+        name_to_team = {}
+        for goal in parsed_replay.metadata["game"].get("goals", []):
+            name_to_team[goal["player_name"]] = int(goal["is_orange"])
+
         for player in player_metas:
             uid = player["unique_id"]
             if uid not in players:
                 continue
             player_df = players[uid]
-            df.loc[:, f"{uid}/car_id"] = int(uid)
-            df.loc[:, f"{uid}/team_num"] = int(player["is_orange"])
-            df.loc[:, [f"{uid}/{col}" for col in physics_cols]] = player_df[physics_cols].values
-            df.loc[:, [f"inverted_{uid}/{col}" for col in physics_cols]] = 0  # Get columns in right order first
-            df.loc[:, [f"inverted_{uid}/{col}" for col in ball_physics_cols]] = (player_df[ball_physics_cols].values
-                                                                                 * invert)
 
-            df.loc[:, [f"inverted_{uid}/quat_{axis}" for axis in "wxyz"]] = (
-                    player_df[["quat_z", "quat_y", "quat_x", "quat_w"]].values
-                    * np.array([-1, -1, 1, 1]))
+            has_quat = all(col in player_df.columns for col in ["quat_w", "quat_x", "quat_y", "quat_z"])
+            has_rot = all(col in player_df.columns for col in ["rot_x", "rot_y", "rot_z"])
 
-            df.loc[:, f"{uid}/match_goals"] = player_df["match_goals"].fillna(0)
-            df.loc[:, f"{uid}/match_saves"] = player_df["match_saves"].fillna(0)
-            df.loc[:, f"{uid}/match_shots"] = player_df["match_shots"].fillna(0)
+            df.loc[:, f"{uid}/car_id"] = safe_int(uid)
+            team = int(player.get("is_orange", name_to_team.get(player["name"], 0)))
+            df.loc[:, f"{uid}/team_num"] = team
+
+            if has_quat:
+                df.loc[:, [f"{uid}/{col}" for col in physics_cols]] = player_df[physics_cols].values
+                df.loc[:, [f"inverted_{uid}/{col}" for col in ball_physics_cols]] = (player_df[ball_physics_cols].values * invert)
+                df.loc[:, [f"inverted_{uid}/quat_{axis}" for axis in "wxyz"]] = (
+                        player_df[["quat_z", "quat_y", "quat_x", "quat_w"]].values
+                        * np.array([-1, -1, 1, 1]))
+            elif has_rot:
+                pos_cols = ["pos_x", "pos_y", "pos_z"]
+                vel_cols = ["vel_x", "vel_y", "vel_z"]
+                ang_vel_cols = ["ang_vel_x", "ang_vel_y", "ang_vel_z"]
+                rot_cols = ["rot_x", "rot_y", "rot_z"]
+
+                for i, col in enumerate(pos_cols):
+                    df.loc[:, f"{uid}/{col}"] = player_df[col].values
+                    df.loc[:, f"inverted_{uid}/{col}"] = player_df[col].values * (-1 if i < 2 else 1)
+                for i, col in enumerate(vel_cols):
+                    df.loc[:, f"{uid}/{col}"] = player_df[col].values
+                    df.loc[:, f"inverted_{uid}/{col}"] = player_df[col].values * (-1 if i < 2 else 1)
+                for i, col in enumerate(ang_vel_cols):
+                    df.loc[:, f"{uid}/{col}"] = player_df[col].values
+                    df.loc[:, f"inverted_{uid}/{col}"] = player_df[col].values * (-1 if i < 2 else 1)
+                for i, col in enumerate(rot_cols):
+                    df.loc[:, f"{uid}/{col}"] = player_df[col].values
+                    df.loc[:, f"inverted_{uid}/{col}"] = player_df[col].values * (-1 if i < 2 else 1)
+                df.loc[:, f"inverted_{uid}/quat_w"] = 1.0
+                df.loc[:, f"inverted_{uid}/quat_x"] = 0.0
+                df.loc[:, f"inverted_{uid}/quat_y"] = 0.0
+                df.loc[:, f"inverted_{uid}/quat_z"] = 0.0
+
+            df.loc[:, f"{uid}/match_goals"] = player_df["match_goals"].fillna(0) if "match_goals" in player_df.columns else 0
+            df.loc[:, f"{uid}/match_saves"] = player_df["match_saves"].fillna(0) if "match_saves" in player_df.columns else 0
+            df.loc[:, f"{uid}/match_shots"] = player_df["match_shots"].fillna(0) if "match_shots" in player_df.columns else 0
             df.loc[:, f"{uid}/match_demos"] = 0
             df.loc[:, f"{uid}/match_pickups"] = 0
-            df.loc[:, f"{uid}/is_demoed"] = player_df["is_sleeping"].isna().astype(float)
+            df.loc[:, f"{uid}/is_demoed"] = player_df["is_sleeping"].isna().astype(float) if "is_sleeping" in player_df.columns else 0
             df.loc[:, f"{uid}/on_ground"] = np.nan
             df.loc[:, f"{uid}/ball_touched"] = False
             df.loc[:, f"{uid}/has_jump"] = np.nan
             df.loc[:, f"{uid}/has_flip"] = np.nan
-            df.loc[:, f"{uid}/boost_amount"] = player_df["boost_amount"].fillna(0) / 100
+            df.loc[:, f"{uid}/boost_amount"] = player_df["boost_amount"].fillna(0) / 100 if "boost_amount" in player_df.columns else 0
 
-            ffill_cols = [f"{invert}{uid}/{col}" for invert in ("", "inverted_") for col in physics_cols]
-            df.loc[:, ffill_cols] = df.loc[:, ffill_cols].ffill()
+            ffill_cols = [f"{invert}{uid}/{col}" for invert in ("", "inverted_") for col in physics_cols if f"{uid}/{col}" in df.columns]
+            if ffill_cols:
+                df.loc[:, ffill_cols] = df.loc[:, ffill_cols].ffill()
 
-            jumping = player_df["jump_is_active"].fillna(0.) > 0
-            dodging = player_df["dodge_is_active"].fillna(0.) > 0
-            double_jumping = player_df["double_jump_is_active"].fillna(0.).diff() > 0  # DJ only acts for one frame
-            flipping_car = player_df["flip_car_is_active"].fillna(0.) > 0
+            if "jump_is_active" in player_df.columns:
+                jumping = player_df["jump_is_active"].fillna(0.) > 0
+            else:
+                jumping = pd.Series(False, index=df.index)
+            if "dodge_is_active" in player_df.columns:
+                dodging = player_df["dodge_is_active"].fillna(0.) > 0
+            else:
+                dodging = pd.Series(False, index=df.index)
+            if "double_jump_is_active" in player_df.columns:
+                double_jumping = player_df["double_jump_is_active"].fillna(0.).diff() > 0
+            else:
+                double_jumping = pd.Series(False, index=df.index)
+            if "flip_car_is_active" in player_df.columns:
+                flipping_car = player_df["flip_car_is_active"].fillna(0.) > 0
+            else:
+                flipping_car = pd.Series(False, index=df.index)
 
             df.loc[jumping.diff() > 0, [f"{uid}/on_ground", f"{uid}/has_jump", f"{uid}/has_flip"]] = 1
             df.loc[double_jumping | dodging | flipping_car, f"{uid}/on_ground"] = 0
@@ -212,13 +262,14 @@ def to_rlgym_dfs(parsed_replay: Replay, lookup_table=None):
 
             controls[uid] = get_actions_from_player(player_df, game["delta"], lookup_table)
 
-            for frame, pos in player_df[player_df["boost_pickup"] > 0][["pos_x", "pos_y", "pos_z"]].iterrows():
-                boost_id = np.linalg.norm(boost_locations - pos.values, axis=-1).argmin()
-                time_inactive = 10 if boost_locations[boost_id][2] > 72 else 4
-                diff_time = game["time"] - game.loc[frame, "time"]
-                inactive_period = diff_time.between(0, time_inactive, inclusive="left")
-                df.loc[inactive_period, f"pad_{boost_id}"] = time_inactive - diff_time[inactive_period]
-                df.loc[frame:, f"{uid}/match_pickups"] += 1
+            if "boost_pickup" in player_df.columns:
+                for frame, pos in player_df[player_df["boost_pickup"] > 0][["pos_x", "pos_y", "pos_z"]].iterrows():
+                    boost_id = np.linalg.norm(boost_locations - pos.values, axis=-1).argmin()
+                    time_inactive = 10 if boost_locations[boost_id][2] > 72 else 4
+                    diff_time = game["time"] - game.loc[frame, "time"]
+                    inactive_period = diff_time.between(0, time_inactive, inclusive="left")
+                    df.loc[inactive_period, f"pad_{boost_id}"] = time_inactive - diff_time[inactive_period]
+                    df.loc[frame:, f"{uid}/match_pickups"] += 1
 
             demoed_diff = df[f"{uid}/is_demoed"].diff()
             for demo_frame, row in df[demoed_diff > 0].iterrows():
@@ -264,9 +315,28 @@ def to_rlgym_dfs(parsed_replay: Replay, lookup_table=None):
             yield gamestate_df, c
 
 
-def get_actions_from_player(player_df, deltas, lookup_table=None):
-    # For throttle and steer, it goes from 0 to 255, so we need to normalize it to -1 to 1. This should give
-    # the closest approximation except for the case of 127/128, which typically means 0 (127.5 rounded)
+def get_actions_from_player(player_df: pd.DataFrame, deltas, lookup_table=None):
+    if player_df.empty:
+        return np.zeros(len(deltas) if hasattr(deltas, '__len__') else 0, dtype=np.int64)
+
+    player_df = player_df.copy().reset_index(drop=True)
+
+    for col in ["jump_is_active", "dodge_is_active", "double_jump_is_active", "flip_car_is_active",
+                "boost_is_active", "dodge_torque_x", "dodge_torque_y", "dodge_torque_z"]:
+        if col not in player_df.columns:
+            if col.startswith("dodge_torque"):
+                player_df[col] = 0.0
+            else:
+                player_df[col] = 0.0 if "is_active" in col or "boost" in col else 0.0
+
+    for col in ["throttle", "steer", "handbrake"]:
+        if col not in player_df.columns:
+            player_df[col] = 127.5
+
+    for col in ["quat_w", "quat_x", "quat_y", "quat_z", "pos_x", "pos_y", "pos_z"]:
+        if col not in player_df.columns:
+            player_df[col] = 0.0
+
     throttle = player_df["throttle"].fillna(127.5) / 127.5 - 1
     throttle *= abs(throttle) > 0.01
     steer = player_df["steer"].fillna(127.5) / 127.5 - 1

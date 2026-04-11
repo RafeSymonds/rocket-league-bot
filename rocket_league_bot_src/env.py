@@ -108,8 +108,11 @@ class ProcessIterationLogger:
         self._last_exported_checkpoint = ""
         self.log_counter = 0
 
-        self.observation_space = env.observation_space
-        self.action_space = env.action_space
+        self._env_obs_space = env.observation_space
+        self._env_act_space = env.action_space
+        self._cached_action_space: Optional[object] = None
+        self._cached_obs_space: Optional[object] = None
+        self._spaces_resolved = False
 
         self._reset_iteration_stats()
         self._reset_episode_stats()
@@ -323,9 +326,58 @@ class ProcessIterationLogger:
         if state is not None:
             for agent, car in state.cars.items():
                 self._prev_touches[agent] = int(car.ball_touches)
+        self._resolve_spaces()
         return obs
 
+    def _resolve_spaces(self):
+        if self._spaces_resolved:
+            return
+        try:
+            action_spaces = getattr(self.env, 'action_spaces', {}) or {}
+            observation_spaces = getattr(self.env, 'observation_spaces', {}) or {}
+            if action_spaces:
+                first_act_info = list(action_spaces.values())[0]
+                act_space = first_act_info[0] if isinstance(first_act_info, tuple) else first_act_info
+                if hasattr(act_space, 'seed'):
+                    self._cached_action_space = act_space
+            if observation_spaces:
+                first_obs_info = list(observation_spaces.values())[0]
+                obs_space = first_obs_info[0] if isinstance(first_obs_info, tuple) else first_obs_info
+                if hasattr(obs_space, 'shape'):
+                    self._cached_obs_space = obs_space
+            self._spaces_resolved = True
+        except Exception:
+            pass
+
+    @property
+    def action_space(self):
+        if self._cached_action_space is not None:
+            return self._cached_action_space
+        return self._env_act_space
+
+    @property
+    def observation_space(self):
+        if self._cached_obs_space is not None:
+            return self._cached_obs_space
+        return self._env_obs_space
+
+    @property
+    def action_spaces(self):
+        return getattr(self.env, 'action_spaces', {})
+
+    @property
+    def observation_spaces(self):
+        return getattr(self.env, 'observation_spaces', {})
+
     def step(self, action):
+        if isinstance(action, np.ndarray):
+            agents = getattr(self.env, 'agents', []) or []
+            if agents and hasattr(self.env, 'action_space') and not hasattr(self.env.action_space, 'seed'):
+                action_dict = {}
+                for i, agent in enumerate(agents):
+                    if i < action.shape[0] if len(action.shape) > 1 else 1:
+                        action_dict[agent] = action[i] if len(action.shape) > 1 else action
+                action = action_dict
         result = self.env.step(action)
         if len(result) == 5:
             obs, reward, terminated, truncated, info = result
@@ -341,9 +393,20 @@ class ProcessIterationLogger:
         orange_rewards: list[float] = []
         if isinstance(reward, (list, tuple, np.ndarray)) and hasattr(
             self.env, "agent_map"
-        ):
+            ):
             for idx, rew in enumerate(reward):
                 agent_id = self.env.agent_map.get(idx)
+                if state is None:
+                    continue
+                car = state.cars.get(agent_id)
+                if car is None:
+                    continue
+                if car.is_orange:
+                    orange_rewards.append(float(rew))
+                else:
+                    blue_rewards.append(float(rew))
+        elif isinstance(reward, dict):
+            for agent_id, rew in reward.items():
                 if state is None:
                     continue
                 car = state.cars.get(agent_id)
