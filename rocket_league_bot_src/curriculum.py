@@ -309,7 +309,9 @@ class CurriculumManager:
             self._set_stage(Stage.SELF_PLAY)
 
     def _update_self_play(self, stats) -> None:
-        goal_skill = np.clip((stats.goal_rate - 0.02) / 0.16, 0.0, 1.0)
+        # Use blue (learner-side) goals only: stats.goal_rate counts goals by
+        # either team, so conceding would raise difficulty just like scoring.
+        goal_skill = np.clip((stats.blue_goal_rate - 0.02) / 0.16, 0.0, 1.0)
         touch_skill = np.clip((stats.touch_rate - 0.45) / 0.40, 0.0, 1.0)
         target_difficulty = 0.7 * goal_skill + 0.3 * touch_skill
         self.difficulty = self._smooth(

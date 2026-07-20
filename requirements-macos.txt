@@ -1,0 +1,18 @@
+certifi==2026.1.4
+cloudpickle==3.1.2
+gym==0.26.2
+gym-notices==0.0.8
+gymnasium==1.2.3
+numpy==1.26.4
+rlgym==2.0.1
+rlgym-api==2.0.0
+rlgym-ppo @ git+https://github.com/AechPro/rlgym-ppo@4ffd2e924198bf4b2d59f4bf280b29919d7c07ea
+rlgym-rocket-league==2.0.1
+rlgym-tools==2.6.0
+rocketsim==2.2.1
+# NOTE: never add earl-pytorch. Its wheel bundles stale rlgym/rlgym_tools
+# copies that overwrite the real 2.x packages on install.
+tensorboard==2.20.0
+torch==2.5.1
+tqdm==4.67.1
+wandb==0.24.0

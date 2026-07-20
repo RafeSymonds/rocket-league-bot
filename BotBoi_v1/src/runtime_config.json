@@ -1,5 +1,5 @@
 {
-  "action_dim": null,
+  "action_dim": 90,
   "action_repeat": 8,
   "checkpoint_dir": "data/checkpoints/rlgym-ppo-run-1775791456355543463/2000000",
   "critic_hidden_sizes": [
@@ -14,5 +14,6 @@
     512,
     512,
     256
-  ]
+  ],
+  "policy_type": "mlp"
 }

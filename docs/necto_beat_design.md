@@ -265,33 +265,24 @@ Actions (8 dims) embedded into query. Scoreboard (goal_diff, time_left, is_overt
 
 ### Current vs Necto's Parameters
 
-| Parameter | Ours | Necto | Recommendation |
+| Parameter | Ours (2026-07) | Necto | Notes |
 |-----------|------|-------|-----------------|
-| batch_size | 50,000 | 100,000 | Increase to 100k |
-| minibatch_size | 10,000 | 10,000 | Keep |
-| epochs | 3 | 30 | Increase to 20-30 |
-| gamma | 0.995 | 0.995 | Keep |
-| ent_coef | 0.003 | 0.01 | Increase to 0.01 |
-| policy_lr | 2.5e-4 | 1e-4 | Decrease to 1e-4 |
-| critic_lr | 2.5e-4 | 1e-4 | Decrease to 1e-4 |
+| batch_size | 100,000 | 100,000 | Matched |
+| minibatch_size | 20,000 | 10,000 | Fine either way |
+| epochs | 3 | 30 | Intentionally NOT matched - see below |
+| gamma | 0.995 | 0.995 | train.py previously never set gamma (silently ran rlgym-ppo's 0.99 default); now exposed via `--gamma` defaulting to 0.995 |
+| ent_coef | 0.005 | 0.01 | rlgym-ppo default; raise via `--ent-coef` if the policy collapses early |
+| policy_lr | 2.5e-4 | 1e-4 | Lower it late in training if updates get unstable |
+| critic_lr | 2.5e-4 | 1e-4 | Same |
 
-### Rationale
+### Correction (2026-07)
 
-- **More epochs**: With discrete actions and more complex observations, the policy needs more SGD passes to converge
-- **Higher entropy**: Prevents early collapse to suboptimal deterministic policies
-- **Lower learning rate**: More stable learning with larger batches and deeper networks
-- **Larger batch**: More stable gradients, better for complex policies
-
-### Implementation
-
-Update defaults in `train.py`:
-```python
-parser.add_argument("--ppo-batch-size", type=int, default=100_000)
-parser.add_argument("--ppo-epochs", type=int, default=25)
-parser.add_argument("--ent-coef", type=float, default=0.01)
-parser.add_argument("--policy-lr", type=float, default=1e-4)
-parser.add_argument("--critic-lr", type=float, default=1e-4)
-```
+The earlier recommendation to raise PPO epochs to 20-30 was wrong for this
+stack. Necto's 30 epochs came from rocket-learn's buffer semantics; rlgym-ppo
+already reuses old experience via `exp_buffer_size` (400k vs 100k batch = each
+sample seen ~4x across iterations), so 2-3 epochs per iteration is the correct
+range. 25 epochs on the same batch causes severe policy drift per iteration.
+`train.py --ppo-epochs` now defaults to 3, matching the launch wrappers.
 
 ---
 

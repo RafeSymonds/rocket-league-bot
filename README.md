@@ -60,13 +60,25 @@ The current rewrite pushes the setup toward:
 
 ## Setup
 
-Typical local setup:
+The `bin/` entrypoints prefer a repo-local `./env` virtualenv (Python 3.11).
+
+Linux (CUDA):
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+python3.11 -m venv env
+./env/bin/pip install -r requirements.txt
 ```
+
+macOS (CPU; the CUDA pins in `requirements.txt` do not install on macOS):
+
+```bash
+python3.11 -m venv env
+./env/bin/pip install -r requirements-macos.txt
+```
+
+Do not install `earl-pytorch` - its wheel bundles stale `rlgym`/`rlgym_tools`
+copies that overwrite the real 2.x packages. (The transformer track that once
+used it was removed in July 2026; the project is MLP-only.)
 
 Replay-download tooling uses a separate dependency file because `carball` does
 not install cleanly on Python 3.11. The replay scripts automatically prefer a
@@ -230,8 +242,25 @@ The `bin/` entrypoints now prefer the repo-local `./env/bin/python` automaticall
 ## Notes
 
 - `watch.py` now discovers the latest checkpoint instead of using a hardcoded run path.
-- Training uses `RepeatAction(LookupTableAction(), repeats=8)` to match common RLGym practice more closely than the old `repeats=2`.
-- The observation contract now includes angular velocity and core car-state flags inspired by the standard RLGym observation builder. This changed `OBS_DIM`, so older checkpoints are intentionally incompatible with current training.
+- Training uses an 8-tick action repeat. With discrete actions this is
+  `RepeatAction(NectoAction(), repeats=8)`; previously the bare `NectoAction`
+  stepped the engine one tick per decision (120Hz), which did not match the
+  documented design or the deployed bot's cadence.
+- Observation standardization is OFF for new runs (`standardize_obs=False`):
+  `SharedObs` already normalizes features, and rlgym-ppo's runtime
+  standardization was a silent train/deploy mismatch - the in-game bot and
+  `watch.py` fed raw observations to policies trained on standardized ones.
+  Old checkpoints carry `obs_running_stats` in their book; `bot.py`,
+  `watch.py`, and the frozen-opponent/eval paths now detect that and apply
+  rlgym-ppo's exact transform, so both old and new checkpoints replay
+  faithfully.
+- The per-step reward clip is a +-40 safety net. It was +-5, which flattened
+  every goal (weighted 6-26) to the clip value and let accumulated dense
+  shaping outweigh scoring.
+- `--gamma` now defaults to 0.995 (~13s credit horizon at 15Hz decisions);
+  gamma was previously unset and silently ran at 0.99.
+- The observation contract now includes angular velocity and core car-state flags inspired by the standard RLGym observation builder, plus 34 boost-pad availability features (`OBS_DIM=88`). Pad features use the engine's pad order, reversed for orange (field mirror); `BotBoi_v1/src/bot.py` bakes the same order and maps RLBot's pads onto it. Any `OBS_DIM` change is a fresh-training boundary, so older checkpoints are intentionally incompatible with current training.
+- Curriculum advancement now aggregates episode stats from every worker process (`data/curriculum_stats/proc_*.json`) instead of gating on worker 0's slice alone.
 - Observation compatibility still matters. If you change `rocket_league_bot_src/obs.py`, review `BotBoi_v1/src/bot.py` as well.
 - Later competitive stages now include a small dense attack-pressure shaping term so the bot gets credit for creating faster, more dangerous shots before sparse goal events arrive. Goals still dominate the reward mix.
 - `DUEL` and `SELF_PLAY` now use competitive shaping, so non-goal reward is scored relative to the opponent team instead of being added symmetrically for both sides.
@@ -247,4 +276,4 @@ The `bin/` entrypoints now prefer the repo-local `./env/bin/python` automaticall
 
 ## Further Reading
 
-Project-specific training notes are in [docs/training.md](/home/rafe/games/rocket-league-bot/docs/training.md).
+Project-specific training notes are in [docs/training.md](docs/training.md).

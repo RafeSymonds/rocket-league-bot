@@ -5,22 +5,18 @@ from enum import Enum
 
 
 ACTION_REPEAT = 8
-OBS_DIM = 54
-NUM_DISCRETE_ACTIONS = 124
+# 54 base features + 34 boost pad availability features. Changing this is a
+# fresh-training boundary (checkpoints trained on other sizes cannot resume).
+OBS_DIM = 88
+NUM_BOOST_PADS = 34
+# Size of the Necto-style lookup table built by NectoAction.make_lookup_table():
+# 24 ground combos + 66 aerial combos after invalid-combo filtering.
+NUM_DISCRETE_ACTIONS = 90
 POLICY_LAYER_SIZES = (512, 512, 256)
 CRITIC_LAYER_SIZES = (512, 512, 256)
 DEFAULT_CHECKPOINT_ROOT = "data/checkpoints"
 
 USE_DISCRETE_ACTIONS = True
-
-EARL_EMBED_DIM = 256
-EARL_NUM_HEADS = 4
-EARL_NUM_LAYERS = 8
-EARL_QUERY_FEATURES = 36
-EARL_KV_FEATURES = 55
-NUM_BOOSTS = 34
-MAX_PLAYERS = 6
-EARL_ENTITY_COUNT = 1 + MAX_PLAYERS + NUM_BOOSTS
 
 
 class Stage(Enum):

@@ -1,10 +1,10 @@
 """
-Discrete action parser matching Necto's 124-action space.
+Discrete action parser matching Necto's 90-action space.
 
-Ground actions (54 combos): throttle {-1, 0, 1} x steer {-1, 0, 1} x boost {0, 1} x handbrake {0, 1}
-Aerial actions (70 combos): pitch {-1, 0, 1} x yaw {-1, 0, 1} x roll {-1, 0, 1} x jump {0, 1} x boost {0, 1}
+Ground actions (24 combos): throttle {-1, 0, 1} x steer {-1, 0, 1} x boost {0, 1} x handbrake {0, 1}
+Aerial actions (66 combos): pitch {-1, 0, 1} x yaw {-1, 0, 1} x roll {-1, 0, 1} x jump {0, 1} x boost {0, 1}
 
-Invalid combos filtered (e.g., boost without throttle).
+Invalid combos filtered (e.g., boost without throttle), leaving 90 total actions.
 """
 
 from __future__ import annotations
@@ -19,9 +19,9 @@ from rlgym.rocket_league.api import GameState
 
 class NectoAction(ActionParser[AgentID, np.ndarray, np.ndarray, GameState, tuple[str, int]]):
     """
-    Discrete action parser with 124 actions:
-    - 54 ground actions (throttle/steer/boost/handbrake combos)
-    - 70 aerial actions (pitch/yaw/roll/jump/boost combos)
+    Discrete action parser with 90 actions:
+    - 24 ground actions (throttle/steer/boost/handbrake combos)
+    - 66 aerial actions (pitch/yaw/roll/jump/boost combos)
     """
 
     def __init__(self):
@@ -30,7 +30,7 @@ class NectoAction(ActionParser[AgentID, np.ndarray, np.ndarray, GameState, tuple
 
     @staticmethod
     def make_lookup_table() -> np.ndarray:
-        """Build the 124-action lookup table."""
+        """Build the 90-action lookup table."""
         actions = []
 
         # Ground actions
@@ -128,7 +128,7 @@ def test_action_parser():
     table = ap.get_lookup_table()
     print(f"Lookup table shape: {table.shape}")
     print(f"Action space: {ap.get_action_space('agent')}")
-    print(f"Ground actions: 54, Aerial actions: 70, Total: {len(table)}")
+    print(f"Ground actions: 24, Aerial actions: 66, Total: {len(table)}")
 
     test_action = np.array([0, 1, 2, 3])
     parsed = ap.parse_actions({"agent": test_action}, None, {})

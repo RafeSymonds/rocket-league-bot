@@ -9,7 +9,7 @@ from rlgym.api import AgentID, ObsBuilder
 from rlgym.rocket_league import common_values
 from rlgym.rocket_league.api import GameState
 
-from .config import OBS_DIM
+from .config import NUM_BOOST_PADS, OBS_DIM
 
 
 class SharedObs(ObsBuilder):
@@ -125,6 +125,24 @@ class SharedObs(ObsBuilder):
                     opp_rel_vel = other_phys.linear_velocity - car_phys.linear_velocity
                     to_opp_dir, to_opp_dist = self._dir_dist(rel_pos)
 
+            # Boost pad availability, 1.0 = up now, 0.0 = just-taken big pad.
+            # Timers count down to respawn in the engine's pad order; the
+            # inverted array reverses the order, which mirrors the field for
+            # orange so index k means the same field-relative pad for both
+            # teams. Pad order comes from RocketSim; BotBoi_v1/src/bot.py
+            # bakes the same order and must stay in sync.
+            pad_timers = np.asarray(
+                state.inverted_boost_pad_timers
+                if car.is_orange
+                else state.boost_pad_timers,
+                dtype=np.float32,
+            )
+            if pad_timers.shape != (NUM_BOOST_PADS,):
+                raise ValueError(
+                    f"Expected {NUM_BOOST_PADS} boost pad timers, got {pad_timers.shape}"
+                )
+            pad_avail = 1.0 - np.clip(pad_timers / 10.0, 0.0, 1.0)
+
             vec = np.concatenate(
                 [
                     forward,  # 3
@@ -155,6 +173,7 @@ class SharedObs(ObsBuilder):
                     opp_rel_vel * self.car_vel_coef,  # 3
                     to_opp_dir,  # 3
                     np.array([to_opp_dist * self.dist_coef], np.float32),  # 1
+                    pad_avail,  # 34
                 ],
                 dtype=np.float32,
             )

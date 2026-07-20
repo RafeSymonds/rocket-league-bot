@@ -5,7 +5,11 @@ import torch
 
 from rlgym_ppo import Learner
 
-from rocket_league_bot_src.checkpoints import find_latest_checkpoint
+from rocket_league_bot_src.checkpoints import (
+    find_latest_checkpoint,
+    load_obs_standardizer,
+    standardize_obs,
+)
 from rocket_league_bot_src.config import (
     CRITIC_LAYER_SIZES,
     DEFAULT_CHECKPOINT_ROOT,
@@ -36,12 +40,19 @@ def main():
 
     learner.load(RUN_FOLDER, load_wandb=False)
 
+    # Checkpoints trained with rlgym-ppo's standardize_obs carry running stats
+    # in their book; the policy must see the same transform at replay time.
+    standardizer = load_obs_standardizer(RUN_FOLDER)
+
     obs = env.reset()
 
     while True:
         actions = []
         with torch.no_grad():
             for agent_obs in obs:
+                agent_obs = standardize_obs(
+                    np.asarray(agent_obs, dtype=np.float32), standardizer
+                )
                 action, _ = learner.ppo_learner.policy.get_action(
                     agent_obs, deterministic=True
                 )

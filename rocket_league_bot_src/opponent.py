@@ -10,7 +10,7 @@ import torch
 
 from rlgym_ppo.ppo.discrete_policy import DiscreteFF
 
-from .checkpoints import load_checkpoint_book
+from .checkpoints import load_checkpoint_book, load_obs_standardizer, standardize_obs
 from .config import OBS_DIM, POLICY_LAYER_SIZES
 
 
@@ -20,8 +20,7 @@ class FrozenOpponentPolicy:
         self.deterministic = deterministic
         self._checkpoint_dir = ""
         self._policy: DiscreteFF | None = None
-        self._obs_mean = np.zeros(OBS_DIM, dtype=np.float32)
-        self._obs_std = np.ones(OBS_DIM, dtype=np.float32)
+        self._standardizer: tuple[float, float] | None = None
         self._n_actions = 90
 
     @staticmethod
@@ -58,22 +57,9 @@ class FrozenOpponentPolicy:
         policy.load_state_dict(state)
         policy.eval()
 
-        stats = book.get("obs_running_stats")
-        if isinstance(stats, dict):
-            mean = np.asarray(stats.get("mean", []), dtype=np.float32)
-            var = np.asarray(stats.get("var", []), dtype=np.float32)
-            count = int(stats.get("count", 0))
-            if count >= 2 and mean.shape == (OBS_DIM,) and var.shape == (OBS_DIM,):
-                variance = var / max(1, count - 1)
-                variance = np.where(variance == 0, 1.0, variance)
-                self._obs_mean = mean
-                self._obs_std = np.sqrt(variance).astype(np.float32)
-            else:
-                self._obs_mean = np.zeros(OBS_DIM, dtype=np.float32)
-                self._obs_std = np.ones(OBS_DIM, dtype=np.float32)
-        else:
-            self._obs_mean = np.zeros(OBS_DIM, dtype=np.float32)
-            self._obs_std = np.ones(OBS_DIM, dtype=np.float32)
+        # Matches rlgym-ppo's actual (scalar) obs standardization; None for
+        # checkpoints trained with standardize_obs off.
+        self._standardizer = load_obs_standardizer(checkpoint_dir)
 
         self._policy = policy
         self._checkpoint_dir = checkpoint_dir
@@ -81,14 +67,13 @@ class FrozenOpponentPolicy:
     def clear(self) -> None:
         self._checkpoint_dir = ""
         self._policy = None
-        self._obs_mean = np.zeros(OBS_DIM, dtype=np.float32)
-        self._obs_std = np.ones(OBS_DIM, dtype=np.float32)
+        self._standardizer = None
 
     def act(self, obs: np.ndarray) -> int:
         if self._policy is None:
             raise RuntimeError("Frozen opponent policy was not loaded")
         obs = np.asarray(obs, dtype=np.float32)
-        obs = (obs - self._obs_mean) / self._obs_std
+        obs = standardize_obs(obs, self._standardizer)
         with torch.no_grad():
             action, _ = self._policy.get_action(obs.reshape(1, -1), deterministic=self.deterministic)
         return int(np.asarray(action).reshape(-1)[0])

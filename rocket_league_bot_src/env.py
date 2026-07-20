@@ -429,10 +429,12 @@ class ProcessIterationLogger:
             if self.ep_goal_step != -1:
                 self.iteration_goals += 1
                 self.iteration_median_t_goal.append(self.ep_goal_step)
-                if state is not None and int(state.scoring_team) == 0:
+                # Use the flags captured at the goal step: in full-match play the
+                # episode ends on a no-goal tick where state.scoring_team is None.
+                if self.ep_blue_goal_step != -1:
                     self.iteration_blue_goals += 1
                     self.iteration_blue_median_t_goal.append(self.ep_blue_goal_step)
-                elif state is not None and int(state.scoring_team) == 1:
+                elif self.ep_orange_goal_step != -1:
                     self.iteration_orange_goals += 1
                     self.iteration_orange_median_t_goal.append(self.ep_orange_goal_step)
 
@@ -592,7 +594,30 @@ class ProcessIterationLogger:
             goal_side_rate=goal_side_rate,
             behind_ball_rate=behind_ball_rate,
         )
+        # Every worker publishes its raw iteration aggregates so curriculum
+        # decisions can use all collected data instead of only worker 0's
+        # 1/n_proc slice, which made stage gates fire on noisy estimates.
+        self._write_worker_stats(
+            {
+                "time": time.time(),
+                "episodes": int(self.iteration_episodes),
+                "touch_eps": int(self.iteration_success_eps),
+                "goals": int(self.iteration_goals),
+                "blue_goals": int(self.iteration_blue_goals),
+                "orange_goals": int(self.iteration_orange_goals),
+                "aerial_eps": int(self.iteration_blue_aerial_touch_eps),
+                "t_first": [float(x) for x in self.iteration_median_t_first],
+                "t_goal": [float(x) for x in self.iteration_median_t_goal],
+                "goal_side": [float(x) for x in self.iteration_goal_side_rates],
+                "behind_ball": [float(x) for x in self.iteration_behind_ball_rates],
+            }
+        )
         if self.pid == 0:
+            aggregated = self._aggregate_worker_stats(
+                max_age_s=max(3.0 * duration, 120.0)
+            )
+            if aggregated is not None and aggregated["episodes"] > 0:
+                stats = self._stats_from_aggregate(aggregated)
             self.cm.maybe_advance(stats)
             self._write_curriculum_state()
             self._write_opponent_state(
@@ -604,6 +629,81 @@ class ProcessIterationLogger:
         self._maybe_register_league_snapshot()
         self._maybe_auto_export_latest_checkpoint()
         self._reset_iteration_stats()
+
+    _WORKER_STATS_DIR = Path("data") / "curriculum_stats"
+
+    def _write_worker_stats(self, payload: dict) -> None:
+        try:
+            self._WORKER_STATS_DIR.mkdir(parents=True, exist_ok=True)
+            path = self._WORKER_STATS_DIR / f"proc_{self.pid:03d}.json"
+            tmp = path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(payload))
+            tmp.replace(path)
+        except Exception as exc:
+            print(f"[P-{self.pid:02d}] failed to write worker stats: {exc}")
+
+    def _aggregate_worker_stats(self, max_age_s: float) -> dict | None:
+        try:
+            files = sorted(self._WORKER_STATS_DIR.glob("proc_*.json"))
+        except Exception:
+            return None
+        if not files:
+            return None
+        now = time.time()
+        agg: dict = {
+            "episodes": 0,
+            "touch_eps": 0,
+            "goals": 0,
+            "blue_goals": 0,
+            "orange_goals": 0,
+            "aerial_eps": 0,
+            "t_first": [],
+            "t_goal": [],
+            "goal_side": [],
+            "behind_ball": [],
+        }
+        for f in files:
+            try:
+                payload = json.loads(f.read_text())
+            except Exception:
+                continue
+            if now - float(payload.get("time", 0.0)) > max_age_s:
+                continue
+            for key in (
+                "episodes",
+                "touch_eps",
+                "goals",
+                "blue_goals",
+                "orange_goals",
+                "aerial_eps",
+            ):
+                agg[key] += int(payload.get(key, 0))
+            for key in ("t_first", "t_goal", "goal_side", "behind_ball"):
+                agg[key].extend(float(x) for x in payload.get(key, []))
+        return agg
+
+    @staticmethod
+    def _stats_from_aggregate(agg: dict) -> Stats:
+        eps = max(1, int(agg["episodes"]))
+        return Stats(
+            touch_rate=agg["touch_eps"] / eps,
+            goal_rate=agg["goals"] / eps,
+            blue_goal_rate=agg["blue_goals"] / eps,
+            orange_goal_rate=agg["orange_goals"] / eps,
+            median_t_first=(
+                float(np.median(agg["t_first"])) if agg["t_first"] else 9999.0
+            ),
+            median_t_goal=(
+                float(np.median(agg["t_goal"])) if agg["t_goal"] else 9999.0
+            ),
+            aerial_touch_rate=agg["aerial_eps"] / eps,
+            goal_side_rate=(
+                float(np.mean(agg["goal_side"])) if agg["goal_side"] else 0.0
+            ),
+            behind_ball_rate=(
+                float(np.mean(agg["behind_ball"])) if agg["behind_ball"] else 0.0
+            ),
+        )
 
     def _sync_curriculum_state(self) -> None:
         path = Path(self.curriculum_state_path)
@@ -827,6 +927,13 @@ class EnvBuilder:
         Path(self.curriculum_state_path).write_text(
             json.dumps(self.curriculum_manager.to_dict(), indent=2, sort_keys=True)
         )
+        # Drop worker stat files from previous runs so curriculum aggregation
+        # never mixes in stale data.
+        for stale in ProcessIterationLogger._WORKER_STATS_DIR.glob("proc_*.json"):
+            try:
+                stale.unlink()
+            except OSError:
+                pass
 
     def __call__(self, process_id: int | None = None):
         if process_id is None:
@@ -836,7 +943,9 @@ class EnvBuilder:
         curriculum_manager = self.curriculum_manager
 
         if self.use_discrete_actions:
-            action_parser = NectoAction()
+            # RepeatAction emulates tick skip; the raw engine runs one tick per
+            # action row, so a bare NectoAction would step at 120Hz decisions.
+            action_parser = RepeatAction(NectoAction(), repeats=ACTION_REPEAT)
         else:
             action_parser = RepeatAction(LookupTableAction(), repeats=ACTION_REPEAT)
 

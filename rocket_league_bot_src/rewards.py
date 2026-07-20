@@ -568,23 +568,25 @@ class WinProbReward(RewardFunction):
     def reset(self, agents, initial_state, shared_info):
         self.prev_win_prob = {agent: 0.5 for agent in agents}
 
-    def _estimate_win_prob(self, state: GameState, agent: AgentID) -> float:
+    def _estimate_win_prob(self, state: GameState, agent: AgentID, shared_info) -> float:
         """
         Estimate win probability for an agent's team.
         Returns value > 0.5 if agent's team is favored, < 0.5 if opponent is favored.
+
+        Score and clock live on the rlgym-tools ScoreboardInfo in shared_info,
+        not on the rlgym 2.x GameState; without a scoreboard provider this term
+        degrades to ball-position advantage only.
         """
         car = state.cars[agent]
         is_orange = bool(car.is_orange)
 
-        blue_score = int(state.blue_score)
-        orange_score = int(state.orange_score)
-        time_remaining = (
-            float(state.game_time_remaining)
-            if hasattr(state, "game_time_remaining")
-            and state.game_time_remaining is not None
-            else 300.0
-        )
-        is_overtime = time_remaining < 0
+        scoreboard = (shared_info or {}).get("scoreboard")
+        blue_score = int(getattr(scoreboard, "blue_score", 0) or 0)
+        orange_score = int(getattr(scoreboard, "orange_score", 0) or 0)
+        time_remaining = float(getattr(scoreboard, "game_timer_seconds", 300.0))
+        is_overtime = bool(np.isinf(time_remaining))
+        if is_overtime or not np.isfinite(time_remaining):
+            time_remaining = 0.0
 
         score_diff = blue_score - orange_score
         if is_orange:
@@ -623,7 +625,7 @@ class WinProbReward(RewardFunction):
         rewards: Dict[AgentID, float] = {}
 
         for agent in agents:
-            current_win_prob = self._estimate_win_prob(state, agent)
+            current_win_prob = self._estimate_win_prob(state, agent, shared_info)
             prev_win_prob = self.prev_win_prob.get(agent, 0.5)
 
             reward = current_win_prob - prev_win_prob
@@ -693,11 +695,15 @@ class CurriculumReward(RewardFunction):
         def add(
             source: RewardFunction, weight: float, *, is_goal: bool = False
         ) -> None:
-            if weight == 0.0:
-                return
+            # Always evaluate the source so stateful terms (prev touches, prev
+            # ball speed, ...) keep their bookkeeping fresh even while their
+            # weight is 0; otherwise a mid-episode stage change that enables a
+            # term compares against stale state and emits a spurious reward.
             values = source.get_rewards(
                 agents, state, is_terminated, is_truncated, shared_info
             )
+            if weight == 0.0:
+                return
             for agent in agents:
                 weighted = float(weight) * float(values[agent])
                 if is_goal:
@@ -755,6 +761,9 @@ class CurriculumReward(RewardFunction):
             for agent in agents:
                 rewards[agent] += shaping_rewards[agent]
 
+        # Safety net only: must stay above the largest goal weight (26 in
+        # SELF_PLAY) or goals get flattened to the clip value and cumulative
+        # dense shaping outweighs scoring.
         for agent in agents:
-            rewards[agent] = float(np.clip(rewards[agent], -5.0, 5.0))
+            rewards[agent] = float(np.clip(rewards[agent], -40.0, 40.0))
         return rewards

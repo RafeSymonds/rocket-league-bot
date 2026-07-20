@@ -210,3 +210,6 @@ __marimo__/
 # MINE
 
 runs/
+
+# Committed by accident: rebuilt by bin/setup_replay_env
+replay-env/

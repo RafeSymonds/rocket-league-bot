@@ -64,6 +64,9 @@ def _attach_curriculum_checkpoint_hook(
         except Exception:
             return
         book["curriculum_state"] = env_builder.curriculum_manager.to_dict()
+        # With standardize_obs off the book no longer carries obs_running_stats,
+        # so record the obs contract explicitly for compatibility checks.
+        book["obs_dim"] = int(OBS_DIM)
         book_path.write_text(json.dumps(book, indent=4))
 
     learner.save = save_with_curriculum
@@ -78,10 +81,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ts-per-iteration", type=int, default=50_000)
     parser.add_argument("--ppo-batch-size", type=int, default=100_000)
     parser.add_argument("--ppo-minibatch-size", type=int, default=10_000)
-    parser.add_argument("--ppo-epochs", type=int, default=25)
+    parser.add_argument("--ppo-epochs", type=int, default=3)
     parser.add_argument("--policy-lr", type=float, default=1e-4)
     parser.add_argument("--critic-lr", type=float, default=1e-4)
-    parser.add_argument("--ent-coef", type=float, default=0.01)
+    parser.add_argument("--ent-coef", type=float, default=0.005)
+    parser.add_argument(
+        "--gamma",
+        type=float,
+        default=0.995,
+        help="Discount factor; at 8-tick steps (15Hz) 0.995 gives a ~13s horizon",
+    )
+    parser.add_argument("--gae-lambda", type=float, default=0.95)
     parser.add_argument("--exp-buffer-size", type=int, default=200_000)
     parser.add_argument("--save-every-ts", type=int, default=2_000_000)
     parser.add_argument("--timestep-limit", type=int, default=1_000_000_000)
@@ -216,11 +226,18 @@ def main():
         ppo_minibatch_size=int(args.ppo_minibatch_size),
         ppo_epochs=int(args.ppo_epochs),
         ppo_ent_coef=float(args.ent_coef),
+        gae_gamma=float(args.gamma),
+        gae_lambda=float(args.gae_lambda),
         policy_lr=float(args.policy_lr),
         critic_lr=float(args.critic_lr),
         ts_per_iteration=int(args.ts_per_iteration),
         exp_buffer_size=int(args.exp_buffer_size),
         timestep_limit=int(args.timestep_limit),
+        # Obs are already hand-normalized in SharedObs. rlgym-ppo's runtime
+        # standardization is a train/deploy trap: the deployed RLBot runtime
+        # would have to replicate its exact (quirky, scalar) transform or see
+        # differently-scaled inputs than training. Keep it off.
+        standardize_obs=False,
         log_to_wandb=False,
         save_every_ts=int(args.save_every_ts),
         checkpoint_load_folder=None,

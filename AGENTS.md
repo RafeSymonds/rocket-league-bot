@@ -27,19 +27,20 @@ The main code paths are:
 
 ## Setup
 
-This repo currently exposes Python dependencies only via `requirements.txt`.
-
-Typical setup:
+Dependencies live in `requirements.txt` (Linux/CUDA) and
+`requirements-macos.txt` (macOS/CPU; the NVIDIA pins do not install there).
+The `bin/` entrypoints prefer a repo-local `./env` (Python 3.11).
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+python3.11 -m venv env
+./env/bin/pip install -r requirements.txt        # Linux
+./env/bin/pip install -r requirements-macos.txt  # macOS
 ```
 
 Notes:
 
-- `requirements.txt` includes GPU-oriented PyTorch/NVIDIA packages and a git dependency on `rlgym-ppo`.
+- `requirements.txt` includes GPU-oriented PyTorch/NVIDIA packages and a git dependency on `rlgym-ppo` (the canonical `AechPro/rlgym-ppo`; the old `Aech-Pro` fork was deleted).
+- Never add `earl-pytorch` as a dependency; see the Architecture Decision section.
 - Full-match `1v1` training uses `rlgym-tools`.
 - Replay download/parsing dependencies live in `requirements-replay.txt`; use a Python 3.10 env for that path because `carball` does not install cleanly on Python 3.11.
 - `bin/setup_replay_env` creates `./replay-env`, and replay scripts should prefer that env automatically when present.
@@ -110,51 +111,24 @@ bin/validate_rlbot_package
 
 The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall back to `python3` when that local env is missing.
 
-## Transformer Architecture (Necto-style)
+## Architecture Decision: MLP Only (2026-07)
 
-This repo now supports a transformer-based observation processing architecture inspired by Necto. This uses the EARLPerceiver architecture instead of a standard MLP for processing observations.
+The Necto-style EARLPerceiver transformer track was removed in July 2026. The
+project is MLP-only: flat 54-dim observations (`obs.py`), a (512, 512, 256)
+policy/critic, and the 90-action discrete lookup table (`action_parser.py`).
+`policy_type` in checkpoint books and `runtime_config.json` is always `"mlp"`.
 
-### Architecture Overview
+Rationale: this is a 1v1-only project on a single training machine. The
+transformer's advantages (permutation invariance over players, variable team
+sizes) do not apply at 1v1, and its rollout-inference cost was measured ~35x
+slower than the MLP path. If the transformer is revisited, the sensible route
+is replay behavior-cloning (see `reply-training/`, Rolv's replay-pretraining
+pipeline) rather than RL from scratch, and the deleted broken implementation
+is at commit ba6669c for reference only - it had fatal bugs throughout.
 
-- **EARLPerceiver**: A transformer-style attention mechanism that processes entity-based observations
-- **Query (Q)**: Player state + previous actions + goal info (36 dims)
-- **Key-Value (KV)**: All entities (ball + 34 boosts + opponents) with position/velocity/state features
-- **Attention**: Dynamically focuses on relevant entities rather than processing a flat vector
-
-### Transformer Components
-
-- `rocket_league_bot_src/obs_transformer.py`: QKV-based observation builder
-- `rocket_league_bot_src/transformer_policy.py`: TransformerPolicy with EARLPerceiver + ControlsPredictorDot
-- `train_transformer.py`: PPO training script for transformer-based policies
-
-### Configuration (in `config.py`)
-
-```python
-EARL_EMBED_DIM = 256      # Output embedding dimension
-EARL_NUM_HEADS = 4        # Attention heads
-EARL_NUM_LAYERS = 8       # Transformer layers
-EARL_QUERY_FEATURES = 36  # Player query vector size
-EARL_KV_FEATURES = 55     # Entity features (type + pos/vel + state)
-```
-
-### Training Transformer
-
-```bash
-python3 train_transformer.py --n-proc 1 --lr 3e-4 --n-steps 512
-```
-
-### Key Differences from MLP
-
-| Aspect | MLP (Original) | Transformer (EARLPerceiver) |
-|--------|----------------|----------------------------|
-| Architecture | Flat MLP (512, 512, 256) | Attention over entities |
-| Entity Processing | Only closest opponent | All opponents + boosts |
-| Information Flow | Fixed 54-dim observation | Dynamic QKV attention |
-| Relationship Reasoning | Limited to hand-crafted features | Learns entity relationships |
-
-### Fresh Training Boundary
-
-The transformer architecture is a **fresh-training boundary** - existing MLP checkpoints cannot be used with the transformer and vice versa. Set `policy_type` in runtime_config to `"transformer"` or `"mlp"` to distinguish.
+Never add `earl-pytorch` as a dependency, even for experiments: its PyPI wheel
+bundles stale copies of `rlgym` and `rlgym_tools` that overwrite the real 2.x
+packages at install time and silently break the training environment.
 
 ## Repo Map
 
@@ -190,6 +164,7 @@ The transformer architecture is a **fresh-training boundary** - existing MLP che
 
 - Observation construction. Changes here can break compatibility with saved/exported policies.
 - The current observation set now includes angular velocities and a few core car-state flags inspired by RLGym's default observation builder, not just positions and linear velocities.
+- OBS_DIM is 88: 54 base features + 34 boost-pad availability features read from `state.boost_pad_timers` (inverted array for orange). The pad order is RocketSim's engine order, NOT `common_values.BOOST_LOCATIONS` (the rlgym docstring is wrong about that); `BotBoi_v1/src/bot.py` bakes the same order into `PAD_LOCATIONS` and must stay in sync.
 
 `rocket_league_bot_src/mutators.py`
 
@@ -263,6 +238,8 @@ There is no formal test suite in the repo at the moment. Use lightweight validat
 - `watch.py` auto-discovers the latest checkpoint. If it fails, inspect checkpoint discovery before hardcoding paths.
 - `bin/stats` launches TensorBoard against `runs`. Confirm that path still matches actual logging output before changing monitoring workflows.
 - `train.py` defaults to `--resume-latest`, so be careful not to accidentally continue from an incompatible checkpoint after architecture changes.
+- Keep `standardize_obs=False` in `train.py`. If it is ever turned back on, every replay consumer (`BotBoi_v1/src/bot.py`, `watch.py`, `opponent.py`, `eval.py`) must apply rlgym-ppo's exact obs transform - it standardizes every feature by feature 0's scalar running mean/std and clips to [-5, 5] (see `checkpoints.load_obs_standardizer`). Feeding raw obs to a standardized-obs policy was a major silent deploy bug.
+- The final reward clip in `rewards.py` must stay above the largest goal weight (currently 26), or goals get flattened and dense shaping dominates.
 - Training `goal_rate` is not enough to prove the bot is stronger. Use eval against fixed older checkpoints before concluding that self-play is working.
 - `bin/serve_training_report` and `bin/progress_dashboard` can auto-run eval and materially reduce training throughput if they share the same machine.
 - `BotBoi_v1/src/runtime_config.json` is part of the training/runtime contract. If export metadata changes, update the RLBot runtime loader too.

@@ -511,11 +511,12 @@ class ScenarioResetMutator(StateMutator):
         defenders = blue if defend_blue_side else orange
         attackers = orange if defend_blue_side else blue
         if defenders:
-            defender_goal = np.array([0.0, goal_y, 0.0], dtype=np.float32)
+            # Goal-side: between the ball and the defended goal (goal is at
+            # sign * BACK_NET_Y), matching the duel-reset convention.
             defender_pos = np.array(
                 [
                     np.clip(pos[0] + np.random.uniform(-200.0, 200.0), -1800.0, 1800.0),
-                    pos[1] - sign * np.random.uniform(320.0, 620.0),
+                    pos[1] + sign * np.random.uniform(320.0, 620.0),
                     17.0,
                 ],
                 dtype=np.float32,
@@ -528,10 +529,11 @@ class ScenarioResetMutator(StateMutator):
                 boost=np.random.uniform(12.0, 35.0),
             )
         if attackers:
+            # Field-side: approaching from midfield behind the shot.
             attacker_pos = np.array(
                 [
                     np.clip(pos[0] + np.random.uniform(-220.0, 220.0), -2000.0, 2000.0),
-                    pos[1] + sign * np.random.uniform(420.0, 860.0),
+                    pos[1] - sign * np.random.uniform(420.0, 860.0),
                     17.0,
                 ],
                 dtype=np.float32,
@@ -539,7 +541,7 @@ class ScenarioResetMutator(StateMutator):
             self._set_car(
                 attackers[0],
                 attacker_pos,
-                self._yaw_toward(attacker_pos, defender_goal),
+                self._yaw_toward(attacker_pos, threatened_goal),
                 velocity=to_goal * np.random.uniform(420.0, 980.0),
                 boost=np.random.uniform(35.0, 80.0),
             )
@@ -550,7 +552,8 @@ class ScenarioResetMutator(StateMutator):
         target_goal_y = (
             common_values.BACK_NET_Y if attack_blue else -common_values.BACK_NET_Y
         )
-        defend_goal_y = -target_goal_y
+        # The defender guards the goal the attacker is shooting at.
+        defend_goal_y = target_goal_y
         ball_pos = np.array(
             [
                 np.random.uniform(-1400.0, 1400.0),
@@ -598,7 +601,7 @@ class ScenarioResetMutator(StateMutator):
                     np.clip(
                         ball_pos[0] + np.random.uniform(-280.0, 280.0), -2200.0, 2200.0
                     ),
-                    ball_pos[1] - sign * np.random.uniform(900.0, 1500.0),
+                    ball_pos[1] + sign * np.random.uniform(900.0, 1500.0),
                     17.0,
                 ],
                 dtype=np.float32,
@@ -713,7 +716,7 @@ class ScenarioResetMutator(StateMutator):
                     ball_pos[0] + np.random.uniform(-250.0, 250.0), -2200.0, 2200.0
                 ),
                 ball_pos[1]
-                + (-1.0 if attack_blue else 1.0) * np.random.uniform(450.0, 900.0),
+                + (1.0 if attack_blue else -1.0) * np.random.uniform(450.0, 900.0),
                 17.0,
             ],
             dtype=np.float32,
@@ -730,7 +733,7 @@ class ScenarioResetMutator(StateMutator):
                     ball_pos[0] + np.random.uniform(-350.0, 350.0), -2600.0, 2600.0
                 ),
                 ball_pos[1]
-                + (1.0 if attack_blue else -1.0) * np.random.uniform(700.0, 1300.0),
+                + (-1.0 if attack_blue else 1.0) * np.random.uniform(700.0, 1300.0),
                 17.0,
             ],
             dtype=np.float32,
@@ -759,7 +762,7 @@ class ScenarioResetMutator(StateMutator):
                     np.clip(
                         ball_pos[0] + np.random.uniform(-120.0, 120.0), -1600.0, 1600.0
                     ),
-                    ball_pos[1] - sign * np.random.uniform(220.0, 420.0),
+                    ball_pos[1] + sign * np.random.uniform(220.0, 420.0),
                     17.0,
                 ],
                 dtype=np.float32,
@@ -777,7 +780,7 @@ class ScenarioResetMutator(StateMutator):
                     np.clip(
                         ball_pos[0] + np.random.uniform(-180.0, 180.0), -1800.0, 1800.0
                     ),
-                    ball_pos[1] + sign * np.random.uniform(380.0, 760.0),
+                    ball_pos[1] - sign * np.random.uniform(380.0, 760.0),
                     17.0,
                 ],
                 dtype=np.float32,

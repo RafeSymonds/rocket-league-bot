@@ -4,9 +4,12 @@ import json
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 from .config import (
     ACTION_REPEAT,
     CRITIC_LAYER_SIZES,
+    NUM_DISCRETE_ACTIONS,
     OBS_DIM,
     POLICY_LAYER_SIZES,
     Stage,
@@ -84,6 +87,11 @@ def load_curriculum_state_from_checkpoint(checkpoint_dir: str) -> dict[str, Any]
 
 def _checkpoint_obs_dim(checkpoint_dir: str) -> int | None:
     book = load_checkpoint_book(checkpoint_dir)
+    if "obs_dim" in book:
+        try:
+            return int(book["obs_dim"])
+        except Exception:
+            pass
     shape = book.get("obs_running_stats", {}).get("shape")
     if isinstance(shape, list) and len(shape) == 1:
         try:
@@ -91,6 +99,40 @@ def _checkpoint_obs_dim(checkpoint_dir: str) -> int | None:
         except Exception:
             return None
     return None
+
+
+def load_obs_standardizer(checkpoint_dir: str) -> tuple[float, float] | None:
+    """Return the (mean, std) scalars a checkpoint's policy saw during training,
+    or None if the checkpoint was trained on raw observations.
+
+    rlgym-ppo's standardize_obs (on by default upstream, off in train.py now)
+    standardizes EVERY obs feature by feature 0's running mean/std - a scalar
+    shift/scale - and then clips to [-5, 5]. Any consumer replaying a policy
+    trained with it must apply the identical transform.
+    """
+    book = load_checkpoint_book(checkpoint_dir)
+    stats = book.get("obs_running_stats")
+    if not isinstance(stats, dict):
+        return None
+    try:
+        mean = float(np.asarray(stats["mean"]).reshape(-1)[0])
+        var = float(np.asarray(stats["var"]).reshape(-1)[0])
+        count = int(stats.get("count", 0))
+    except Exception:
+        return None
+    if count < 2:
+        return None
+    variance = var / (count - 1)
+    if variance == 0.0:
+        variance = 1.0
+    return mean, float(np.sqrt(variance))
+
+
+def standardize_obs(obs: np.ndarray, standardizer: tuple[float, float] | None) -> np.ndarray:
+    if standardizer is None:
+        return obs
+    mean, std = standardizer
+    return np.clip((obs - mean) / std, -5.0, 5.0)
 
 
 def _checkpoint_stage_rank(checkpoint_dir: str) -> int:
@@ -258,19 +300,6 @@ def select_eval_anchor_checkpoints(
 def build_runtime_config(checkpoint_dir: str) -> dict[str, Any]:
     book = load_checkpoint_book(checkpoint_dir)
 
-    policy_type = book.get("policy_type", "mlp")
-
-    if policy_type == "transformer":
-        return {
-            "checkpoint_dir": str(Path(checkpoint_dir)),
-            "cumulative_timesteps": int(book.get("cumulative_timesteps", 0)),
-            "policy_average_reward": float(book.get("policy_average_reward", 0.0)),
-            "policy_type": "transformer",
-            "obs_dim": int(book.get("earl_query_features", 36)),
-            "action_repeat": int(ACTION_REPEAT),
-            "action_dim": int(book.get("action_dim", 90)),
-        }
-
     return {
         "checkpoint_dir": str(Path(checkpoint_dir)),
         "cumulative_timesteps": int(book.get("cumulative_timesteps", 0)),
@@ -280,5 +309,5 @@ def build_runtime_config(checkpoint_dir: str) -> dict[str, Any]:
         "action_repeat": int(ACTION_REPEAT),
         "policy_hidden_sizes": list(POLICY_LAYER_SIZES),
         "critic_hidden_sizes": list(CRITIC_LAYER_SIZES),
-        "action_dim": None,
+        "action_dim": int(NUM_DISCRETE_ACTIONS),
     }
