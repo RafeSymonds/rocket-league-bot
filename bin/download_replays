@@ -67,11 +67,19 @@ def normalize_rfc3339(value: str) -> str:
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def iter_replays_by_playlist(api: bc.Api, playlist: str, min_rank: str, replay_after: str = "", replay_before: str = ""):
+def iter_replays_by_playlist(
+    api: bc.Api,
+    playlist: str,
+    min_rank: str,
+    replay_after: str = "",
+    replay_before: str = "",
+    uploader: str = "",
+):
     """Yield replay metadata from ballchasing for the requested playlist."""
     yield from api.get_replays(
         playlist=playlist,
-        min_rank=min_rank,
+        min_rank=min_rank or None,
+        uploader=uploader or None,
         replay_after=normalize_rfc3339(replay_after) or None,
         replay_before=normalize_rfc3339(replay_before) or None,
         count=100000,
@@ -198,11 +206,16 @@ def main():
         help="ballchasing.com API token. Defaults to BALLCHASING_API_TOKEN from .env or the shell.",
     )
     parser.add_argument("--output", default="data/replays", help="Output folder for replays")
-    parser.add_argument("--playlist", default="ranked-duels", 
-                        choices=["ranked-duels", "ranked-doubles", "ranked-standard"],
+    parser.add_argument("--playlist", default="ranked-duels",
+                        choices=["ranked-duels", "ranked-doubles", "ranked-standard",
+                                 "unranked-duels", "unranked-doubles", "unranked-standard",
+                                 "private"],
                         help="Playlist to download")
     parser.add_argument("--count", type=int, default=1000, help="Number of replays to download")
-    parser.add_argument("--min-rank", default="supersonic-legend", help="Minimum rank filter")
+    parser.add_argument("--uploader", default="",
+                        help='Only replays uploaded by this account; "me" = the token owner. '
+                             "Disables the min-rank filter unless one is passed explicitly.")
+    parser.add_argument("--min-rank", default=None, help="Minimum rank filter (default: supersonic-legend, or none with --uploader)")
     parser.add_argument("--replay-after", default="2024-01-01", help="Only include replays after this RFC3339/date value")
     parser.add_argument("--replay-before", default="", help="Only include replays before this RFC3339/date value")
     parser.add_argument("--rate-limit", type=int, default=10, help="Requests per second limit")
@@ -223,12 +236,17 @@ def main():
             "Set BALLCHASING_API_TOKEN in .env or pass --api-token."
         )
 
+    min_rank = args.min_rank
+    if min_rank is None:
+        min_rank = "" if args.uploader else "supersonic-legend"
+
     api = bc.Api(api_token)
     output_folder = Path(args.output)
-    
+
     print(
         f"Fetching replays for {args.playlist} "
-        f"(min rank: {args.min_rank}, replay_after: {args.replay_after or 'any'}, "
+        f"(uploader: {args.uploader or 'any'}, min rank: {min_rank or 'any'}, "
+        f"replay_after: {args.replay_after or 'any'}, "
         f"replay_before: {args.replay_before or 'any'}, newest first within window)..."
     )
     
@@ -263,9 +281,10 @@ def main():
     replay_iter = iter_replays_by_playlist(
         api,
         args.playlist,
-        args.min_rank,
+        min_rank,
         replay_after=args.replay_after,
         replay_before=args.replay_before,
+        uploader=args.uploader,
     )
     submission_interval = 1.0 / args.rate_limit if args.rate_limit > 0 else 0.0
     last_submit_time = 0.0
