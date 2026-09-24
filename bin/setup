@@ -13,17 +13,27 @@ fi
 
 uv venv --python 3.12 --allow-existing env
 
+torch_spec="torch==2.14.0"
 torch_index=()
 if [[ "$(uname -s)" == "Linux" ]]; then
-    if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then
-        torch_index=(--index-url "https://download.pytorch.org/whl/${TORCH_CUDA:-cu126}")
+    # WSL keeps nvidia-smi in /usr/lib/wsl/lib, which non-login shells
+    # (e.g. ssh commands) often lack on PATH.
+    nvidia_smi="$(command -v nvidia-smi || true)"
+    if [[ -z "$nvidia_smi" && -x /usr/lib/wsl/lib/nvidia-smi ]]; then
+        nvidia_smi=/usr/lib/wsl/lib/nvidia-smi
+    fi
+    if [[ -n "$nvidia_smi" ]] && "$nvidia_smi" >/dev/null 2>&1; then
+        build="${TORCH_CUDA:-cu126}"
     else
         echo "No NVIDIA GPU visible (nvidia-smi failed): installing CPU PyTorch."
-        torch_index=(--index-url "https://download.pytorch.org/whl/cpu")
+        build=cpu
     fi
+    # The local version (+cu126, +cpu) makes uv replace a wrong existing build.
+    torch_spec="torch==2.14.0+$build"
+    torch_index=(--index-url "https://download.pytorch.org/whl/$build")
 fi
 # PyTorch first, from the right index, so the requirements below keep it.
-VIRTUAL_ENV=env uv pip install "torch==2.14.0" ${torch_index[@]+"${torch_index[@]}"}
+VIRTUAL_ENV=env uv pip install "$torch_spec" ${torch_index[@]+"${torch_index[@]}"}
 VIRTUAL_ENV=env uv pip install -r requirements.txt
 
 env/bin/python - <<'PY'
