@@ -66,8 +66,12 @@ class TrainConfig:
     run_name: str = "botboi"
     runs_dir: str = "runs"
     phase: str = "early"
-    n_proc: int = 0  # 0 = one env process per CPU core
+    n_proc: int = 0  # 0 = CPU cores minus one (the learner needs a core)
     device: str = "auto"  # auto = cuda if available, else cpu
+    # Pick actions during collection with a CPU copy of the policy (synced
+    # after every update) instead of the GPU learner. Much faster for small
+    # per-step batches.
+    cpu_inference: bool = True
     timestep_limit: int = 10_000_000_000  # total steps for the run
     timesteps_per_iteration: int = 100_000
     batch_size: int = 100_000
@@ -79,7 +83,10 @@ class TrainConfig:
     ent_coef: float = 0.01
     clip_range: float = 0.2
     gae_lambda: float = 0.95
-    policy_layers: tuple[int, ...] = (1024, 1024, 512, 512)
+    # The policy runs on the CPU during collection (cpu_inference), so its
+    # size sets collection speed: 512-512-256 measured ~2x faster than
+    # 1024-1024-512-512 on the desktop. The critic only runs on the GPU.
+    policy_layers: tuple[int, ...] = (512, 512, 256)
     critic_layers: tuple[int, ...] = (1024, 1024, 512, 512)
     save_every_ts: int = 10_000_000
     checkpoints_to_keep: int = 5
@@ -95,7 +102,6 @@ class TrainConfig:
 # tests and `bin/train --preset smoke` to prove the pipeline runs end to end.
 SMOKE_OVERRIDES = {
     "n_proc": 2,
-    "device": "cpu",
     "timestep_limit": 30_000,
     "timesteps_per_iteration": 5_000,
     "batch_size": 5_000,

@@ -37,8 +37,9 @@ bin/train             # run "botboi", phase "early", resumes automatically
   and quit. Ctrl+C also saves a checkpoint.
 - Running `bin/train` again resumes the run from its latest checkpoint.
   `bin/train --run <name>` starts or resumes a separately named run.
-- It uses one env process per CPU core (`--n-proc` to change), and the GPU
-  when one is available.
+- It runs one env process per CPU core minus one (`--n-proc` to change).
+  PPO updates run on the GPU. Actions during collection come from a CPU copy
+  of the policy, which is faster than the GPU for these small batches.
 - Output goes to `runs/botboi/`:
   - `metrics.csv` has one row per iteration.
   - `policies/<steps>.pt` is a policy snapshot every 50M steps, kept forever.
@@ -83,10 +84,10 @@ the phase recorded in `run.json`.
 
 ### Speed
 
-On this repo's MacBook, env collection measured about 5k steps/s per process
-(50k steps/s with 10 processes). The WSL machine has not been measured. The
-first iterations print its real speed. At 40k steps/s, 100M steps take about
-40 minutes and 1B take about 7 hours.
+The desktop (i7-9700K, 7 env processes, RTX 2080 Super) runs at about 15k
+steps/s overall, measured 2026-09-24. That is about 55M steps per hour, so
+100M steps take about 2 hours and 1B steps about 19 hours. The limit is the
+single learner process that picks every action, not the GPU.
 
 ## Evaluating progress
 
@@ -150,7 +151,9 @@ policy trained with a different observation layout.
   - Individual shaping: speed toward the ball, facing the ball, boost pickup,
     and boost kept.
   - Rewards are normalized by the running spread of returns.
-- **Network.** Separate policy and value MLPs, 1024-1024-512-512.
+- **Network.** A 512-512-256 policy and a 1024-1024-512-512 value network,
+  both MLPs. The policy stays small because it runs on the CPU for every
+  action during collection.
 
 ## Known gaps
 

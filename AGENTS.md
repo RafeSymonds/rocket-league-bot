@@ -8,9 +8,12 @@ Trains a Rocket League bot for 1v1 and 2v2 with self-play PPO in RocketSim
 the vendored `necto/` and `reply-training/` trees, and the ballchasing replay
 tools remain in git history. Commit `845afa3` is the last one that has them.
 
-Training runs on a Windows PC under WSL2 (RTX 2080 Super, 48 GB RAM). The Mac
-checkout is for development and short smoke runs only. `lobs` is an M4 Mac
-mini that runs other jobs, so do not train there.
+Training runs on the Windows desktop under WSL2 (`ssh desktop`, repo at
+`~/games/botboi`). It has an i7-9700K (8 cores), an RTX 2080 Super, and a
+40 GB WSL limit. `~/games/rocket-league-bot` on the desktop is the old
+April-era checkout with 2.5 GB of replay data, so leave it alone. The Mac is
+for development and short smoke runs only. `lobs` is an M4 Mac mini that runs
+other jobs, so do not train there.
 
 ## Layout
 
@@ -105,6 +108,18 @@ mini that runs other jobs, so do not train there.
 - **RLBot v5 package.** The pip package is `rlbot==2.0.0b55`, and a plain
   `rlbot` gets v4. `game_mode` must be `"Soccar"`. Importing `rlbot.config`
   before `rlbot.utils.logging` triggers a circular import.
+- **Policy inference during collection.** On the WSL2 desktop, each GPU
+  policy call for ~12 observations cost ~0.7 ms of launch and copy overhead
+  whatever the network size, which capped collection at ~10k steps/s.
+  `BotPPOController` therefore picks actions with a CPU copy of the actor,
+  synced after every update. The 512-512-256 actor then takes ~0.3 ms per
+  call, for ~15k steps/s overall. These did not help: 1024-wide actor on CPU
+  (slower), two torch threads (no change), sampling in numpy (+5%),
+  `min_frac_process_responses_per_collection=1.0` (5-50x slower), and more
+  env processes than cores. The learner process is the bottleneck, so
+  `n_proc` defaults to cores minus one.
+- **WSL nvidia-smi.** It lives in `/usr/lib/wsl/lib`, which non-login
+  shells (ssh commands) may lack on PATH. `bin/setup` checks there.
 - **numpy.** rlgym 2.0.1 pins `numpy<2`, so rlviser-py (numpy>=2) cannot be
   installed alongside it.
 - **Easy Anti-Cheat.** RLBot v5 launches Rocket League with EAC off, so bot

@@ -13,6 +13,7 @@ os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 
 import argparse
+import copy
 import csv
 import dataclasses
 import functools
@@ -45,6 +46,7 @@ from rlgym_learn_algos.ppo import (
     PPOMetricsLogger,
     SeparateActorCritic,
 )
+from rlgym_learn_algos.util import flatten_env_obs_data_dict, unflatten_iterable
 from torch.optim import Adam
 
 from .actions import TICK_SKIP
@@ -71,16 +73,54 @@ class StepLimitReached(KeyboardInterrupt):
 
 class BotPPOController(PPOAgentController):
     """PPOAgentController that writes botboi.json into every checkpoint, keeps
-    never-pruned policy snapshots in runs/<run>/policies/, and stops the run
-    at a total step count."""
+    never-pruned policy snapshots in runs/<run>/policies/, stops the run at a
+    total step count, and can pick actions with a CPU copy of the policy."""
 
-    def __init__(self, *args, meta_dir: Path, snapshot_every_ts: int, stop_at_timesteps: int, **kwargs):
+    def __init__(
+        self,
+        *args,
+        meta_dir: Path,
+        snapshot_every_ts: int,
+        stop_at_timesteps: int,
+        cpu_inference: bool,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.policies_dir = meta_dir / "policies"
         self.snapshot_every_ts = snapshot_every_ts
         self.stop_at_timesteps = stop_at_timesteps
+        self.cpu_inference = cpu_inference
+        self.cpu_actor = None
         existing = [int(p.stem) for p in self.policies_dir.glob("*.pt") if p.stem.isdigit()]
         self.last_snapshot_ts = max(existing, default=0)
+
+    def load(self, config):
+        super().load(config)
+        actor = self.learner.actor_critic.actor
+        if self.cpu_inference and actor.device.type != "cpu":
+            # Collection calls the policy thousands of times per second on
+            # ~12 observations. On the WSL2 desktop each GPU call cost ~0.7 ms
+            # of launch and copy overhead and capped collection at ~10k
+            # steps/s; the CPU copy of a 512-512-256 actor takes ~0.3 ms.
+            self.cpu_actor = copy.deepcopy(actor).to("cpu")
+            self.cpu_actor.device = torch.device("cpu")
+
+    @torch.no_grad()
+    def get_actions(self, env_obs_data_dict):
+        if self.cpu_actor is None:
+            return super().get_actions(env_obs_data_dict)
+        # Same as the parent, with the CPU actor in place of the learner's.
+        (agent_id_list, obs_list), flattened_state = flatten_env_obs_data_dict(env_obs_data_dict)
+        actions, log_probs = self.cpu_actor.get_actions(agent_id_list, obs_list)
+        if log_probs.dim() == 0:
+            log_probs = log_probs.unsqueeze(0)
+        self.current_env_log_probs.update(unflatten_iterable(log_probs.numpy(), flattened_state))
+        return unflatten_iterable(actions, flattened_state)
+
+    def _learn(self):
+        super()._learn()
+        if self.cpu_actor is not None:
+            self.cpu_actor.load_state_dict(self.learner.actor_critic.actor.state_dict())
 
     def _load_from_checkpoint(self):
         super()._load_from_checkpoint()
@@ -219,7 +259,8 @@ def parse_args() -> TrainConfig:
     parser.add_argument("--runs-dir", default=defaults.runs_dir)
     parser.add_argument("--phase", choices=sorted(PHASES), default=None,
                         help="reward/gamma preset (default: early for a new run, else the run's last phase)")
-    parser.add_argument("--n-proc", type=int, default=defaults.n_proc, help="env processes (0 = one per CPU core)")
+    parser.add_argument("--n-proc", type=int, default=defaults.n_proc,
+                        help="env processes (0 = CPU cores minus one)")
     parser.add_argument("--device", default=defaults.device, help="auto, cuda, cuda:0, or cpu")
     parser.add_argument("--timesteps", type=int, default=None,
                         help="stop when the run reaches this many total steps (or press q / Ctrl+C)")
@@ -303,7 +344,8 @@ def main() -> None:
     device = cfg.device
     if device == "auto":
         device = "cuda" if torch.cuda.is_available() else "cpu"
-    n_proc = cfg.n_proc or os.cpu_count() or 1
+    # One core stays free for this learner process, which picks every action.
+    n_proc = cfg.n_proc or max(1, (os.cpu_count() or 2) - 1)
     phase = PHASES[cfg.phase]
     resume_from = find_latest_checkpoint(run_dir)
     if resume_from:
@@ -434,6 +476,7 @@ def main() -> None:
         meta_dir=run_dir,
         snapshot_every_ts=cfg.snapshot_every_ts,
         stop_at_timesteps=cfg.timestep_limit,
+        cpu_inference=cfg.cpu_inference,
     )
     coordinator = LearningCoordinator(
         env_create_function=functools.partial(build_env, env_cfg),
