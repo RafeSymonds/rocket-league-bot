@@ -1,34 +1,5 @@
 #!/usr/bin/env bash
+# Train (see: bin/train --help).
 set -euo pipefail
-
-ROOT_DIR="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
-PYTHON_BIN="${ROOT_DIR}/env/bin/python"
-if [[ ! -x "${PYTHON_BIN}" ]]; then
-  PYTHON_BIN="python3"
-fi
-
-"${PYTHON_BIN}" - <<'PY'
-try:
-    import numpy  # noqa: F401
-except Exception as exc:  # pragma: no cover
-    raise SystemExit(
-        "Missing Python dependencies. Install them first with: pip3 install -r requirements.txt\n"
-        f"Details: {exc}"
-    )
-PY
-
-"${PYTHON_BIN}" train.py \
-  --device gpu \
-  --n-proc 16 \
-  --min-inference-size 16 \
-  --ts-per-iteration 100000 \
-  --ppo-batch-size 100000 \
-  --ppo-minibatch-size 20000 \
-  --ppo-epochs 3 \
-  --policy-lr 2.5e-4 \
-  --critic-lr 2.5e-4 \
-  --ent-coef 0.005 \
-  --exp-buffer-size 400000 \
-  --save-every-ts 2000000 \
-  --resume-latest \
-  "$@"
+cd "$(dirname "$0")/.."
+exec env/bin/python -m botboi.train "$@"

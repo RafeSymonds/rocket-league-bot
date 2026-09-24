@@ -2,246 +2,110 @@
 
 ## Purpose
 
-This repository trains and packages a Rocket League bot built on `rlgym`, `rlgym-ppo`, and `rlbot`.
+Trains a Rocket League bot for 1v1 and 2v2 with self-play PPO in RocketSim
+(RLGym 2, rlgym-learn) and runs it in game through RLBot v5. The rewrite of
+2026-09-24 replaced the old rlgym-ppo / 12-stage-curriculum code. That code,
+the vendored `necto/` and `reply-training/` trees, and the ballchasing replay
+tools remain in git history. Commit `845afa3` is the last one that has them.
 
-The main code paths are:
+Training runs on a Windows PC under WSL2 (RTX 2080 Super, 48 GB RAM). The Mac
+checkout is for development and short smoke runs only. `lobs` is an M4 Mac
+mini that runs other jobs, so do not train there.
 
-- `train.py`: PPO training entry point.
-- `watch.py`: local rollout/viewer script for a saved checkpoint.
-- `rocket_league_bot_src/`: environment, curriculum, reward, observation, and mutator code.
-- `BotBoi_v1/src/bot.py`: RLBot runtime bot that loads the exported policy weights.
-- `bin/manage_training`: unattended background training manager.
-- `bin/progress_dashboard`, `bin/render_training_report`: live progress views.
-- `bin/export_rlbot`, `bin/validate_rlbot_package`: checkpoint export and RLBot package validation.
+## Layout
 
-## Working Rules
+- `botboi/obs.py`: `BotObs`, the 163-float observation. It is shared by
+  training and the RLBot runtime. `OBS_VERSION` guards compatibility.
+- `botboi/actions.py`: the 90-action lookup table, held for `TICK_SKIP = 8` ticks.
+- `botboi/model.py`: `Policy`, the inference MLP (same parameter names as
+  rlgym_learn_algos' `DiscreteFF`), plus `check_compatible`.
+- `botboi/rlbot_obs.py`: `RLBotObsAdapter`, which turns RLBot packets into a
+  game state (via rlgym_compat) and builds observations.
+- `botboi/rewards.py`: reward terms and `build_reward`. Goal, zero-sum
+  competitive terms, and individual shaping.
+- `botboi/mutators.py`: `RandomGroundStateMutator` (episode starts besides kickoffs).
+- `botboi/env.py`: `build_env`, plus `StatsProvider` for game stats.
+- `botboi/config.py`: all settings. `PHASES` holds rewards, gamma, and team
+  spirit. `TrainConfig`, `EnvConfig`, `SMOKE_OVERRIDES`.
+- `botboi/train.py`: the rlgym-learn setup. `BotPPOController` handles
+  snapshots, checkpoint metadata, and the step limit. `BotMetricsLogger`
+  handles console output and `metrics.csv`.
+- `botboi/checkpoints.py`: checkpoint discovery and `resolve_policy`.
+- `botboi/evaluate.py`: head-to-head games between two policies.
+- `botboi/export.py`: writes `bot/policy.pt` or builds a standalone bot folder.
+- `bot/`: RLBot v5 package. `bot.py` imports `botboi` from its own folder
+  (exported) or the repo root.
+- `bin/`: `setup`, `train`, `eval`, `export`, `test`.
 
-- Prefer small, targeted edits. This repo is simple and does not need framework-style abstractions.
-- Do not modify or delete checkpoint/model artifacts unless the user explicitly asks.
-- Treat `data/checkpoints/`, `old_runs/`, `data/logs/`, `data/training_report.html`, and `BotBoi_v1/src/PPO_POLICY.pt` as generated/runtime assets, not normal source files.
-- Keep training code and deployed bot code aligned. If observation layout, action lookup behavior, or model dimensions change, verify whether `BotBoi_v1/src/bot.py` must change too.
-- Preserve unattended workflows. New training changes should keep resume behavior, progress reporting, and RLBot export working end to end.
-- Preserve context across turns by updating local docs and `AGENTS.md` whenever the workflow or training architecture changes materially.
-- Preserve ASCII unless a file already requires otherwise.
-- Avoid adding new dependencies unless necessary.
+## Working rules
 
-## Setup
-
-Dependencies live in `requirements.txt` (Linux/CUDA) and
-`requirements-macos.txt` (macOS/CPU; the NVIDIA pins do not install there).
-The `bin/` entrypoints prefer a repo-local `./env` (Python 3.11).
-
-```bash
-python3.11 -m venv env
-./env/bin/pip install -r requirements.txt        # Linux
-./env/bin/pip install -r requirements-macos.txt  # macOS
-```
-
-Notes:
-
-- `requirements.txt` includes GPU-oriented PyTorch/NVIDIA packages and a git dependency on `rlgym-ppo` (the canonical `AechPro/rlgym-ppo`; the old `Aech-Pro` fork was deleted).
-- Never add `earl-pytorch` as a dependency; see the Architecture Decision section.
-- Full-match `1v1` training uses `rlgym-tools`.
-- Replay download/parsing dependencies live in `requirements-replay.txt`; use a Python 3.10 env for that path because `carball` does not install cleanly on Python 3.11.
-- `bin/setup_replay_env` creates `./replay-env`, and replay scripts should prefer that env automatically when present.
-- Network access may be required to install dependencies.
-
-## Common Commands
-
-Run training with the repo defaults:
-
-```bash
-bin/train
-```
-
-Run training with stronger multi-process defaults and resume the latest compatible checkpoint:
-
-```bash
-bin/train_tuned
-```
-
-Run the same tuned setup without resuming:
-
-```bash
-bin/train_tuned_fresh
-```
-
-Run unattended background training:
-
-```bash
-bin/manage_training start
-bin/manage_training status
-bin/manage_training logs -f
-bin/manage_training stop
-```
-
-Run training directly with custom args:
-
-```bash
-python3 train.py --n-proc 1 --resume-latest
-```
-
-Default training uses current-policy vs current-policy self-play for throughput.
-Use `--self-play-mode frozen` with `--opponent-checkpoint <dir>` to force a specific frozen opponent, or `--self-play-mode frozen --opponent-gap-ts 4000000` to keep the opponent a few million timesteps behind the current resumed checkpoint.
-During frozen self-play, the training manager may tighten that gap when the learner is dominating or widen it when the learner is consistently losing, so the opponent stays in a useful difficulty band.
-
-Watch a saved checkpoint locally:
-
-```bash
-python3 watch.py
-```
-
-Inspect training progress:
-
-```bash
-bin/progress_report data/checkpoints
-bin/metrics_report data/training_metrics.csv
-bin/progress_dashboard --watch 5
-bin/render_training_report
-bin/evaluate_ladder
-```
-
-Export and validate the RLBot package:
-
-```bash
-bin/export_rlbot
-bin/use_latest_rlbot
-bin/validate_rlbot_package
-```
-
-The `bin/` entrypoints prefer `./env/bin/python` automatically and only fall back to `python3` when that local env is missing.
-
-## Architecture Decision: MLP Only (2026-07)
-
-The Necto-style EARLPerceiver transformer track was removed in July 2026. The
-project is MLP-only: flat 54-dim observations (`obs.py`), a (512, 512, 256)
-policy/critic, and the 90-action discrete lookup table (`action_parser.py`).
-`policy_type` in checkpoint books and `runtime_config.json` is always `"mlp"`.
-
-Rationale: this is a 1v1-only project on a single training machine. The
-transformer's advantages (permutation invariance over players, variable team
-sizes) do not apply at 1v1, and its rollout-inference cost was measured ~35x
-slower than the MLP path. If the transformer is revisited, the sensible route
-is replay behavior-cloning (see `reply-training/`, Rolv's replay-pretraining
-pipeline) rather than RL from scratch, and the deleted broken implementation
-is at commit ba6669c for reference only - it had fatal bugs throughout.
-
-Never add `earl-pytorch` as a dependency, even for experiments: its PyPI wheel
-bundles stale copies of `rlgym` and `rlgym_tools` that overwrite the real 2.x
-packages at install time and silently break the training environment.
-
-## Repo Map
-
-`rocket_league_bot_src/config.py`
-
-- Defines curriculum stages, reward weights, action repeat, observation size, and reset presets.
-
-`rocket_league_bot_src/env.py`
-
-- Builds the environment.
-- Writes `data/training_metrics.csv`.
-- Regenerates `data/training_report.html`.
-- Contains per-process iteration logging, curriculum reporting, and auto-export of fresh checkpoints to the RLBot package.
-
-`rocket_league_bot_src/curriculum.py`
-
-- Manages stage progression and curriculum state.
-- The curriculum now inserts harder contested pre-duel stages so the bot must prove it can score under pressure and save-clear under pressure before `DUEL` and full-match `SELF_PLAY`.
-- The later curriculum now also includes `AERIAL_CONTACT`, `AERIAL_SHOOT`, `SHADOW_DEFEND`, and `POSITIONAL_DUEL` so the bot learns jump contacts, goal-side defense, and behind-ball spacing before self-play.
-- Stage transitions now reset stage EMAs so later stages do not auto-promote off inherited stats from earlier ones.
-
-`rocket_league_bot_src/rewards.py`
-
-- Central reward shaping logic.
-- Includes the game-relevant shaping terms we currently believe matter most: hard hits, flip touches, saves/clears, boost gain, and boost retention.
-- Includes a forward-drive shaping term so "face the ball while reversing" is less attractive, and an aerial-control shaping term for airborne approaches toward lofted balls.
-- Later competitive stages also use a light attack-pressure term so faster threatening shots get some learning signal before a goal is actually scored.
-- `DUEL` and `SELF_PLAY` treat shaping competitively, subtracting opponent-team shaping instead of rewarding both teams independently.
-- Includes explicit late-curriculum shaping for aerial touches, goal-side positioning, and staying behind the ball before challenging.
-- `SELF_PLAY` shaping should remain sparse and competitive; avoid dense symmetric shaping that can reward both teams for scoreless stalemates.
-
-`rocket_league_bot_src/obs.py`
-
-- Observation construction. Changes here can break compatibility with saved/exported policies.
-- The current observation set now includes angular velocities and a few core car-state flags inspired by RLGym's default observation builder, not just positions and linear velocities.
-- OBS_DIM is 88: 54 base features + 34 boost-pad availability features read from `state.boost_pad_timers` (inverted array for orange). The pad order is RocketSim's engine order, NOT `common_values.BOOST_LOCATIONS` (the rlgym docstring is wrong about that); `BotBoi_v1/src/bot.py` bakes the same order into `PAD_LOCATIONS` and must stay in sync.
-
-`rocket_league_bot_src/mutators.py`
-
-- State reset and match setup behavior.
-- The 1v1 scenario stages now reposition both cars and the ball into more replay-like attack/defense situations instead of only moving the ball while leaving kickoff car positions intact.
-- Later attack-oriented stages now occasionally loft the ball so the policy sees jump-and-boost approach situations during normal curriculum training, not only ground dribbles.
-- The late-stage scenario family now also includes medium-height aerial contact/shoot setups plus shadow-defense and positional-duel starts to preload jump timing and spacing before self-play.
-- `DEFEND` is intentionally threat-heavy and should bias toward genuine save/clear situations rather than mostly neutral 1v1 starts.
-- The final stage uses full-match `1v1` behavior via `rlgym-tools` when available.
-
-`rocket_league_bot_src/reporting.py`
-
-- Generates the HTML graph report at `data/training_report.html`.
-
-`rocket_league_bot_src/checkpoints.py`
-
-- Shared checkpoint discovery and runtime metadata helpers.
-
-`rocket_league_bot_src/eval.py`
-
-- Checkpoint-vs-checkpoint evaluation ladder logic.
-- Keeps a stable set of older anchor checkpoints for a configurable timestep window, then refreshes them forward.
-- `bin/progress_dashboard` auto-refreshes this ladder for the latest compatible checkpoint unless disabled.
-- Full-match eval now reads the final scoreboard so win rate is not inflated by draw-accounting mistakes on terminal frames.
-
-`rocket_league_bot_src/export.py`
-
-- Shared checkpoint-to-RLBot export logic.
-- Also contains RLBot botpack detection and package install helpers used by `bin/use_latest_rlbot`.
-
-`rocket_league_bot_src/league.py`
-
-- Snapshot registry for future old-version self-play / league training.
-
-`BotBoi_v1/src/bot.py`
-
-- Standalone inference/runtime bot for RLBot.
-- Generates the discrete action lookup table locally so RLBot runtime does not need `rlgym` installed just to load an exported policy.
-- Reads `runtime_config.json` so training-side action repeat and network settings stay aligned with the packaged bot.
-
-## Change Guidance
-
-- For training behavior changes, start with `config.py`, `rewards.py`, `obs.py`, `mutators.py`, and `env.py`.
-- For checkpoint resume/save behavior, inspect `train.py`.
-- For inference/export compatibility issues, inspect `watch.py`, `rocket_league_bot_src/export.py`, and `BotBoi_v1/src/bot.py`.
-- If you change observation features, action dimensions, or policy architecture, call that out explicitly because existing weights may become unusable.
-- Any change to `OBS_DIM` should be treated as a fresh-training boundary unless there is an explicit compatibility migration.
-- If you add scripts, keep them in `bin/` when they are operator-facing helpers.
-- If you change logging or metrics, keep `bin/progress_dashboard`, `bin/manage_training status`, and `data/training_report.html` useful.
-- Training metrics now include `aerial_touch_rate`, `goal_side_rate`, and `behind_ball_rate`; keep dashboards and migration logic aligned if metrics change again.
-- If you change checkpoint save semantics, keep `--resume-latest` and RLBot auto-export working.
+- Keep edits small and direct. No framework-style abstractions.
+- Never modify or delete anything under `runs/` or a user's exported bot
+  folder unless asked. `bot/policy.pt` is generated.
+- Treat any change to `botboi/obs.py`, `botboi/actions.py`, or network input
+  or output sizes as a fresh-training boundary. Bump `OBS_VERSION` for obs
+  changes, and say so explicitly.
+- Anything the RLBot runtime imports must stay out of the training stack: no
+  rocketsim or rlgym_learn imports in `obs.py`, `actions.py`, `model.py`, or
+  `rlbot_obs.py`. The exported bot copies exactly `export.RUNTIME_MODULES`.
+- Keep resume working. `bin/train` must always pick up the latest checkpoint
+  of the run.
+- Update README.md and this file when the workflow or architecture changes.
+- Avoid new dependencies. Pins live in `requirements.txt` (training),
+  `bot/requirements.txt` (runtime), and `bin/setup` (torch).
+- Never add `earl-pytorch`. Its wheel overwrites rlgym 2.x with stale copies.
 
 ## Validation
 
-There is no formal test suite in the repo at the moment. Use lightweight validation appropriate to the change:
+- `bin/test` runs the full suite in about a minute. `-m "not slow"` skips the
+  training job.
+- `tests/test_parity.py` must pass after any change to obs, `rlbot_obs.py`,
+  or the bot. It replays simulator ticks as RLBot packets.
+- `tests/test_bot.py` runs an exported bot folder in a clean interpreter.
+- `tests/test_pipeline.py` covers train, resume with a phase change, and eval,
+  using `--preset smoke`.
+- For training changes, run `bin/train --run scratch --preset smoke` or a
+  short custom run. Do not start long runs on the Mac.
 
-- Syntax check targeted files with `python3 -m py_compile ...`.
-- For training-path changes, run a short local smoke test rather than a long training job unless the user asks for more.
-- For reporting-script changes, run the script directly against existing `data/` artifacts if available.
-- For RLBot runtime changes, verify assumptions in `BotBoi_v1/src/bot.py` against the training-side observation/action code.
-- For workflow changes, verify these still work:
-  - `python3 bin/manage_training status`
-  - `python3 bin/progress_dashboard`
-  - `python3 bin/render_training_report`
-  - `python3 bin/export_rlbot`
-  - `python3 bin/use_latest_rlbot --no-install`
-  - `python3 bin/validate_rlbot_package`
+## Gotchas (all verified 2026-09-24)
 
-## Safety Notes
-
-- `watch.py` auto-discovers the latest checkpoint. If it fails, inspect checkpoint discovery before hardcoding paths.
-- `bin/stats` launches TensorBoard against `runs`. Confirm that path still matches actual logging output before changing monitoring workflows.
-- `train.py` defaults to `--resume-latest`, so be careful not to accidentally continue from an incompatible checkpoint after architecture changes.
-- Keep `standardize_obs=False` in `train.py`. If it is ever turned back on, every replay consumer (`BotBoi_v1/src/bot.py`, `watch.py`, `opponent.py`, `eval.py`) must apply rlgym-ppo's exact obs transform - it standardizes every feature by feature 0's scalar running mean/std and clips to [-5, 5] (see `checkpoints.load_obs_standardizer`). Feeding raw obs to a standardized-obs policy was a major silent deploy bug.
-- The final reward clip in `rewards.py` must stay above the largest goal weight (currently 26), or goals get flattened and dense shaping dominates.
-- Training `goal_rate` is not enough to prove the bot is stronger. Use eval against fixed older checkpoints before concluding that self-play is working.
-- `bin/serve_training_report` and `bin/progress_dashboard` can auto-run eval and materially reduce training throughput if they share the same machine.
-- `BotBoi_v1/src/runtime_config.json` is part of the training/runtime contract. If export metadata changes, update the RLBot runtime loader too.
-- `bin/use_latest_rlbot` is the preferred operator command for pushing the newest compatible checkpoint into RLBot. Keep `RLBOT_BOTPACK_DIR` and common Windows RLBot locations working when changing that flow.
-- There are no other repo-local agent instruction files right now. If more are added later, keep them consistent with this file.
+- **rlgym-learn 2.0.0 shared-info bug.** Setting `shared_info_serde_type`
+  corrupts startup parsing: `collect_start_response_data` does not advance
+  the offset past the shared info. Game stats therefore go through
+  `runs/<run>/stats/<pid>.json` files (`StatsProvider` writes them,
+  `BotMetricsLogger` reads them).
+- **Allocation pool warning.** pyany-serde's numpy allocation pool warning
+  (default 10k) runs a referrer scan on every allocation once an iteration
+  passes 10k steps, which made collection about 15x slower. Obs and action
+  serdes set `allocation_pool_warning_size=None`.
+- **Step counting.** rlgym-learn's `timestep_limit` counts only the current
+  launch, and differently from the controller. `BotPPOController` enforces
+  the run total and stops by raising `StepLimitReached` (a
+  `KeyboardInterrupt`, so rlgym-learn saves).
+- **Shared-memory link files.** rlgym-learn writes them to `flinks_folder`
+  (default `./shmem_flinks`) and deletes them on shutdown, which broke a
+  second run started from the same directory. Each run uses
+  `runs/<run>/shmem_flinks`.
+- **Resume.** With `save_mid_iteration_data_in_checkpoint=False`, a resumed
+  controller used to count phantom iteration steps. `_load_from_checkpoint`
+  resets `iteration_timesteps`.
+- **Boost pad timers.** RLBot reports seconds since pickup, while RocketSim
+  and training use seconds until respawn. `RLBotObsAdapter.update` converts.
+  Pad order: rlgym's `BOOST_LOCATIONS`, RocketSim's engine order, and
+  rlgym_compat all agree in rlgym 2.0.1. Reversing the array mirrors the
+  field.
+- **Features rlgym_compat can only estimate.** `on_ground` is guessed during
+  jump takeoff, and `is_boosting` lags one tick after a boost tap. The
+  observation uses `is_boosting and boost > 0` (RLBot reports boosting on an
+  empty tank) and a masked flip window instead of raw air time (RLBot stops
+  updating it after a flip).
+- **Action delay.** `RocketSimEngine(rlbot_delay=True)`, the default, applies
+  actions one tick late, like RLBot. An RLBot packet's `last_input` equals
+  the previous step's controls.
+- **RLBot v5 package.** The pip package is `rlbot==2.0.0b55`, and a plain
+  `rlbot` gets v4. `game_mode` must be `"Soccar"`. Importing `rlbot.config`
+  before `rlbot.utils.logging` triggers a circular import.
+- **numpy.** rlgym 2.0.1 pins `numpy<2`, so rlviser-py (numpy>=2) cannot be
+  installed alongside it.
+- **Easy Anti-Cheat.** RLBot v5 launches Rocket League with EAC off, so bot
+  matches are offline or LAN only.

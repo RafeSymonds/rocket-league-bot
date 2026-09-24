@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Copy a trained policy into the RLBot bot (see: bin/export --help).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+exec env/bin/python -m botboi.export "$@"

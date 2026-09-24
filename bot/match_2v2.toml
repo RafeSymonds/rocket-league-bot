@@ -1,0 +1,33 @@
+#:schema https://rlbot.org/schemas/match.json
+# You + BotBoi (blue) vs two BotBois (orange).
+[rlbot]
+launcher = "Steam"   # "Steam", "Epic", "Custom", or "NoLaunch"
+auto_start_agents = true
+wait_for_agents = true
+
+[match]
+game_mode = "Soccar"
+game_map_upk = "Stadium_P"
+skip_replays = true
+existing_match_behavior = "Restart"
+enable_rendering = false
+enable_state_setting = true
+
+[mutators]
+match_length = "FiveMinutes"
+
+[[cars]]
+type = "Human"
+team = 0
+
+[[cars]]
+config_file = "bot.toml"
+team = 0
+
+[[cars]]
+config_file = "bot.toml"
+team = 1
+
+[[cars]]
+config_file = "bot.toml"
+team = 1

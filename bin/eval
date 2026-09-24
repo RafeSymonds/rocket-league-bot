@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Pit two policies against each other (see: bin/eval --help).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+exec env/bin/python -m botboi.evaluate "$@"

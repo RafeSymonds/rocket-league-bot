@@ -1,7 +1,0 @@
-# Optional replay-pipeline dependencies.
-#
-# Prefer Python 3.11 for this file. `sprocket-rl-parser` provides a newer
-# maintained replay parser with a carball-compatible Python API.
-sprocket-rl-parser==1.2.37
-requests==2.32.4
-tqdm==4.67.1

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Run the test suite. Skip the ~1 minute training test with: bin/test -m "not slow"
+set -euo pipefail
+cd "$(dirname "$0")/.."
+exec env/bin/python -m pytest "$@"

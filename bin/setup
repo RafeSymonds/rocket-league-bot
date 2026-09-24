@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Creates ./env (Python 3.12) with everything needed to train and run tests.
+# Linux/WSL with an NVIDIA GPU gets CUDA PyTorch; anything else gets CPU PyTorch.
+# Override the CUDA build with TORCH_CUDA=cu130 (needs a newer driver).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+if ! command -v uv >/dev/null 2>&1; then
+    echo "Installing uv (Python package manager) into ~/.local/bin"
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+uv venv --python 3.12 --allow-existing env
+
+torch_index=()
+if [[ "$(uname -s)" == "Linux" ]]; then
+    if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then
+        torch_index=(--index-url "https://download.pytorch.org/whl/${TORCH_CUDA:-cu126}")
+    else
+        echo "No NVIDIA GPU visible (nvidia-smi failed): installing CPU PyTorch."
+        torch_index=(--index-url "https://download.pytorch.org/whl/cpu")
+    fi
+fi
+# PyTorch first, from the right index, so the requirements below keep it.
+VIRTUAL_ENV=env uv pip install "torch==2.14.0" ${torch_index[@]+"${torch_index[@]}"}
+VIRTUAL_ENV=env uv pip install -r requirements.txt
+
+env/bin/python - <<'PY'
+import os
+import torch
+from rlgym.rocket_league.sim import RocketSimEngine
+import rlgym_learn, rlgym_learn_algos
+
+RocketSimEngine()  # loads the bundled collision meshes
+cuda = torch.cuda.is_available()
+print(f"torch {torch.__version__}, CUDA available: {cuda}")
+if cuda:
+    major, minor = torch.cuda.get_device_capability(0)
+    print(f"GPU: {torch.cuda.get_device_name(0)} (sm_{major}{minor})")
+    if f"sm_{major}{minor}" not in torch.cuda.get_arch_list():
+        print(f"WARNING: this PyTorch build has no kernels for sm_{major}{minor}: {torch.cuda.get_arch_list()}")
+    (torch.ones(8, device="cuda") * 2).sum().item()  # a real kernel launch
+print(f"CPU cores: {os.cpu_count()} (training starts one env process per core)")
+print("Setup OK. Next: bin/test, then bin/train")
+PY

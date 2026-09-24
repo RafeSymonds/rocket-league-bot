@@ -1,279 +1,162 @@
-# Rocket League Bot
+# BotBoi
 
-This repository trains and packages a Rocket League bot built with `rlgym`, `rlgym-ppo`, `rocketsim`, and `rlbot`.
+A Rocket League bot for 1v1 and 2v2, trained from scratch with self-play PPO in
+RocketSim ([RLGym 2](https://rlgym.org) + [rlgym-learn](https://github.com/JPK314/rlgym-learn))
+and played in game through [RLBot v5](https://rlbot.org).
 
-## Repo Layout
+| Path | What it is |
+|---|---|
+| `botboi/` | Python package: observations, actions, rewards, env, trainer, evaluation, export |
+| `bot/` | RLBot v5 bot (`bot.toml`, `bot.py`, match configs, Windows setup script) |
+| `bin/` | `setup`, `train`, `eval`, `export`, `test` |
+| `tests/` | pytest suite, including sim-vs-RLBot observation parity |
+| `runs/` | training output (gitignored): checkpoints, policy snapshots, `metrics.csv` |
 
-- `train.py`: PPO training entry point.
-- `watch.py`: loads the latest checkpoint and runs a local deterministic rollout.
-- `rocket_league_bot_src/`: training environment, curriculum, observations, rewards, and reset scenarios.
-- `BotBoi_v1/src/bot.py`: RLBot runtime bot.
-- `bin/train`: convenience wrapper around `train.py`.
-- `bin/train_tuned`: stronger multi-process training wrapper that resumes by default.
-- `bin/train_tuned_fresh`: same tuned wrapper, but always starts fresh.
-- `bin/progress_report`: summarizes checkpoint reward trends.
-- `bin/metrics_report`: summarizes `data/training_metrics.csv`.
-- `bin/evaluate_ladder`: evaluates the current checkpoint against a stable ladder of older checkpoints.
+## Setup (WSL2 + NVIDIA GPU)
 
-## Current Training Design
+1. In WSL, `nvidia-smi` must list the GPU. It comes from the Windows NVIDIA
+   driver, so keep that current; do not install a Linux driver inside WSL.
+2. Clone into the WSL filesystem (for example `~/rocket-league-bot`), not
+   under `/mnt/c`, which is much slower.
+3. `bin/setup` creates `./env` with Python 3.12 and CUDA PyTorch, then checks
+   the GPU and the simulator. It installs `uv` first if it is missing.
+4. `bin/test` runs the suite in about a minute. `bin/test -m "not slow"` skips
+   the short training job.
 
-The training pipeline is intentionally staged:
+Settings live in `botboi/config.py`. Run `bin/train --help` for command-line
+overrides.
 
-1. `CONTACT`
-   The bot learns to reach and touch the ball from controlled placements.
-2. `DRIBBLE`
-   The bot learns to keep pressure on the ball and move it through space with control.
-3. `SHOOT`
-   The bot learns to convert open-net and forward-ball scenarios into goals.
-4. `SHOOT_CONTESTED`
-   The bot learns to finish chances with a live defender between ball and goal.
-5. `DEFEND`
-   The bot learns first saves from dangerous goal-side starts.
-6. `DEFEND_CLEAR`
-   The bot learns to turn those saves into real clears and exits under pressure.
-7. `DUEL`
-   The bot learns short-form 1v1 conversions from replay-like attack and defense starts.
-8. `SELF_PLAY`
-   The bot trains in full-match 1v1 after the structured duel stage.
-
-The current design lives primarily in:
-
-- `rocket_league_bot_src/config.py`
-- `rocket_league_bot_src/curriculum.py`
-- `rocket_league_bot_src/mutators.py`
-- `rocket_league_bot_src/rewards.py`
-- `rocket_league_bot_src/env.py`
-
-## Why The Training Was Reworked
-
-The earlier version mixed many overlapping reward terms with a single generic reset pattern. That made it hard to tell what the agent was actually being trained to do, and it made curriculum behavior harder to inspect.
-
-The current rewrite pushes the setup toward:
-
-- fewer, clearer reward terms
-- stage-specific reset scenarios
-- explicit curriculum progression
-- a progression that covers offense and defense before full self-play
-- centralized training constants
-- iteration metrics that show stage and difficulty
-- snapshot registration for future league-style training against older checkpoints
-
-## Setup
-
-The `bin/` entrypoints prefer a repo-local `./env` virtualenv (Python 3.11).
-
-Linux (CUDA):
+## Training
 
 ```bash
-python3.11 -m venv env
-./env/bin/pip install -r requirements.txt
+tmux new -s train     # training runs for hours; tmux keeps it alive
+bin/train             # run "botboi", phase "early", resumes automatically
 ```
 
-macOS (CPU; the CUDA pins in `requirements.txt` do not install on macOS):
+- Keys in the training terminal: `p` pause, `c` checkpoint now, `q` checkpoint
+  and quit. Ctrl+C also saves a checkpoint.
+- Running `bin/train` again resumes the run from its latest checkpoint.
+  `bin/train --run <name>` starts or resumes a separately named run.
+- It uses one env process per CPU core (`--n-proc` to change), and the GPU
+  when one is available.
+- Output goes to `runs/botboi/`:
+  - `metrics.csv` has one row per iteration.
+  - `policies/<steps>.pt` is a policy snapshot every 50M steps, kept forever.
+  - `checkpoints/` holds full checkpoints every 10M steps, with the last 5 kept.
+  - `run.json` records each launch and its settings.
+- `bin/train --wandb` also logs to Weights & Biases. Run `env/bin/wandb login`
+  once first.
+
+Each iteration prints two lines. These are real lines from a 10M-step 1v1 test
+run on the MacBook (CPU, small network):
+
+```
+[9,950,798 steps] sps 26,577 (collect 46,959) | reward 0.1993 | entropy 3.531 | kl 0.00321 | clip 0.030 | critic loss 0.1089
+    goals/min 0.71 | touches/min 17.1 | aerial touches/min 1.73 | ball speed 868 | in air 0.26 | boost 6 | 2v2 share 0.00
+```
+
+What healthy early training looks like:
+
+- Entropy falls slowly from 4.50, the value for uniform random actions over 90.
+- Car speed and touches per game minute rise within the first few million
+  steps. In the test run, touches per minute went from 0.3 to 17 by 10M steps.
+- KL stays around 0.001-0.02 and clip fraction stays below about 0.2.
+- The bot first learns to hit the ball hard in any direction, then to aim.
+  At 10M steps the test run still scored own goals about as often as real
+  ones.
+
+### Training phases
+
+A phase bundles reward weights, discount factor, and 2v2 team spirit
+(`PHASES` in `botboi/config.py`).
+
+1. `early`: dense shaping teaches the bot to reach the ball, hit it hard, and
+   score. Start here.
+2. `main`: winning. Goals and ball-toward-goal velocity dominate, chasing
+   rewards are off, gamma goes from 0.99 to 0.995, and 2v2 teammates share
+   competitive credit.
+
+Switch to `main` once touches per minute have plateaued and the bot scores in
+open play. Expect that somewhere around 100-300M steps. Stop training, then
+run `bin/train --phase main`. It resumes the same run, and later launches keep
+the phase recorded in `run.json`.
+
+### Speed
+
+On this repo's MacBook, env collection measured about 5k steps/s per process
+(50k steps/s with 10 processes). The WSL machine has not been measured. The
+first iterations print its real speed. At 40k steps/s, 100M steps take about
+40 minutes and 1B take about 7 hours.
+
+## Evaluating progress
+
+Training reward alone does not show improvement in self-play, so check
+against older snapshots:
 
 ```bash
-python3.11 -m venv env
-./env/bin/pip install -r requirements-macos.txt
+bin/eval botboi runs/botboi/policies/100000000.pt      # latest vs 100M
+bin/eval runs/botboi/policies/300000000.pt runs/botboi/policies/200000000.pt --games 200
 ```
 
-Do not install `earl-pytorch` - its wheel bundles stale `rlgym`/`rlgym_tools`
-copies that overwrite the real 2.x packages. (The transformer track that once
-used it was removed in July 2026; the project is MLP-only.)
+Each game starts from a kickoff and ends at the first goal, or is a draw after
+30 s without a touch or 120 s total. The command prints A's score, counting a
+draw as half a win, with a 95% confidence interval for 1v1 and 2v2. It also
+prints the number of own goals. Once the bot aims, a new snapshot should
+clearly beat older ones. Before that, while own goals are common, win rates
+stay near 50% even as touches improve.
 
-Replay-download tooling uses a separate dependency file because `carball` does
-not install cleanly on Python 3.11. The replay scripts automatically prefer a
-repo-local `./replay-env` when it exists.
+## Playing against it (Windows, RLBot v5)
 
-```bash
-bin/setup_replay_env
-```
+RLBot starts Rocket League without Easy Anti-Cheat, so bot matches are
+offline only.
 
-To configure replay downloads, copy `.env.example` to `.env` and set:
+1. From WSL, export a policy into a bot folder on the Windows drive:
+   ```bash
+   bin/export --dest /mnt/c/Users/<you>/Documents/BotBoi   # latest checkpoint
+   bin/export runs/botboi/policies/500000000.pt --dest /mnt/c/Users/<you>/Documents/BotBoi
+   ```
+2. On Windows, install Python 3.12 and RLBot v5 from https://rlbot.org.
+3. In that folder, run `powershell -ExecutionPolicy Bypass -File setup_windows.ps1`
+   once. It creates `venv` with the bot's small runtime (CPU PyTorch).
+4. Start a match with `venv\Scripts\python.exe run_match.py match_1v1.toml`
+   (you vs BotBoi) or `match_2v2.toml` (you + BotBoi vs two BotBois). You can
+   also add `bot.toml` in the RLBot v5 GUI. Set `launcher` in the match file to
+   `Epic` if you play on Epic.
 
-```bash
-BALLCHASING_API_TOKEN=...
-```
+Re-exporting to the same folder keeps its `venv`. The bot refuses to load a
+policy trained with a different observation layout.
 
-## Commands
+## How it works
 
-Start training:
+- **Self-play.** One policy drives every car. Episodes are 1v1 or 2v2 (50/50)
+  and start from a kickoff or a random on-ground situation (50/50). An episode
+  ends at a goal, after 30 s without a touch, or after 300 s.
+- **Actions.** Each choice is one of 90 discrete controller combos (Necto's
+  lookup table), held for 8 physics ticks, so the bot makes 15 decisions per
+  second.
+- **Observations** (`botboi/obs.py`, 163 floats):
+  - Everything is seen from the car's team side, so orange sees a mirrored field.
+  - Ball, boost pad timers, own car state, and jump/flip state.
+  - Ball position and velocity in the car's own frame.
+  - One teammate slot and two opponent slots, filled nearest first. Missing
+    cars are zero slots with a presence flag.
+- **Same code in game.** The RLBot bot runs the same observation code on a
+  game state built by `rlgym-compat`. `tests/test_parity.py` replays simulator
+  ticks as RLBot packets and checks the observations match.
+- **Rewards** (`botboi/rewards.py`):
+  - Goal: +1 for the scoring team, -1 for the conceding team.
+  - Zero-sum terms, where one team's gain is the other's loss: ball velocity
+    toward the opponent goal, hard touches, and demos.
+  - Individual shaping: speed toward the ball, facing the ball, boost pickup,
+    and boost kept.
+  - Rewards are normalized by the running spread of returns.
+- **Network.** Separate policy and value MLPs, 1024-1024-512-512.
 
-```bash
-bin/train
-```
+## Known gaps
 
-Start tuned training with better GPU/CPU utilization and auto-resume:
-
-```bash
-bin/train_tuned
-```
-
-Start tuned training without resuming from an older checkpoint:
-
-```bash
-bin/train_tuned_fresh
-```
-
-Start unattended background training:
-
-```bash
-bin/manage_training start
-```
-
-Check whether it is still running, what checkpoint it last saved, and the recent log tail:
-
-```bash
-bin/manage_training status
-```
-
-Follow the live training log:
-
-```bash
-bin/manage_training logs -f
-```
-
-Stop the background training process cleanly:
-
-```bash
-bin/manage_training stop
-```
-
-Train directly with custom flags:
-
-```bash
-python3 train.py --n-proc 8 --min-inference-size 8 --resume-latest
-```
-
-Resume with a frozen opponent checkpoint behind the current run:
-
-```bash
-python3 train.py --resume-latest --self-play-mode frozen --opponent-gap-ts 4000000
-```
-
-Resume with a fixed opponent checkpoint:
-
-```bash
-python3 train.py --resume-latest --self-play-mode frozen --opponent-checkpoint data/checkpoints/<run>/<ts>
-```
-
-The tuned wrappers default to:
-
-- `n_proc=8`
-- `min_inference_size=n_proc`
-- `ts_per_iteration=100000`
-- `ppo_batch_size=100000`
-- `ppo_minibatch_size=20000`
-- `exp_buffer_size=400000`
-
-Override them per run with environment variables, for example:
-
-```bash
-N_PROC=10 PPO_MINIBATCH_SIZE=25000 bin/train_tuned
-```
-
-Watch the latest checkpoint:
-
-```bash
-./env/bin/python watch.py
-```
-
-Inspect saved checkpoints:
-
-```bash
-bin/progress_report data/checkpoints
-```
-
-Inspect live training metrics:
-
-```bash
-bin/metrics_report data/training_metrics.csv
-```
-
-Watch the full training/export dashboard live:
-
-```bash
-bin/progress_dashboard --watch 5
-```
-
-`bin/progress_dashboard` now auto-runs the evaluation ladder when the latest compatible checkpoint changes, so the dashboard keeps a checkpoint-vs-checkpoint progress signal without needing a separate eval command.
-
-Run a checkpoint-vs-checkpoint evaluation ladder:
-
-```bash
-bin/evaluate_ladder
-```
-
-The evaluation ladder keeps the same anchor checkpoints for 10 million timesteps by default, then refreshes them forward as training advances.
-That makes it easier to tell whether the current bot is actually improving instead of only tying itself in live self-play.
-By default it evaluates at the current checkpoint's saved curriculum stage and difficulty.
-
-Serve the auto-refreshing HTML training graphs locally:
-
-```bash
-bin/serve_training_report
-```
-
-Generate the HTML graph report manually:
-
-```bash
-bin/render_training_report
-```
-
-Export the latest checkpoint into the RLBot package:
-
-```bash
-bin/export_rlbot
-```
-
-Refresh the latest RLBot package and sync it into your RLBot botpack folder when one is detected:
-
-```bash
-bin/use_latest_rlbot
-```
-
-Validate the RLBot package before opening RLBot:
-
-```bash
-bin/validate_rlbot_package
-```
-
-The `bin/` entrypoints now prefer the repo-local `./env/bin/python` automatically and fall back to `python3` only if that env does not exist.
-
-## Notes
-
-- `watch.py` now discovers the latest checkpoint instead of using a hardcoded run path.
-- Training uses an 8-tick action repeat. With discrete actions this is
-  `RepeatAction(NectoAction(), repeats=8)`; previously the bare `NectoAction`
-  stepped the engine one tick per decision (120Hz), which did not match the
-  documented design or the deployed bot's cadence.
-- Observation standardization is OFF for new runs (`standardize_obs=False`):
-  `SharedObs` already normalizes features, and rlgym-ppo's runtime
-  standardization was a silent train/deploy mismatch - the in-game bot and
-  `watch.py` fed raw observations to policies trained on standardized ones.
-  Old checkpoints carry `obs_running_stats` in their book; `bot.py`,
-  `watch.py`, and the frozen-opponent/eval paths now detect that and apply
-  rlgym-ppo's exact transform, so both old and new checkpoints replay
-  faithfully.
-- The per-step reward clip is a +-40 safety net. It was +-5, which flattened
-  every goal (weighted 6-26) to the clip value and let accumulated dense
-  shaping outweigh scoring.
-- `--gamma` now defaults to 0.995 (~13s credit horizon at 15Hz decisions);
-  gamma was previously unset and silently ran at 0.99.
-- The observation contract now includes angular velocity and core car-state flags inspired by the standard RLGym observation builder, plus 34 boost-pad availability features (`OBS_DIM=88`). Pad features use the engine's pad order, reversed for orange (field mirror); `BotBoi_v1/src/bot.py` bakes the same order and maps RLBot's pads onto it. Any `OBS_DIM` change is a fresh-training boundary, so older checkpoints are intentionally incompatible with current training.
-- Curriculum advancement now aggregates episode stats from every worker process (`data/curriculum_stats/proc_*.json`) instead of gating on worker 0's slice alone.
-- Observation compatibility still matters. If you change `rocket_league_bot_src/obs.py`, review `BotBoi_v1/src/bot.py` as well.
-- Later competitive stages now include a small dense attack-pressure shaping term so the bot gets credit for creating faster, more dangerous shots before sparse goal events arrive. Goals still dominate the reward mix.
-- `DUEL` and `SELF_PLAY` now use competitive shaping, so non-goal reward is scored relative to the opponent team instead of being added symmetrically for both sides.
-- Snapshot metadata for future old-version self-play is stored under `data/league/snapshots.json`.
-- `bin/use_latest_rlbot` is the one-command way to refresh the package for in-game use. It exports the newest compatible checkpoint into `BotBoi_v1/src` and, when it finds an RLBot botpack directory, copies the `BotBoi_v1` package there too.
-- If RLBot is installed in a non-standard location, set `RLBOT_BOTPACK_DIR` or pass `--botpack-dir` to `bin/use_latest_rlbot`.
-- The RLBot package lives at `BotBoi_v1/src/bot.cfg`. If auto-install is skipped, load that bot config directly in RLBot GUI.
-- `BotBoi_v1/src/runtime_config.json` is now the contract between training and the in-game bot package.
-- During unattended training, PID 0 now auto-exports the newest checkpoint into the RLBot package when it detects a fresh save.
-- Background run state is stored in `data/training_run.json` and logs go to `data/logs/train_latest.log`.
-- The graph report is written to `data/training_report.html` whenever a new metrics row is logged.
-- Default training uses current-policy vs current-policy self-play for throughput. Use `--self-play-mode frozen --opponent-gap-ts 4000000` when you want a slower but more stable old-checkpoint comparison target.
-
-## Further Reading
-
-Project-specific training notes are in [docs/training.md](docs/training.md).
+- No training against older versions of the bot yet. Pure current-vs-current
+  self-play can drift into habits that exploit only itself. `bin/eval`
+  against old snapshots is how to catch that. rlgym-learn-algos'
+  `MultiAgentController` is the route to add past-version opponents.
+- rlgym-learn 2.0.0 was released in August 2026. Two of its rough edges are
+  worked around here (see AGENTS.md).

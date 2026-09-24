@@ -1,0 +1,10 @@
+# Runtime for the RLBot v5 bot (not the training stack).
+# rlbot must be pinned: a plain `pip install rlbot` gets the old v4 package.
+rlbot==2.0.0b55
+rlgym-compat==2.3.6
+# rlgym's API and Rocket League modules without the simulator or viewer.
+rlgym-api==2.0.0
+rlgym-rocket-league==2.0.1
+numpy==1.26.4
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.14.0

@@ -1,0 +1,15 @@
+#:schema https://rlbot.org/schemas/agent.json
+[settings]
+name = "BotBoi"
+agent_id = "rafe/botboi"
+loadout_file = "loadout.toml"
+# Commands run from this folder. setup_windows.ps1 creates .\venv.
+run_command = "venv\\Scripts\\python.exe bot.py"
+run_command_linux = "venv/bin/python bot.py"
+logo_file = ""
+
+[details]
+description = "Self-play PPO bot trained with RLGym for 1v1 and 2v2."
+developer = "Rafe"
+language = "Python"
+tags = ["1v1", "teamplay"]
