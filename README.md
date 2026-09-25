@@ -35,7 +35,10 @@ bin/train             # run "botboi", phase "early", resumes automatically
 
 - Keys in the training terminal: `p` pause, `c` checkpoint now, `q` checkpoint
   and quit. Ctrl+C also saves a checkpoint.
-- Running `bin/train` again resumes the run from its latest checkpoint.
+- Running `bin/train` again resumes the run from its latest checkpoint. If
+  an update hangs (the desktop's GPU sometimes freezes early in a launch),
+  the trainer exits after 3 minutes without progress and `bin/train`
+  restarts it from the last checkpoint.
   `bin/train --run <name>` starts or resumes a separately named run.
 - It runs one env process per CPU core minus one (`--n-proc` to change).
   PPO updates run on the GPU. Actions during collection come from a CPU copy

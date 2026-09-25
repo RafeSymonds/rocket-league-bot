@@ -19,6 +19,9 @@ import dataclasses
 import functools
 import json
 import shutil
+import signal
+import subprocess
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -64,11 +67,44 @@ from .obs import OBS_SIZE
 TICKS_PER_SECOND = 120
 # Normalized rewards are clipped to this. High enough that goals are never cut.
 REWARD_CLIP = 50.0
+# bin/train restarts the run (resuming from the last checkpoint) on this code.
+STALL_EXIT_CODE = 75
+STALL_TIMEOUT_SECONDS = 180  # a normal iteration takes ~7 s
 
 
 class StepLimitReached(KeyboardInterrupt):
     """Raised in the learning loop at the --timesteps limit. rlgym-learn treats
     KeyboardInterrupt as "save a checkpoint and shut down"."""
+
+
+class StallWatchdog(threading.Thread):
+    """Exits the run when no timesteps arrive for STALL_TIMEOUT_SECONDS.
+
+    On the WSL2 desktop the GPU occasionally hangs inside a PPO update (the
+    host spins in a CUDA sync forever, GPU at 100% with no memory traffic).
+    Nothing in-process can interrupt that, so kill the env processes, exit
+    with STALL_EXIT_CODE, and let bin/train resume from the last checkpoint.
+    """
+
+    def __init__(self, controller: "BotPPOController"):
+        super().__init__(daemon=True)
+        self.controller = controller
+
+    def run(self):
+        while True:
+            time.sleep(10)
+            idle = time.monotonic() - self.controller.last_progress
+            if idle > STALL_TIMEOUT_SECONDS:
+                print(f"No training progress for {idle:.0f}s (GPU hang?). Exiting for a restart.", flush=True)
+                _kill_descendants(os.getpid())
+                os._exit(STALL_EXIT_CODE)
+
+
+def _kill_descendants(pid: int) -> None:
+    children = subprocess.run(["pgrep", "-P", str(pid)], capture_output=True, text=True).stdout.split()
+    for child in map(int, children):
+        _kill_descendants(child)
+        os.kill(child, signal.SIGKILL)
 
 
 class BotPPOController(PPOAgentController):
@@ -91,6 +127,7 @@ class BotPPOController(PPOAgentController):
         self.stop_at_timesteps = stop_at_timesteps
         self.cpu_inference = cpu_inference
         self.cpu_actor = None
+        self.last_progress = time.monotonic()  # read by StallWatchdog
         existing = [int(p.stem) for p in self.policies_dir.glob("*.pt") if p.stem.isdigit()]
         self.last_snapshot_ts = max(existing, default=0)
 
@@ -129,6 +166,7 @@ class BotPPOController(PPOAgentController):
         self.iteration_timesteps = 0
 
     def process_timestep_data(self, timestep_data):
+        self.last_progress = time.monotonic()
         super().process_timestep_data(timestep_data)
         if self.cumulative_timesteps >= self.stop_at_timesteps:
             print(f"Reached {self.stop_at_timesteps:,} total steps.")
@@ -373,9 +411,11 @@ def main() -> None:
             Adam(actor_critic.critic.parameters(), **param_group_kwargs["critic"]),
         ]
 
-    # Totals from a previous launch would be double counted.
+    # Totals from a previous launch would be double counted, and a killed
+    # launch (see StallWatchdog) leaves stale shared-memory link files.
     stats_dir = run_dir / "stats"
     shutil.rmtree(stats_dir, ignore_errors=True)
+    shutil.rmtree(run_dir / "shmem_flinks", ignore_errors=True)
     stats_dir.mkdir()
     env_cfg = dataclasses.replace(cfg.env, stats_dir=str(stats_dir))
 
@@ -483,6 +523,8 @@ def main() -> None:
         agent_controller=controller,
         config=config,
     )
+    controller.last_progress = time.monotonic()
+    StallWatchdog(controller).start()
     coordinator.start()
 
 

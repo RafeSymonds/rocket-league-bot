@@ -118,6 +118,16 @@ other jobs, so do not train there.
   `min_frac_process_responses_per_collection=1.0` (5-50x slower), and more
   env processes than cores. The learner process is the bottleneck, so
   `n_proc` defaults to cores minus one.
+- **GPU hangs on the desktop.** About 1 in 3 training launches froze in
+  its first ~0-4 PPO updates. The GPU showed 100% busy at 91 W with no
+  memory traffic, and the host spun forever in a CUDA sync inside the
+  forward/backward. Later updates never hung (0 in ~290). This was not fixed
+  by synchronous copies, `CUDA_MODULE_LOADING=EAGER`, or CPU vs GPU
+  inference. Windows logs nvlddmkm event 153 only when a process with a
+  CUDA context is killed. Mitigation: `StallWatchdog` exits with code 75
+  after 180 s without timesteps, and `bin/train` restarts, resuming from the
+  last checkpoint. Untested: the cu130 torch build (`TORCH_CUDA=cu130
+  bin/setup`).
 - **WSL nvidia-smi.** It lives in `/usr/lib/wsl/lib`, which non-login
   shells (ssh commands) may lack on PATH. `bin/setup` checks there.
 - **numpy.** rlgym 2.0.1 pins `numpy<2`, so rlviser-py (numpy>=2) cannot be
