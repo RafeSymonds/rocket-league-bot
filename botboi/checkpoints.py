@@ -3,6 +3,7 @@
 Layout written by training (rlgym-learn decides the middle two levels):
     runs/<run>/checkpoints/<run><suffix>/<time_ns>/ppo_learner/actor_critic.pt
     runs/<run>/checkpoints/<run><suffix>/<time_ns>/ppo_agent.json
+    runs/<run>/checkpoints/<run><suffix>/<time_ns>/botboi.json   written last
     runs/<run>/policies/<timesteps>.pt      policy snapshots, never pruned
 """
 
@@ -19,10 +20,13 @@ from .obs import OBS_SIZE, OBS_VERSION
 
 
 def find_checkpoints(run_dir: str | Path) -> list[Path]:
-    """All full checkpoints of a run, oldest first."""
+    """All complete checkpoints of a run, oldest first. training writes
+    botboi.json after a save finishes, so a save cut short by a crash (which
+    leaves a partial actor_critic.pt) is skipped."""
     found = [
-        p.parents[1]
-        for p in (Path(run_dir) / "checkpoints").rglob("ppo_learner/actor_critic.pt")
+        p.parent
+        for p in (Path(run_dir) / "checkpoints").rglob("botboi.json")
+        if (p.parent / "ppo_learner" / "actor_critic.pt").exists()
     ]
     # Checkpoint folders are named after time.time_ns(), so name order is age order.
     return sorted(found, key=lambda p: int(p.name))
