@@ -1,12 +1,27 @@
 #!/usr/bin/env bash
-# Train (see: bin/train --help). If the trainer exits with code 75 (it detected
-# a hung GPU update), it is restarted and resumes from the last checkpoint.
+# Train (see: bin/train --help). The trainer exits with 75 when an update hangs
+# and 76 when training crashes (GPU faults); both restart it from the last
+# checkpoint. Gives up after 5 failures in a row that each come within 2
+# minutes of starting.
 set -uo pipefail
 cd "$(dirname "$0")/.."
+quick_failures=0
 while true; do
+    started=$(date +%s)
     env/bin/python -m botboi.train "$@"
     code=$?
-    [ "$code" -eq 75 ] || exit "$code"
-    echo "bin/train: restarting after a stalled update ($(date))"
+    if [ "$code" -ne 75 ] && [ "$code" -ne 76 ]; then
+        exit "$code"
+    fi
+    if [ $(( $(date +%s) - started )) -lt 120 ]; then
+        quick_failures=$((quick_failures + 1))
+    else
+        quick_failures=0
+    fi
+    if [ "$quick_failures" -ge 5 ]; then
+        echo "bin/train: 5 quick failures in a row, giving up ($(date))"
+        exit "$code"
+    fi
+    echo "bin/train: restarting after exit code $code ($(date))"
     sleep 5
 done

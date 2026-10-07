@@ -88,7 +88,7 @@ class TrainConfig:
     # 1024-1024-512-512 on the desktop. The critic only runs on the GPU.
     policy_layers: tuple[int, ...] = (512, 512, 256)
     critic_layers: tuple[int, ...] = (1024, 1024, 512, 512)
-    save_every_ts: int = 10_000_000
+    save_every_ts: int = 5_000_000  # ~6 min on the desktop: the most a crash loses
     checkpoints_to_keep: int = 5
     # Standalone policy snapshots (runs/<run>/policies/) for eval and export.
     # These are never pruned.

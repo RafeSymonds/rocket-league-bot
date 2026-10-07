@@ -35,10 +35,12 @@ bin/train             # run "botboi", phase "early", resumes automatically
 
 - Keys in the training terminal: `p` pause, `c` checkpoint now, `q` checkpoint
   and quit. Ctrl+C also saves a checkpoint.
-- Running `bin/train` again resumes the run from its latest checkpoint. If
-  an update hangs (the desktop's GPU sometimes freezes early in a launch),
-  the trainer exits after 3 minutes without progress and `bin/train`
-  restarts it from the last checkpoint.
+- Running `bin/train` again resumes the run from its latest checkpoint.
+  If the GPU faults, `bin/train` restarts the trainer from the last
+  checkpoint. A fault is either an update that hangs, caught after
+  3 minutes without progress, or a crash such as "illegal memory access".
+  Checkpoints come every 5M steps, so a restart loses at most about
+  6 minutes.
   `bin/train --run <name>` starts or resumes a separately named run.
 - It runs one env process per CPU core minus one (`--n-proc` to change).
   PPO updates run on the GPU. Actions during collection come from a CPU copy
@@ -46,7 +48,7 @@ bin/train             # run "botboi", phase "early", resumes automatically
 - Output goes to `runs/botboi/`:
   - `metrics.csv` has one row per iteration.
   - `policies/<steps>.pt` is a policy snapshot every 50M steps, kept forever.
-  - `checkpoints/` holds full checkpoints every 10M steps, with the last 5 kept.
+  - `checkpoints/` holds full checkpoints every 5M steps, with the last 5 kept.
   - `run.json` records each launch and its settings.
 - `bin/train --wandb` also logs to Weights & Biases. Run `env/bin/wandb login`
   once first.

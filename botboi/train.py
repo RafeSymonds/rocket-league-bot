@@ -67,8 +67,9 @@ from .obs import OBS_SIZE
 TICKS_PER_SECOND = 120
 # Normalized rewards are clipped to this. High enough that goals are never cut.
 REWARD_CLIP = 50.0
-# bin/train restarts the run (resuming from the last checkpoint) on this code.
+# bin/train restarts the run (resuming from the last checkpoint) on these codes.
 STALL_EXIT_CODE = 75
+CRASH_EXIT_CODE = 76
 STALL_TIMEOUT_SECONDS = 180  # a normal iteration takes ~7 s
 
 
@@ -523,9 +524,30 @@ def main() -> None:
         agent_controller=controller,
         config=config,
     )
+    # rlgym-learn catches errors in its loop, saves, and returns normally, so
+    # record them to exit with CRASH_EXIT_CODE. On the desktop these are GPU
+    # faults (e.g. "illegal memory access" when the display powered off).
+    loop_errors: list[BaseException] = []
+    run_loop = coordinator._run
+
+    def recorded_run():
+        try:
+            return run_loop()
+        except Exception as error:
+            loop_errors.append(error)
+            raise
+
+    coordinator._run = recorded_run
     controller.last_progress = time.monotonic()
     StallWatchdog(controller).start()
-    coordinator.start()
+    try:
+        coordinator.start()
+    except Exception:
+        loop_errors.append(RuntimeError("shutdown failed"))
+    if loop_errors:
+        print(f"Training stopped on an error: {loop_errors[0]!r}", flush=True)
+        _kill_descendants(os.getpid())
+        os._exit(CRASH_EXIT_CODE)
 
 
 if __name__ == "__main__":

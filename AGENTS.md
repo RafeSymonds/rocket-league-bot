@@ -128,6 +128,13 @@ other jobs, so do not train there.
   after 180 s without timesteps, and `bin/train` restarts, resuming from the
   last checkpoint. Untested: the cu130 torch build (`TORCH_CUDA=cu130
   bin/setup`).
+- **GPU crashes on the desktop.** The first run died at 33.5M steps with
+  "CUDA error: an illegal memory access". It came 2 s after a Windows
+  Kernel-Power 566 session transition, probably the display turning off
+  ("Turn off display after" is 15 min on AC; sleep is never). A 90 s matmul
+  consistency test found 0 wrong results, so this does not look like bad
+  hardware. rlgym-learn swallows loop errors, so `train.main` records them
+  and exits with code 76, and `bin/train` restarts on 75 and 76.
 - **WSL nvidia-smi.** It lives in `/usr/lib/wsl/lib`, which non-login
   shells (ssh commands) may lack on PATH. `bin/setup` checks there.
 - **numpy.** rlgym 2.0.1 pins `numpy<2`, so rlviser-py (numpy>=2) cannot be
