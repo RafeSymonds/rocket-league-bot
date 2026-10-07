@@ -78,7 +78,9 @@ def resolve_policy(spec: str, runs_dir: str = "runs") -> tuple[Policy, dict]:
     elif (path / "ppo_learner").is_dir():
         policy, meta = policy_from_checkpoint(path)
     else:
-        run_dir = path if path.is_dir() else Path(runs_dir) / spec
+        # Prefer runs/<spec>: the default run name "botboi" is also the
+        # package folder in the repo root.
+        run_dir = Path(runs_dir) / spec if (Path(runs_dir) / spec).is_dir() else path
         latest = find_latest_checkpoint(run_dir)
         if latest is None:
             raise FileNotFoundError(f"No policy, checkpoint, or run found for {spec!r}")
